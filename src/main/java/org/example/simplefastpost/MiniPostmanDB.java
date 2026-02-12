@@ -1,45 +1,57 @@
 package org.example.simplefastpost;
 
-import org.springframework.beans.factory.annotation.Value;
-
 import java.sql.*;
 import java.util.Scanner;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.io.File;
 
 public class MiniPostmanDB {
 
-
-    private static final String DB_FILE = null;
+    private static String DB_FILE = null;
 
     public static void main(String[] args) throws Exception {
-        // Connect to SQLite DB
-//        Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_FILE);
-//        createTableIfNotExists(conn);
+        // Determine save folder if -sv is provided
+        String saveFolder = null;
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equalsIgnoreCase("-sc") && i + 1 < args.length) {
+                saveFolder = args[i + 1];
+                File folder = new File(saveFolder);
+                if (!folder.exists()) folder.mkdirs();
+                DB_FILE = saveFolder + File.separator + "commands.db";
+            }
+        }
+
+        // Connect to SQLite DB if -sv is used
+//        Connection conn = null;
+//        if (DB_FILE != null) {
+//            conn = DriverManager.getConnection("jdbc:sqlite:" + DB_FILE);
+//            createTableIfNotExists(conn);
+//        }
 
         if (args.length == 0) {
             System.out.println("Usage: <program> -m METHOD -u URL OR saved commands");
             return;
         }
 
-//        if (args[0].equalsIgnoreCase("saved") && args[1].equalsIgnoreCase("commands")) {
-//            if (args.length == 3 && args[2].equalsIgnoreCase("prune")) {
+        if (args[0].equalsIgnoreCase("saved") && args[1].equalsIgnoreCase("commands")) {
+            if (args.length == 3 && args[2].equalsIgnoreCase("prune")) {
 //                pruneCommands(conn);
-//            } else {
+            } else {
 //                listCommands(conn);
-//            }
-//            conn.close();
-//            return;
-//        }
-//
-//        if (args[0].equalsIgnoreCase("-qc")) {
-//            int id = Integer.parseInt(args[1]);
+            }
+//            if (conn != null) conn.close();
+            return;
+        }
+
+        if (args[0].equalsIgnoreCase("-qc")) {
+            int id = Integer.parseInt(args[1]);
 //            runSavedCommand(conn, id);
-//            conn.close();
-//            return;
-//        }
+//            if (conn != null) conn.close();
+            return;
+        }
 
         // Parse HTTP request arguments
         String method = "GET";
@@ -64,15 +76,12 @@ public class MiniPostmanDB {
 
         sendRequest(method, url, body);
 
-        // Optionally, ask to save the command
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Save this command? (y/n): ");
-        String save = scanner.nextLine();
-        if (save.equalsIgnoreCase("y")) {
+        // Automatically save if -sv <folder> was provided
+        if (DB_FILE != null) {
 //            saveCommand(conn, method, url, body);
         }
 
-//        conn.close();
+//        if (conn != null) conn.close();
     }
 
     private static void createTableIfNotExists(Connection conn) throws SQLException {
