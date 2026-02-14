@@ -7,14 +7,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class CommandMapper {
 
-
     public static CommandDTO toDto(Command command) {
         return new CommandDTO(
                 command.getId(),
                 command.getCommand(),
-                command.getFolder()
+                command.getFolder() != null ? command.getFolder().getId() : null
         );
     }
-
-
 }

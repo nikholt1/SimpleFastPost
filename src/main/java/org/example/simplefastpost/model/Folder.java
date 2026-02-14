@@ -10,8 +10,9 @@ import java.util.List;
 public class Folder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
-    String projectName;
+    private Long id;
+
+    private String projectName;
 
     @OneToMany(mappedBy = "folder", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Command> commands = new ArrayList<>();

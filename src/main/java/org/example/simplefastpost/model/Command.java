@@ -8,13 +8,12 @@ public class Command {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String command;
 
     @ManyToOne
     @JoinColumn(name = "folder_id")
     private Folder folder;
-
-
     public Command() {}
 
     public Folder getFolder() {

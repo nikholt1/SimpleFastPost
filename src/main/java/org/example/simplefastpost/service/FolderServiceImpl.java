@@ -4,11 +4,13 @@ import org.example.simplefastpost.dto.FolderDTO;
 import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
 import org.example.simplefastpost.repository.FolderRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Service
 public class FolderServiceImpl implements FolderService {
     private final FolderRepository folderRepository;
     public FolderServiceImpl(FolderRepository folderRepository) {
@@ -33,4 +35,12 @@ public class FolderServiceImpl implements FolderService {
         return Optional.empty();
     }
 
+    @Override
+    public FolderDTO createFolder(String projectName, List<Command> commands) {
+        Folder folder = new Folder();
+        folder.setProjectName(projectName);
+        folder.setCommands(commands);
+        folderRepository.save(folder);
+        return FolderMapper.toDTO(folder);
+    }
 }
