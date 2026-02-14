@@ -1,11 +1,6 @@
 package org.example.simplefastpost.service;
 
 
-import org.example.simplefastpost.repository.CommandRepository;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
-import org.springframework.stereotype.Component;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -13,17 +8,12 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Scanner;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.List;
-import java.util.Scanner;
+
 
 public class CLIExecutor {
 
     public CLIExecutor() {
-        // No dependencies, purely standalone
+
     }
 
     public void execute(String[] rawArgs) {
@@ -35,7 +25,7 @@ public class CLIExecutor {
         String method = "GET";
         String url = "";
 
-        // Parse args
+
         for (int i = 0; i < rawArgs.length; i++) {
             if (rawArgs[i].equalsIgnoreCase("-m") && i + 1 < rawArgs.length) {
                 method = rawArgs[i + 1].toUpperCase();
@@ -67,7 +57,7 @@ public class CLIExecutor {
             sendRequest(method, url, body);
         } catch (Exception e) {
             System.err.println("Failed to send request:");
-            e.printStackTrace(); // print full stack trace to see the actual reason
+            e.printStackTrace();
         }
     }
 
@@ -92,7 +82,7 @@ public class CLIExecutor {
         }
 
         HttpResponse<String> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-        System.out.println("\n--- RESPONSE ---");
+        System.out.println("\nRESPONSE:");
         System.out.println("Status: " + response.statusCode());
         System.out.println(response.body());
     }
