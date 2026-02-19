@@ -63,7 +63,7 @@ public class CLIExecutor {
                     saveMode = true;
                 }
                 i++;
-            } else if (arg.equalsIgnoreCase("-help")) {
+            } else if (arg.equalsIgnoreCase("--help")) {
                 helpMode = true;
                 System.out.println("\n=== SimpleFastPost CLI Help ===\n");
                 System.out.println("Commands:");
