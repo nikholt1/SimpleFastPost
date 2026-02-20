@@ -1,5 +1,11 @@
 package org.example.simplefastpost.cli;
 
+import org.example.simplefastpost.cli.RequestController.RequestController;
+import org.example.simplefastpost.cli.commandRepo.CLICommandRepository;
+import org.example.simplefastpost.cli.commandService.CLICommandService;
+import org.example.simplefastpost.cli.folderRepo.CLIFolderRepository;
+import org.example.simplefastpost.cli.folderService.CLIFolderService;
+import org.example.simplefastpost.service.FolderService;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -9,14 +15,19 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Scanner;
 
-@Component
+
 public class CLIExecutor {
 
 
-    private static final String DB_URL = "jdbc:sqlite:mydb.sqlite";
+    private final String DB_URL = "jdbc:sqlite:mydb.sqlite";
+    public CLICommandRepository cliCommandRepository = new CLICommandRepository(DB_URL);
+    public CLIFolderRepository cliFolderRepository = new CLIFolderRepository(DB_URL);
+    public CLICommandService cliCommandService = new CLICommandService(cliCommandRepository);
+    public CLIFolderService cliFolderService = new CLIFolderService(cliFolderRepository);
+
+    private final RequestController requestController = new RequestController();
 
     public CLIExecutor() {
-
     }
 
     public void execute(String[] rawArgs) {
@@ -85,7 +96,7 @@ public class CLIExecutor {
                 System.out.println("\nWhen entering POST, PUT, PATCH, DELETE, you will be prompted for JSON input.");
                 System.out.println("Type '-s' to finish entering JSON (can be left empty for DELETE).\n");
                 System.out.println("Examples:");
-                System.out.println("  m GET -u https://jsonplaceholder.typicode.com/posts/1 -sv -cmd commandName -f foldername");
+                System.out.println("  -m GET -u https://jsonplaceholder.typicode.com/posts/1 -sv -cmd commandName -f foldername");
                 System.out.println("  run -scmd commandName\n");
             } else {
                 System.out.println("Unknown flag or value: " + arg);
@@ -171,7 +182,7 @@ public class CLIExecutor {
 
             System.out.println("Running saved command '" + commandName + "'...");
             try {
-                sendRequest(method, url, body);
+                requestController.sendRequest(method, url, body);
             } catch (Exception e) {
                 System.err.println("Failed to run saved command:");
                 e.printStackTrace();
@@ -202,36 +213,12 @@ public class CLIExecutor {
         }
 
         try {
-            sendRequest(method, url, body);
+            requestController.sendRequest(method, url, body);
         } catch (Exception e) {
             System.err.println("Failed to send request:");
             e.printStackTrace();
         }
     }
 
-    private void sendRequest(String method, String url, String body) throws Exception {
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest.Builder builder = HttpRequest.newBuilder().uri(URI.create(url));
 
-        switch (method) {
-            case "POST":
-            case "PUT":
-            case "PATCH":
-            case "DELETE":
-                if (body != null && !body.isEmpty()) {
-                    builder.method(method, HttpRequest.BodyPublishers.ofString(body))
-                            .header("Content-Type", "application/json");
-                } else {
-                    builder.method(method, HttpRequest.BodyPublishers.noBody());
-                }
-                break;
-            default:
-                builder.GET();
-        }
-
-        HttpResponse<String> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-        System.out.println("\nRESPONSE:");
-        System.out.println("Status: " + response.statusCode());
-        System.out.println(response.body());
-    }
 }
