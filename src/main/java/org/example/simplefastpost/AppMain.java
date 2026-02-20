@@ -1,16 +1,15 @@
 package org.example.simplefastpost;
 
-import org.example.simplefastpost.service.CLIExecutor;
+import org.example.simplefastpost.cli.CLIExecutor;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.WebApplicationType;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class AppMain {
 
     public static void main(String[] args) {
