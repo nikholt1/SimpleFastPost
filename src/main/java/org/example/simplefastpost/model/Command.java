@@ -9,10 +9,15 @@ public class Command {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String name;
+
     private String command;
 
+    @Column(length = 2000)
+    private String body;
+
     @ManyToOne
-    @JoinColumn(name = "folder_id")
+    @JoinColumn(name = "folder_id", nullable = true)
     private Folder folder;
     public Command() {}
 
@@ -30,6 +35,22 @@ public class Command {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
     }
 
     public String getCommand() {

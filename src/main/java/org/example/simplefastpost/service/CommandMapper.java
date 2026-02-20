@@ -11,7 +11,10 @@ public class CommandMapper {
         return new CommandDTO(
                 command.getId(),
                 command.getCommand(),
+                command.getName(),
+                command.getBody(),
                 command.getFolder() != null ? command.getFolder().getId() : null
+
         );
     }
 }

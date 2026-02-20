@@ -5,11 +5,9 @@ import org.example.simplefastpost.model.Folder;
 
 public record CommandDTO(
         Long id,
+        String name,
         String command,
+        String body,
         Long folderId
-) {
-    public CommandDTO(Command command) {
-        this(command.getId(), command.getCommand(), command.getFolder().getId());
-    }
-}
+) {}
 
