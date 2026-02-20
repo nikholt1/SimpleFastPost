@@ -80,8 +80,8 @@ public class CLIExecutor {
                 System.out.println("\nWhen entering POST, PUT, PATCH, DELETE, you will be prompted for JSON input.");
                 System.out.println("Type '-s' to finish entering JSON (can be left empty for DELETE).\n");
                 System.out.println("Examples:");
-                System.out.println("  -m GET -u https://jsonplaceholder.typicode.com/posts -sv -cmd listPosts");
-                System.out.println("  run -scmd listPosts\n");
+                System.out.println("  m GET -u https://jsonplaceholder.typicode.com/posts/1 -sv -cmd commandName -f foldername");
+                System.out.println("  run -scmd commandName\n");
             } else {
                 System.out.println("Unknown flag or value: " + arg);
             }

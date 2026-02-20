@@ -17,27 +17,6 @@ public interface CommandService {
     Optional<CommandDTO> getCommandById(Long id);
     CommandDTO createCommand(String command, Long id);
 
-//    private final CommandRepository commandRepository;
-//
-//    public CommandService(CommandRepository commandRepository) {
-//        this.commandRepository = commandRepository;
-//    }
-//
-//
-//    public Command createCommand(Command command) {
-//        return commandRepository.save(command);
-//    }
-//
-//    public List<Command> findAll() {
-//        return commandRepository.findAll();
-//    }
-//    public Command findById(Long id) {
-//        Optional<Command> commandOptional = commandRepository.findById(id);
-//        if (commandOptional.isEmpty()) {
-//            System.out.println("Command with id " + id + " not found");
-//        }
-//        return commandRepository.findById(id).get();
-//    }
-//
+
 
 }

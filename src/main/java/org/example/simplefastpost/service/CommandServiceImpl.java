@@ -16,8 +16,8 @@ import java.util.Optional;
 public class CommandServiceImpl implements CommandService {
 
 
-    CommandRepository commandRepository;
-    FolderRepository folderRepository;
+    private final CommandRepository commandRepository;
+    private final FolderRepository folderRepository;
     public CommandServiceImpl(CommandRepository commandRepository, FolderRepository folderRepository) {
         this.commandRepository = commandRepository;
         this.folderRepository = folderRepository;
