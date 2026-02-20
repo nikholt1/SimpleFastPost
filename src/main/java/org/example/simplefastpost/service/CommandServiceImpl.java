@@ -43,20 +43,6 @@ public class CommandServiceImpl implements CommandService {
     }
 
     @Override
-    public CommandDTO createCommand(String command, Long folderId) {
-
-        Folder folder = folderRepository.findById(folderId)
-                .orElseThrow(() -> new RuntimeException("Folder not found"));
-
-        Command cmd = new Command();
-        cmd.setCommand(command);
-        cmd.setFolder(folder); // sets the owning side
-
-        Command saved = commandRepository.save(cmd);
-
-        return CommandMapper.toDto(saved);
-    }
-    @Override
     public void deleteCommand(Long commandId) {
 
         if (!commandRepository.existsById(commandId)) {
@@ -66,22 +52,46 @@ public class CommandServiceImpl implements CommandService {
         commandRepository.deleteById(commandId);
     }
     @Override
-    public CommandDTO updateCommand(Long commandId, String newCommand, Long folderId) {
+    public CommandDTO createCommand(String name, String command, String body, Long folderId) {
+
+        Command cmd = new Command();
+        cmd.setName(name);
+        cmd.setCommand(command);
+        cmd.setBody(body);
+
+        if (folderId != null) {
+            Folder folder = folderRepository.findById(folderId)
+                    .orElseThrow(() -> new RuntimeException("Folder not found"));
+            cmd.setFolder(folder);
+        }
+
+        Command saved = commandRepository.save(cmd);
+        return CommandMapper.toDto(saved);
+    }
+    @Override
+    public CommandDTO updateCommand(
+            Long commandId,
+            String name,
+            String command,
+            String body,
+            Long folderId
+    ) {
 
         Command existing = commandRepository.findById(commandId)
                 .orElseThrow(() -> new RuntimeException("Command not found"));
 
-        // update command text
-        existing.setCommand(newCommand);
+        if (name != null) existing.setName(name);
+        if (command != null) existing.setCommand(command);
+        if (body != null) existing.setBody(body);
 
-        // update folder if provided
         if (folderId != null) {
             Folder folder = folderRepository.findById(folderId)
                     .orElseThrow(() -> new RuntimeException("Folder not found"));
             existing.setFolder(folder);
+        } else {
+            existing.setFolder(null); // allow un-assigning
         }
 
-        Command saved = commandRepository.save(existing);
-        return CommandMapper.toDto(saved);
+        return CommandMapper.toDto(commandRepository.save(existing));
     }
 }
