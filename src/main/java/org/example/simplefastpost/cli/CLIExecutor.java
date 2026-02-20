@@ -1,4 +1,4 @@
-package org.example.simplefastpost.service;
+package org.example.simplefastpost.cli;
 
 import org.springframework.stereotype.Component;
 
@@ -12,7 +12,12 @@ import java.util.Scanner;
 @Component
 public class CLIExecutor {
 
-    public CLIExecutor() { }
+
+    private static final String DB_URL = "jdbc:sqlite:mydb.sqlite";
+
+    public CLIExecutor() {
+
+    }
 
     public void execute(String[] rawArgs) {
         if (rawArgs.length == 0) {
@@ -95,8 +100,10 @@ public class CLIExecutor {
                     folderAndListMode = true;
                     if (folderName != null) {
                         System.out.println("Listing commands in folder: " + folderName);
+                        // TODO: Lookup command in folder
                     } else {
                         System.out.println("Listing all folders");
+                        // TODO: look up all folders and commands in root
                     }
                     return;
 
@@ -108,6 +115,7 @@ public class CLIExecutor {
                     if (folderName != null) {
                         System.out.println("Running command '" + commandName + "' from folder '" + folderName + "'");
                         // TODO: lookup command in DB using folderName + commandName
+
                     } else {
                         System.out.println("Running command '" + commandName + "'");
                         // TODO: lookup command in DB using commandName
