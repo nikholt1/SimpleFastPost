@@ -9,6 +9,8 @@ public class CLICommandRepository {
 
     public CLICommandRepository(String DB_URL) {
         this.DB_URL = DB_URL;
+        System.out.println(DB_URL + " in CommandRepository");
+
     }
 
 
@@ -58,14 +60,21 @@ public class CLICommandRepository {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                System.out.printf(
-                        "ID: %d | Name: %s | Command: %s | Body: %s | Folder: %s%n",
-                        rs.getLong("id"),
-                        rs.getString("name"),
-                        rs.getString("command"),
-                        rs.getString("body"),
-                        rs.getObject("folder_id")
-                );
+                String name = rs.getString("name");
+                String command = rs.getString("command");
+                String body = rs.getString("body");
+                Object folderId = rs.getObject("folder_id");
+
+                System.out.printf("Name: %s | Command: %s | Folder: %s%n", name, command, folderId);
+
+                if (body != null && !body.isBlank()) {
+                    String[] lines = body.split("\\R"); // splits on any newline (\r, \n, \r\n)
+                    for (String line : lines) {
+                        System.out.println("---> " + line); // indented for readability
+                    }
+                } else {
+                    System.out.println();
+                }
             }
         }
     }

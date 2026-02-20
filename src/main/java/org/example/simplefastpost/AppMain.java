@@ -14,8 +14,14 @@ import java.util.Map;
 public class AppMain {
 
     public static void main(String[] args) {
-        String DB_URL = "jdbc:sqlite:../sfpDB.db";
 
+
+        String DB_URL = "jdbc:sqlite:../sfpDB.db";
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("SQLite JDBC driver not found", e);
+        }
         ApplicationSetup applicationSetup = new ApplicationSetup();
         applicationSetup.initialize(DB_URL);
 
@@ -54,7 +60,8 @@ public class AppMain {
 
         } else {
             // CLI mode: create CLIExecutor directly, pass args
-            CLIExecutor cli = new CLIExecutor(DB_URL); // pass null if JPA not needed
+            CLIExecutor cli = new CLIExecutor(DB_URL);
+            System.out.println(DB_URL + " in CLI executor call");
             try {
                 cli.execute(args);
             } catch (Exception e) {

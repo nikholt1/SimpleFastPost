@@ -20,15 +20,20 @@ public class CLIExecutor {
 
 
     private String DB_URL = "";
-    public CLICommandRepository cliCommandRepository = new CLICommandRepository(DB_URL);
-    public CLIFolderRepository cliFolderRepository = new CLIFolderRepository(DB_URL);
-    public CLICommandService cliCommandService = new CLICommandService(cliCommandRepository);
-    public CLIFolderService cliFolderService = new CLIFolderService(cliFolderRepository);
+    public CLICommandRepository cliCommandRepository = null;
+    public CLIFolderRepository cliFolderRepository = null;
+    public CLICommandService cliCommandService = null;
+    public CLIFolderService cliFolderService = null;
 
     private final RequestController requestController = new RequestController();
 
     public CLIExecutor(String DB_URL) {
+        System.out.println(DB_URL + " in CLIExecutor");
         this.DB_URL = DB_URL;
+        this.cliCommandRepository = new CLICommandRepository(DB_URL);
+        this.cliFolderRepository = new CLIFolderRepository(DB_URL);
+        this.cliCommandService = new CLICommandService(cliCommandRepository);
+        this.cliFolderService = new CLIFolderService(cliFolderRepository);
     }
 
     public void execute(String[] rawArgs) {
@@ -114,9 +119,10 @@ public class CLIExecutor {
                         System.out.println("Listing commands in folder: " + folderName);
                         // TODO: Lookup command in folder
                     } else {
-                        System.out.println("Listing all folders");
+                        System.out.println("Listing all folders and parentless commands...");
                         // TODO: look up all folders and commands in root
-
+                        cliFolderService.listFolders();
+                        cliCommandService.listCommands();
                     }
                     return;
 
