@@ -16,7 +16,8 @@ public interface CommandService {
     List<CommandDTO> getAllCommands();
     Optional<CommandDTO> getCommandById(Long id);
     CommandDTO createCommand(String command, Long id);
-
+    CommandDTO updateCommand(Long commandId, String newCommand, Long folderId);
+    void deleteCommand(Long commandId);
 
 
 }

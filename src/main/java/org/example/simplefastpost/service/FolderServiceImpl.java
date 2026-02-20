@@ -43,4 +43,30 @@ public class FolderServiceImpl implements FolderService {
         folderRepository.save(folder);
         return FolderMapper.toDTO(folder);
     }
+    @Override
+    public void deleteFolder(Long folderId) {
+
+        if (!folderRepository.existsById(folderId)) {
+            throw new RuntimeException("Folder not found");
+        }
+
+        folderRepository.deleteById(folderId);
+    }
+    @Override
+    public FolderDTO updateFolder(Long folderId, String projectName, List<Command> commands) {
+
+        Folder existing = folderRepository.findById(folderId)
+                .orElseThrow(() -> new RuntimeException("Folder not found"));
+
+        // update name
+        existing.setProjectName(projectName);
+
+        // update commands if provided
+        if (commands != null) {
+            existing.setCommands(commands);
+        }
+
+        Folder saved = folderRepository.save(existing);
+        return FolderMapper.toDTO(saved);
+    }
 }

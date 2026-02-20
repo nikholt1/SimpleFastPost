@@ -14,6 +14,7 @@ public interface FolderService {
     List<FolderDTO> getAllFolders();
     Optional<FolderDTO> getFolderById(Long id);
     FolderDTO createFolder(String projectName, List<Command> commands);
-
+    FolderDTO updateFolder(Long folderId, String projectName, List<Command> commands);
+    void deleteFolder(Long folderId);
 
 }
