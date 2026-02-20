@@ -56,4 +56,32 @@ public class CommandServiceImpl implements CommandService {
 
         return CommandMapper.toDto(saved);
     }
+    @Override
+    public void deleteCommand(Long commandId) {
+
+        if (!commandRepository.existsById(commandId)) {
+            throw new RuntimeException("Command not found");
+        }
+
+        commandRepository.deleteById(commandId);
+    }
+    @Override
+    public CommandDTO updateCommand(Long commandId, String newCommand, Long folderId) {
+
+        Command existing = commandRepository.findById(commandId)
+                .orElseThrow(() -> new RuntimeException("Command not found"));
+
+        // update command text
+        existing.setCommand(newCommand);
+
+        // update folder if provided
+        if (folderId != null) {
+            Folder folder = folderRepository.findById(folderId)
+                    .orElseThrow(() -> new RuntimeException("Folder not found"));
+            existing.setFolder(folder);
+        }
+
+        Command saved = commandRepository.save(existing);
+        return CommandMapper.toDto(saved);
+    }
 }
