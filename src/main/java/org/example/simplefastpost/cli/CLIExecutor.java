@@ -19,7 +19,7 @@ import java.util.Scanner;
 public class CLIExecutor {
 
 
-    private final String DB_URL = "jdbc:sqlite:mydb.sqlite";
+    private String DB_URL = "";
     public CLICommandRepository cliCommandRepository = new CLICommandRepository(DB_URL);
     public CLIFolderRepository cliFolderRepository = new CLIFolderRepository(DB_URL);
     public CLICommandService cliCommandService = new CLICommandService(cliCommandRepository);
@@ -27,7 +27,8 @@ public class CLIExecutor {
 
     private final RequestController requestController = new RequestController();
 
-    public CLIExecutor() {
+    public CLIExecutor(String DB_URL) {
+        this.DB_URL = DB_URL;
     }
 
     public void execute(String[] rawArgs) {
@@ -115,6 +116,7 @@ public class CLIExecutor {
                     } else {
                         System.out.println("Listing all folders");
                         // TODO: look up all folders and commands in root
+
                     }
                     return;
 

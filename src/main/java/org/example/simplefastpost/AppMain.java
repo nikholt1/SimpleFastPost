@@ -1,6 +1,7 @@
 package org.example.simplefastpost;
 
 import org.example.simplefastpost.cli.CLIExecutor;
+import org.example.simplefastpost.setup.ApplicationSetup;
 import org.springframework.boot.SpringApplication;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +14,10 @@ import java.util.Map;
 public class AppMain {
 
     public static void main(String[] args) {
+        String DB_URL = "jdbc:sqlite:../sfpDB.db";
+
+        ApplicationSetup applicationSetup = new ApplicationSetup();
+        applicationSetup.initialize(DB_URL);
 
         List<String> argList = Arrays.asList(args);
         boolean isApiMode = argList.contains("--api");
@@ -49,7 +54,7 @@ public class AppMain {
 
         } else {
             // CLI mode: create CLIExecutor directly, pass args
-            CLIExecutor cli = new CLIExecutor(); // pass null if JPA not needed
+            CLIExecutor cli = new CLIExecutor(DB_URL); // pass null if JPA not needed
             try {
                 cli.execute(args);
             } catch (Exception e) {
