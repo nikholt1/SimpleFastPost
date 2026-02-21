@@ -21,6 +21,12 @@ public class Command {
     private Folder folder;
     public Command() {}
 
+    public Command(String name, String command, String body) {
+        this.name = name;
+        this.command = command;
+        this.body = body;
+    }
+
     public Folder getFolder() {
         return folder;
     }

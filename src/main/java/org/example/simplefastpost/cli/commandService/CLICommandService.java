@@ -1,6 +1,10 @@
 package org.example.simplefastpost.cli.commandService;
 
 import org.example.simplefastpost.cli.commandRepo.CLICommandRepository;
+import org.example.simplefastpost.model.Command;
+
+import java.sql.SQLException;
+import java.util.List;
 
 public class CLICommandService {
 
@@ -61,5 +65,8 @@ public class CLICommandService {
         } catch (Exception e) {
             System.err.println("Failed to delete command: " + e.getMessage());
         }
+    }
+    public List<Command> getRootCommands() throws SQLException {
+        return cliCommandRepository.getRootCommands();
     }
 }

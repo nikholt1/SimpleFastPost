@@ -1,6 +1,12 @@
 package org.example.simplefastpost.cli.folderService;
 
 import org.example.simplefastpost.cli.folderRepo.CLIFolderRepository;
+import org.example.simplefastpost.model.Command;
+import org.example.simplefastpost.model.Folder;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CLIFolderService {
 
@@ -52,4 +58,19 @@ public class CLIFolderService {
             System.err.println("Failed to delete folder: " + e.getMessage());
         }
     }
+
+    public List<Folder> getAllFolders() throws SQLException {
+        return cliFolderRepository.getAllFolders();
+    }
+    public List<Command> getCommandsInFolder(String folderName) {
+        List<Command> commands = new ArrayList<>();
+        try {
+            return cliFolderRepository.getCommandsInFolder(folderName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
 }

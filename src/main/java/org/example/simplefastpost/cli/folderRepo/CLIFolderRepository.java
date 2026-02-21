@@ -1,6 +1,11 @@
 package org.example.simplefastpost.cli.folderRepo;
 
+import org.example.simplefastpost.model.Command;
+import org.example.simplefastpost.model.Folder;
+
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CLIFolderRepository {
 
@@ -38,6 +43,27 @@ public class CLIFolderRepository {
                 );
             }
         }
+    }
+
+    public List<Folder> getAllFolders() throws SQLException {
+        String sql = "SELECT id, project_name FROM folder";
+
+        List<Folder> folders = new ArrayList<>();
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Folder folder = new Folder();
+                folder.setId(rs.getLong("id"));
+                folder.setProjectName(rs.getString("project_name"));
+
+                folders.add(folder);
+            }
+        }
+
+        return folders;
     }
 
     /* READ ONE */
@@ -97,5 +123,36 @@ public class CLIFolderRepository {
                 System.out.println("Folder deleted: " + id);
             }
         }
+    }
+
+    public List<Command> getCommandsInFolder(String folderName) throws SQLException {
+        List<Command> commands = new ArrayList<>();
+
+        String sql = """
+        SELECT c.id, c.name, c.command, c.body, c.folder_id
+        FROM command c
+        JOIN folder f ON c.folder_id = f.id
+        WHERE f.project_name = ?
+        ORDER BY c.name
+    """;
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, folderName);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Command cmd = new Command(
+                            rs.getString("name"),
+                            rs.getString("command"),
+                            rs.getString("body")
+                    );
+                    commands.add(cmd);
+                }
+            }
+        }
+
+        return commands;
     }
 }

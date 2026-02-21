@@ -5,6 +5,8 @@ import org.example.simplefastpost.cli.commandRepo.CLICommandRepository;
 import org.example.simplefastpost.cli.commandService.CLICommandService;
 import org.example.simplefastpost.cli.folderRepo.CLIFolderRepository;
 import org.example.simplefastpost.cli.folderService.CLIFolderService;
+import org.example.simplefastpost.model.Command;
+import org.example.simplefastpost.model.Folder;
 import org.example.simplefastpost.service.FolderService;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +14,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -36,7 +39,7 @@ public class CLIExecutor {
         this.cliFolderService = new CLIFolderService(cliFolderRepository);
     }
 
-    public void execute(String[] rawArgs) {
+    public void execute(String[] rawArgs) throws SQLException {
         if (rawArgs.length == 0) {
             System.out.println("Usage: <command> [options]");
             return;
@@ -118,6 +121,10 @@ public class CLIExecutor {
                     if (folderName != null) {
                         System.out.println("Listing commands in folder: " + folderName);
                         // TODO: Lookup command in folder
+                        List<Command> commands = cliFolderRepository.getCommandsInFolder(folderName);
+                        for (Command cmd : commands) {
+                            System.out.println(cmd.getName() + " " + cmd.getCommand() + " " + cmd.getBody());
+                        }
                     } else {
                         System.out.println("Listing all folders and parentless commands...");
                         // TODO: look up all folders and commands in root
@@ -131,14 +138,57 @@ public class CLIExecutor {
                         System.err.println("Error: run requires -scmd <commandName>");
                         return;
                     }
-                    if (folderName != null) {
-                        System.out.println("Running command '" + commandName + "' from folder '" + folderName + "'");
-                        // TODO: lookup command in DB using folderName + commandName
 
+                    Command cmd = null;
+
+                    if (folderName != null) {
+                        List<Command> commands = cliFolderRepository.getCommandsInFolder(folderName);
+                        for (Command c : commands) {
+                            if (cmd.getCommand().contains("run -scmd")) {
+                                System.err.println("Refusing to run recursive command.");
+                                return;
+                            }
+                            if (c.getName().equalsIgnoreCase(commandName)) {
+                                cmd = c;
+                                break;
+                            }
+                        }
                     } else {
-                        System.out.println("Running command '" + commandName + "'");
-                        // TODO: lookup command in DB using commandName
+                        // TODO: lookup command by name only
+                        if (commandName == null || commandName.isBlank()) {
+                            System.err.println("Error: run requires -scmd <commandName>");
+                            return;
+                        }
+
+                        List<Command> rootCommands = cliCommandRepository.getRootCommands();
+                        for (Command c :  rootCommands) {
+                            if (c.getName().equalsIgnoreCase(commandName)) {
+                                cmd = c;
+                                break;
+                            }
+                        }
+
+                        List<Folder> folders = cliFolderRepository.getAllFolders();
+                        for (Folder f : folders) {
+                            for(Command c : f.getCommands()) {
+                                if (c.getName().equalsIgnoreCase(commandName)) {
+                                    cmd = c;
+                                    break;
+                                }
+                            }
+                        }
                     }
+
+                    if (cmd == null) {
+                        System.err.println("Command not found: " + commandName);
+                        return;
+                    }
+
+                    System.out.println("Re-running saved command:");
+                    System.out.println("> " + cmd.getCommand());
+
+                    String[] savedArgs = tokenize(cmd.getCommand());
+                    execute(savedArgs);
                     return;
 
                 case "mkdir":
@@ -148,6 +198,8 @@ public class CLIExecutor {
                     }
                     System.out.println("Creating folder: " + folderName);
                     // TODO: create folder in DB
+                    cliFolderService.createFolder(folderName);
+                    System.out.println("Folder created: " + folderName);
                     return;
 
                 default:
@@ -186,7 +238,15 @@ public class CLIExecutor {
             }
 
             // TODO: save command info (method, url, body, folderName) into DB
-
+            String command = "-m " + method + " -u " + url;
+            Long folderId = null;
+            List<Folder> folders = cliFolderService.getAllFolders();
+            for (Folder f : folders) {
+                if (f.getProjectName().equalsIgnoreCase(commandName)) {
+                    folderId = f.getId();
+                }
+            }
+            cliCommandService.createCommand(commandName, command, body, folderId);
 
             System.out.println("Running saved command '" + commandName + "'...");
             try {
@@ -227,6 +287,8 @@ public class CLIExecutor {
             e.printStackTrace();
         }
     }
-
+    private String[] tokenize(String command) {
+        return command.trim().split("\\s+");
+    }
 
 }

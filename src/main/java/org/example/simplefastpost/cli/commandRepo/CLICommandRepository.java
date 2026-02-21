@@ -1,6 +1,10 @@
 package org.example.simplefastpost.cli.commandRepo;
 
+import org.example.simplefastpost.model.Command;
+
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CLICommandRepository {
 
@@ -186,5 +190,33 @@ public class CLICommandRepository {
                 }
             }
         }
+    }
+
+    public List<Command> getRootCommands() throws SQLException {
+        String sql = """
+        SELECT id, name, command, body
+        FROM command
+        WHERE folder_id IS NULL
+        ORDER BY name
+    """;
+
+        List<Command> commands = new ArrayList<>();
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Command cmd = new Command();
+                cmd.setId(rs.getLong("id"));
+                cmd.setName(rs.getString("name"));
+                cmd.setCommand(rs.getString("command"));
+                cmd.setBody(rs.getString("body"));
+
+                commands.add(cmd);
+            }
+        }
+
+        return commands;
     }
 }
