@@ -1,5 +1,7 @@
 package org.example.simplefastpost.cli.RequestController;
 
+import org.example.simplefastpost.model.Command;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -35,5 +37,8 @@ public class RequestController {
         System.out.println("\nRESPONSE:");
         System.out.println("Status: " + response.statusCode());
         System.out.println(response.body());
+    }
+    public void sendSavedRequest(Command command) {
+
     }
 }

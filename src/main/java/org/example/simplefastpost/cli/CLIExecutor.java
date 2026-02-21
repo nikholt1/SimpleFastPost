@@ -7,13 +7,6 @@ import org.example.simplefastpost.cli.folderRepo.CLIFolderRepository;
 import org.example.simplefastpost.cli.folderService.CLIFolderService;
 import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
-import org.example.simplefastpost.service.FolderService;
-import org.springframework.stereotype.Component;
-
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
@@ -29,7 +22,7 @@ public class CLIExecutor {
     private final CLIFolderRepository cliFolderRepository;
     private final CLICommandService cliCommandService;
     private final CLIFolderService cliFolderService;
-
+    private boolean replayMode = false;
     private final RequestController requestController = new RequestController();
 
     public CLIExecutor(String DB_URL) {
@@ -41,10 +34,12 @@ public class CLIExecutor {
     }
 
     public void execute(String[] rawArgs) throws Exception {
-        execute(rawArgs, 0);
+        execute(rawArgs, 0, false);
     }
 
-    private void execute(String[] rawArgs, int depth) throws Exception {
+    private void execute(String[] rawArgs, int depth, boolean replayMode) throws Exception {
+        this.replayMode = replayMode;
+
         if (depth > MAX_RECURSION_DEPTH) {
             System.err.println("Max command recursion depth reached.");
             return;
@@ -141,7 +136,7 @@ public class CLIExecutor {
                     System.out.println("Re-running:");
                     System.out.println("> " + cmd.getCommand());
 
-                    execute(tokenize(cmd.getCommand()), depth + 1);
+                    execute(tokenize(cmd.getCommand()), depth + 1, true);
                     return;
             }
         }
@@ -154,7 +149,7 @@ public class CLIExecutor {
             }
 
             if (List.of("POST", "PUT", "PATCH", "DELETE").contains(method)) {
-                body = readJsonBody(commandName);
+                body = readJsonBody(commandName, replayMode);
             }
 
             Long folderId = null;
@@ -188,9 +183,25 @@ public class CLIExecutor {
         }
 
         if (List.of("POST", "PUT", "PATCH", "DELETE").contains(method)) {
-            body = readJsonBody(null);
+            body = readJsonBody(null, replayMode);
         }
-
+        if (replayMode) {
+            List<Folder> folders =  cliFolderRepository.getAllFolders();
+            List<Command>  commands = cliCommandRepository.getRootCommands();
+            for (Folder f : folders) {
+                List<Command> cmds = cliFolderRepository.getCommandsInFolder(f.getProjectName());
+                for (Command c : cmds) {
+                    if (c.getName().equalsIgnoreCase(commandName)) {
+                        body = c.getBody();
+                    }
+                }
+            }
+            for (Command c : commands) {
+                if (c.getName().equalsIgnoreCase(commandName)) {
+                    body = c.getBody();
+                }
+            }
+        }
         requestController.sendRequest(method, url, body);
     }
 
@@ -212,7 +223,10 @@ public class CLIExecutor {
         return command.trim().split("\\s+");
     }
 
-    private String readJsonBody(String name) {
+    private String readJsonBody(String name, boolean replayMode) {
+        if (replayMode) {
+            return name;
+        }
         System.out.println("Enter JSON" + (name != null ? " for " + name : "") + " (-s to end):");
         Scanner sc = new Scanner(System.in);
         StringBuilder sb = new StringBuilder();
@@ -226,16 +240,16 @@ public class CLIExecutor {
 
     private void printHelp() {
         System.out.println("""
-        Commands:
-          ls [-f folder]
-          mkdir -f folder
-          run -scmd name [-f folder]
-
-        HTTP:
-          -m METHOD
-          -u URL
-          -sv save
-          -cmd name
-        """);
+                Commands:
+                  ls [-f folder]
+                  mkdir -f folder
+                  run -scmd name [-f folder]
+                
+                HTTP:
+                  -m METHOD
+                  -u URL
+                  -sv save
+                  -cmd name
+                """);
     }
 }
