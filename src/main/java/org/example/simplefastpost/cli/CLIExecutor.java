@@ -60,12 +60,15 @@ public class CLIExecutor {
 
         boolean saveMode = false;
         boolean helpMode = false;
-
+        boolean updateMode = false;
         String commandName = null;
         String folderName = null;
         String method = "GET";
         String url = "";
         String body = null;
+        String updateTarget = null; // "command" or "folder"
+        String updateField = null;  // name, body, etc.
+        String updateValue = null;
 
         for (; i < rawArgs.length; i++) {
             String arg = rawArgs[i];
@@ -138,6 +141,86 @@ public class CLIExecutor {
 
                     execute(tokenize(cmd.getCommand()), depth + 1, true);
                     return;
+
+                case "update":
+                    if (rawArgs.length < 3) {
+                        System.err.println("Usage: update <command|folder> <name> [options]");
+                        return;
+                    }
+
+                    updateTarget = rawArgs[1].toLowerCase();
+                    String targetName = rawArgs[2];
+
+                    Long id = null;
+                    Long folderId = null;
+
+                    // Parse flags
+                    for (int j = 3; j < rawArgs.length; j++) {
+                        if (rawArgs[j].equalsIgnoreCase("--set") && j + 1 < rawArgs.length) {
+                            String first = rawArgs[++j];
+
+                            int sep = first.indexOf(':');
+                            if (sep == -1) {
+                                System.err.println("Invalid --set format. Use field:value");
+                                return;
+                            }
+
+                            updateField = first.substring(0, sep);
+                            StringBuilder valueBuilder = new StringBuilder(first.substring(sep + 1));
+
+                            // collect remaining args as part of the value
+                            while (j + 1 < rawArgs.length && !rawArgs[j + 1].startsWith("--")) {
+                                valueBuilder.append(" ").append(rawArgs[++j]);
+                            }
+
+                            updateValue = valueBuilder.toString().trim();
+                        }
+                        if (rawArgs[j].equalsIgnoreCase("--name") && j + 1 < rawArgs.length) {
+                            updateField = "name";
+                            updateValue = rawArgs[++j];
+                        }
+                    }
+
+                    switch (updateTarget) {
+
+                        case "folder" -> {
+                            Folder folder = null;
+                            List<Folder> folders = cliFolderService.getAllFolders();
+                            for (Folder f : folders) {
+                                if (f.getProjectName().equalsIgnoreCase(targetName)) {
+                                    folder = f;
+                                }
+                            }
+                            if (folder == null) {
+                                System.err.println("Folder not found: " + targetName);
+                                return;
+                            }
+                            id = folder.getId();
+                        }
+
+                        case "command" -> {
+//                            Command cmdS = resolveCommand(targetName, null);
+
+                            Command command = cliCommandService.getCommandByName(targetName);
+                            if (command == null) {
+                                System.err.println("Command not found: " + targetName);
+                                return;
+                            }
+                            id = command.getId();
+                            folderId = command.getFolderId();
+                        }
+
+                        default -> {
+                            System.err.println("Unknown update target: " + updateTarget);
+                            return;
+                        }
+                    }
+
+                    handleUpdate(id, folderId, updateTarget, updateField, updateValue);
+                    return;
+
+                case "purge":
+
             }
         }
 
@@ -244,12 +327,66 @@ public class CLIExecutor {
                   ls [-f folder]
                   mkdir -f folder
                   run -scmd name [-f folder]
-                
+                  update <command/folder> <commandName/folderName> --set name=<new name>/body
+                        (case folder update use --name for setting a new name)
                 HTTP:
                   -m METHOD
                   -u URL
                   -sv save
                   -cmd name
                 """);
+    }
+
+    private void handleUpdate(
+            Long id,
+            Long folderId,
+            String target,
+            String field,
+            String value
+    ) throws Exception {
+
+        switch (target) {
+
+            case "command" -> {
+                Command existing = cliCommandService.getCommandByName(target);
+                if (existing == null) {
+                    System.err.println("Command not found");
+                    return;
+                }
+
+                String name = existing.getName();
+                String commandStr = existing.getCommand();
+                String body = existing.getBody();
+                Long newFolderId = existing.getFolderId();
+
+                switch (field) {
+                    case "name" -> name = value;
+                    case "body" -> body = readJsonBody(existing.getName(), false);
+                    case "command" -> commandStr = value;
+                    default -> {
+                        System.err.println("Unknown command field: " + field);
+                        return;
+                    }
+                }
+
+                cliCommandService.updateCommand(
+                        id,
+                        name,
+                        commandStr,
+                        body,
+                        newFolderId
+                );
+            }
+
+            case "folder" -> {
+                if (!"name".equals(field)) {
+                    System.err.println("Folder can only update name");
+                    return;
+                }
+                cliFolderService.updateFolder(id, value);
+            }
+
+            default -> System.err.println("Unknown update target: " + target);
+        }
     }
 }

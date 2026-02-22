@@ -35,7 +35,7 @@ public class CLICommandService {
         }
     }
 
-    public void getCommandByName(String name) {
+    public void searchCommandByName(String name) {
         try {
             cliCommandRepository.searchCommandsByName(name);
         } catch (Exception e) {
@@ -56,6 +56,10 @@ public class CLICommandService {
         } catch (Exception e) {
             System.err.println("Failed to update command: " + e.getMessage());
         }
+    }
+
+    public Command getCommandByName(String commandName) throws SQLException{
+        return cliCommandRepository.getCommandByName(commandName);
     }
 
     public void deleteCommand(long id) {

@@ -16,15 +16,25 @@ public class Command {
     @Column(length = 2000)
     private String body;
 
+    private Long folderId;
+
     @ManyToOne
     @JoinColumn(name = "folder_id", nullable = true)
     private Folder folder;
-    public Command() {}
 
+    public Command() {}
     public Command(String name, String command, String body) {
         this.name = name;
         this.command = command;
         this.body = body;
+    }
+
+    public Long getFolderId() {
+        return folderId;
+    }
+
+    public void setFolderId(Long folderId) {
+        this.folderId = folderId;
     }
 
     public Folder getFolder() {

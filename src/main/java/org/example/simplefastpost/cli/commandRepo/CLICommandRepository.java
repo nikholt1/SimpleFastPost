@@ -149,6 +149,61 @@ public class CLICommandRepository {
             }
         }
     }
+    public Command getCommandByName(String commandName) throws SQLException {
+
+        String sql = """
+        SELECT 
+            c.id,
+            c.name,
+            c.command,
+            c.body,
+            c.folder_id,
+            f.project_name AS folder_name
+        FROM command c
+        LEFT JOIN folder f ON c.folder_id = f.id
+        WHERE c.name LIKE ?
+        ORDER BY c.name
+    """;
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, "%" + commandName + "%");
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                Command command = null;
+                boolean multiple = false;
+
+                while (rs.next()) {
+                    if (command == null) {
+                        command = new Command();
+                        command.setId(rs.getLong("id"));
+                        command.setName(rs.getString("name"));
+                        command.setCommand(rs.getString("command"));
+                        command.setBody(rs.getString("body"));
+                        command.setFolderId(rs.getLong("folder_id"));
+                    } else {
+                        multiple = true;
+                    }
+                }
+
+                if (command == null) {
+                    return null;
+                }
+
+                if (multiple) {
+                    System.out.println(
+                            "Warning: multiple commands matched '" + commandName +
+                                    "', using first result: " + command.getName()
+                    );
+                }
+
+                return command;
+            }
+        }
+    }
+
     public void searchCommandsByName(String searchTerm) throws SQLException {
 
         String sql = """
