@@ -274,4 +274,16 @@ public class CLICommandRepository {
 
         return commands;
     }
+
+    public void deleteAllCommands() throws SQLException {
+
+        String sql = "DELETE FROM command";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            int deleted = stmt.executeUpdate();
+            System.out.println("Deleted commands: " + deleted);
+        }
+    }
 }

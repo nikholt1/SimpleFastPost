@@ -73,4 +73,8 @@ public class CLICommandService {
     public List<Command> getRootCommands() throws SQLException {
         return cliCommandRepository.getRootCommands();
     }
+
+    public void deleteAllCommands() throws SQLException {
+        cliCommandRepository.deleteAllCommands();
+    }
 }

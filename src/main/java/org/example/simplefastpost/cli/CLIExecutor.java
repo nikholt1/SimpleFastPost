@@ -224,6 +224,7 @@ public class CLIExecutor {
 
                 case "purge":
                     cliFolderService.deleteAllFolders();
+                    cliCommandService.deleteAllCommands();
                     return;
 
 
@@ -329,17 +330,61 @@ public class CLIExecutor {
 
     private void printHelp() {
         System.out.println("""
-                Commands:
-                  ls [-f folder]
-                  mkdir -f folder
-                  run -scmd name [-f folder]
-                  update <command/folder> <commandName/folderName> --set name=<new name>/body
-                        (case folder update use --name for setting a new name)
-                HTTP:
-                  -m METHOD
-                  -u URL
-                  -sv save
-                  -cmd name
+USAGE:
+  <command> [options]
+
+START SFP BROWSER
+--api                                   start api
+
+-d                                      detached mode
+
+COMMANDS:
+  ls                                    List all folders and root commands
+
+  ls -f <folder>                        List commands inside a folder
+
+  mkdir -f <folder>                     Create a new folder
+
+  run -scmd <command> [-f <folder>]     Execute a saved command
+                                        Prevents recursive execution
+
+  update command <commandName> --set <field>:<value>
+            Update a saved command
+
+      Fields:
+        name        Rename the command
+        body        Edit JSON body interactively
+        command     Replace the raw command string
+
+      Examples:
+        update command getUsers --set name:newGetUsers
+        update command getUsers --set body
+        update command getUsers --set command:-m POST -u https://api.com
+
+  update folder <folderName> --name <newName>   
+                            Rename a folder
+
+  purge                     Delete ALL folders and ALL commands (DANGEROUS)
+
+HTTP REQUESTS:
+  -m <METHOD>               HTTP method (GET, POST, PUT, PATCH, DELETE)
+
+  -u <URL>                  Target URL (required for direct requests)
+
+  -sv                       Save the request as a reusable command
+
+  -cmd <name>               Name of the command when saving
+
+  -f <folder>               Folder to save the command in (optional)
+
+EXAMPLES:
+  -m GET -u https://example.com
+
+  -m POST -u https://api.com/users -cmd createUser -sv
+
+  run -scmd createUser
+
+  update command createUser --set command:-m POST -u https://api.com/users
                 """);
     }
 
