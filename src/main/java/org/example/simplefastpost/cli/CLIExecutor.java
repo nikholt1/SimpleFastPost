@@ -86,6 +86,9 @@ public class CLIExecutor {
                 commandName = rawArgs[++i];
             } else if (arg.equalsIgnoreCase("--help")) {
                 helpMode = true;
+            } else if (arg.equalsIgnoreCase("--version")) {
+                System.out.println("sfp version: 0.0.1 beta");
+                return;
             }
         }
 
