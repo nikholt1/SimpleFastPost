@@ -214,12 +214,18 @@ public class CLIExecutor {
                             System.err.println("Unknown update target: " + updateTarget);
                             return;
                         }
+
+
                     }
 
                     handleUpdate(id, folderId, updateTarget, updateField, updateValue);
                     return;
 
+
                 case "purge":
+                    cliFolderService.deleteAllFolders();
+                    return;
+
 
             }
         }

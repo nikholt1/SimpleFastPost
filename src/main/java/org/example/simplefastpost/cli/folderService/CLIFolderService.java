@@ -72,5 +72,9 @@ public class CLIFolderService {
         return null;
     }
 
+    public void deleteAllFolders() throws SQLException {
+        cliFolderRepository.deleteAllFolders();
+    }
+
 
 }
