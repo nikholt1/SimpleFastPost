@@ -55,15 +55,18 @@ public class CLICommandRepository {
 
     public void listCommands() throws SQLException {
         String sql = """
-            SELECT id, name, command, body, folder_id
-            FROM command
-        """;
+        SELECT id, name, command, body, folder_id
+        FROM command
+    """;
+        boolean found = false;
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
+                found = true;
+
                 String name = rs.getString("name");
                 String command = rs.getString("command");
                 String body = rs.getString("body");
@@ -72,14 +75,18 @@ public class CLICommandRepository {
                 System.out.printf("Name: %s | Command: %s | Folder: %s%n", name, command, folderId);
 
                 if (body != null && !body.isBlank()) {
-                    String[] lines = body.split("\\R"); // splits on any newline (\r, \n, \r\n)
+                    String[] lines = body.split("\\R");
                     for (String line : lines) {
-                        System.out.println("---> " + line); // indented for readability
+                        System.out.println("---> " + line);
                     }
                 } else {
                     System.out.println();
                 }
             }
+        }
+
+        if (!found) {
+            System.out.println("No commands found.");
         }
     }
 

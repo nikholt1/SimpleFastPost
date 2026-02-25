@@ -104,6 +104,9 @@ public class CLIExecutor {
                     if (folderName != null) {
                         List<Command> cmds =
                                 cliFolderRepository.getCommandsInFolder(folderName);
+                        if (cmds.isEmpty()) {
+                            System.out.println("No folders or commands found in DB");
+                        }
                         cmds.forEach(c ->
                                 System.out.println(c.getName() + " -> " + c.getCommand()));
                     } else {

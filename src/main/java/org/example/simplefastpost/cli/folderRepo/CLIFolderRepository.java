@@ -30,18 +30,24 @@ public class CLIFolderRepository {
     /* READ ALL */
     public void listFolders() throws SQLException {
         String sql = "SELECT id, project_name FROM folder";
+        boolean found = false;
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
+                found = true;
                 System.out.printf(
                         "ID: %d | Name: %s%n",
                         rs.getLong("id"),
                         rs.getString("project_name")
                 );
             }
+        }
+
+        if (!found) {
+            System.out.println("No folders found.");
         }
     }
 
