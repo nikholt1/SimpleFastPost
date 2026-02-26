@@ -5,22 +5,25 @@ import jakarta.persistence.*;
 
 @Entity
 public class Command {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
-
     private String command;
 
     @Column(length = 2000)
     private String body;
 
+    // <-- read-only mirror of folder_id
+    @Column(name = "folder_id", insertable = false, updatable = false)
     private Long folderId;
 
     @ManyToOne
-    @JoinColumn(name = "folder_id", nullable = true)
+    @JoinColumn(name = "folder_id")
     private Folder folder;
+
 
     public Command() {}
     public Command(String name, String command, String body) {
