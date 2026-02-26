@@ -11,8 +11,8 @@ public class CommandMapper {
     public static CommandDTO toDto(Command command) {
         return new CommandDTO(
                 command.getId(),
-                command.getCommand(),
                 command.getName(),
+                command.getCommand(),
                 command.getBody(),
                 command.getFolder() != null ? command.getFolder().getId() : null
         );
