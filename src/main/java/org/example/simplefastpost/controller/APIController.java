@@ -91,8 +91,8 @@ public class APIController {
             @RequestBody CreateCommandRequest request
     ) {
         CommandDTO saved = commandService.createCommand(
-                request.command(),
                 request.name(),
+                request.command(),
                 request.body(),
                 request.folderId()
         );
