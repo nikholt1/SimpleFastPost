@@ -29,6 +29,7 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
+        <button id="addFolder">+ fld</button><button id="addCommand">+ cmd</button>
     </div>
 
 
@@ -37,23 +38,25 @@
 
     <div id="main">
 
-
-        <form class="hidden" id="commandForm">
-            <h5>Add Command</h5>
-            <input type="text" placeholder="Command Name" required>
-            <input type="text" placeholder="Command" required>
-            <input type="text" placeholder="Command Body" required>
-            <button class="btn btn-primary">Add Command</button>
-        </form>
-
-
-        <form class="hidden" id="folderForm">
-            <h5>Add Folder</h5>
-            <input type="text" placeholder="Folder Name" required>
-            <button class="btn btn-primary">Add Folder</button>
-        </form>
-
+        <div id="startPage">
+            <h1>Hello!</h1>
+        </div>
     </div>
+    <form class="hidden" id="commandForm">
+        <h5>Add Command</h5>
+        <input type="text" placeholder="Command Name" required>
+        <input type="text" placeholder="Command" required>
+        <input type="text" placeholder="Command Body" required>
+        <button class="btn btn-primary">Add Command</button>
+    </form>
+
+
+    <form class="hidden" id="folderForm">
+        <h5>Add Folder</h5>
+        <input type="text" placeholder="Folder Name" required>
+        <button class="btn btn-primary">Add Folder</button>
+    </form>
+
 </div>
 
 <script src="app.js"></script>

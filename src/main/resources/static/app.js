@@ -17,6 +17,11 @@ async function initApp() {
 
     sidebarTree = buildSidebarTree(listOfFolders, listOfCommands);
     renderSidebar(sidebarTree);
+
+    let addFolder = document.getElementById("addFolder");
+    let addCommand = document.getElementById("addCommand");
+
+    addCommand.addEventListener("click", () => renderNewCommand());
 }
 
 
@@ -103,11 +108,23 @@ function renderItem(item, tbody, level) {
     }
 }
 
+function renderNewCommand() {
+    const main = document.getElementById("main");
+    if (!main) return;
+
+    main.innerHTML = `
+        <form class="hidden" id="folderForm">
+            <h5>Add Folder</h5>
+            <input type="text" placeholder="Folder Name" required>
+            <button class="btn btn-primary">Add Folder</button>
+        </form>
+    `;
+}
+
 function renderCommand(command) {
     const main = document.getElementById("main");
     if (!main) return;
 
-    // Apply dark theme classes to main content
     main.innerHTML = `
         <div class="dark-main-content">
             <h3 class="dark-text">${command.name}</h3>
