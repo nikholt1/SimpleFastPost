@@ -1,6 +1,7 @@
 package org.example.simplefastpost.model;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -16,12 +17,12 @@ public class Command {
     @Column(length = 2000)
     private String body;
 
-    // <-- read-only mirror of folder_id
     @Column(name = "folder_id", insertable = false, updatable = false)
     private Long folderId;
 
     @ManyToOne
     @JoinColumn(name = "folder_id")
+    @JsonBackReference
     private Folder folder;
 
 

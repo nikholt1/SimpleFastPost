@@ -2,12 +2,11 @@ const BASE_URL = "http://localhost:8080/api";
 
 let listOfFolders = [];
 let listOfCommands = [];
+let sidebarTree = [];
 
 document.addEventListener("DOMContentLoaded", initApp);
 
-/* =========================
-   APP ENTRY
-========================= */
+
 async function initApp() {
     initSidebarResize();
 
@@ -16,13 +15,11 @@ async function initApp() {
         getCommands()
     ]);
 
-    const tree = buildSidebarTree(listOfFolders, listOfCommands);
-    renderSidebar(tree);
+    sidebarTree = buildSidebarTree(listOfFolders, listOfCommands);
+    renderSidebar(sidebarTree);
 }
 
-/* =========================
-   API
-========================= */
+
 async function getFolders() {
     const res = await fetch(`${BASE_URL}/folders`);
     listOfFolders = await res.json();
@@ -33,27 +30,23 @@ async function getCommands() {
     listOfCommands = await res.json();
 }
 
-/* =========================
-   TREE NORMALIZATION
-========================= */
+
 function buildSidebarTree(folders, commands) {
     const roots = [];
 
-    // folders already contain their commands
     folders.forEach(folder => {
         roots.push({
             type: "folder",
             id: folder.id,
-            name: folder.name,
+            name: folder.projectName,
             expanded: false,
-            children: (folder.listOfCommands || []).map(cmd => ({
+            children: (folder.cmds || []).map(cmd => ({
                 ...cmd,
                 type: "command"
             }))
         });
     });
 
-    // root commands (no folderId)
     commands
         .filter(cmd => cmd.folderId == null)
         .forEach(cmd => {
@@ -66,35 +59,16 @@ function buildSidebarTree(folders, commands) {
     return roots;
 }
 
-/* =========================
-   SIDEBAR RENDER
-========================= */
+
 function renderSidebar(items) {
     const tbody = document.getElementById("tableBody");
     if (!tbody) return;
 
     tbody.innerHTML = "";
-
-    items.forEach(item => {
-        renderItem(item, tbody, 0);
-    });
+    items.forEach(item => renderItem(item, tbody, 0));
 }
 
 function renderItem(item, tbody, level) {
-    const row = createRow(item, level);
-    tbody.appendChild(row);
-
-    if (item.type === "folder" && item.expanded) {
-        item.children.forEach(child => {
-            renderItem(child, tbody, level + 1);
-        });
-    }
-}
-
-/* =========================
-   ROW FACTORY
-========================= */
-function createRow(item, level) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
 
@@ -107,7 +81,7 @@ function createRow(item, level) {
 
         tr.addEventListener("click", () => {
             item.expanded = !item.expanded;
-            renderSidebar(buildSidebarTree(listOfFolders, listOfCommands));
+            renderSidebar(sidebarTree);
         });
     } else {
         td.textContent = `⚡ ${item.name}`;
@@ -115,12 +89,16 @@ function createRow(item, level) {
     }
 
     tr.appendChild(td);
-    return tr;
+    tbody.appendChild(tr);
+
+    if (item.type === "folder" && item.expanded) {
+        item.children.forEach(child =>
+            renderItem(child, tbody, level + 1)
+        );
+    }
 }
 
-/* =========================
-   MAIN VIEW
-========================= */
+
 function renderCommand(command) {
     const main = document.getElementById("main");
     if (!main) return;
@@ -138,9 +116,7 @@ function renderCommand(command) {
     `;
 }
 
-/* =========================
-   SIDEBAR RESIZE
-========================= */
+
 function initSidebarResize() {
     const sidebar = document.getElementById("sidebar");
     const resizer = document.getElementById("resizer");
