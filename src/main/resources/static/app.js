@@ -72,7 +72,12 @@ function renderItem(item, tbody, level) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
 
+    // Add padding for hierarchy
     td.style.paddingLeft = `${level * 16}px`;
+
+    // Apply dark theme class
+    tr.classList.add("dark-row");
+    td.classList.add("dark-cell");
 
     if (item.type === "folder") {
         const hasChildren = item.children.length > 0;
@@ -84,7 +89,7 @@ function renderItem(item, tbody, level) {
             renderSidebar(sidebarTree);
         });
     } else {
-        td.textContent = `⚡ ${item.name}`;
+        td.textContent = `-> ${item.name}`;
         tr.addEventListener("click", () => renderCommand(item));
     }
 
@@ -98,24 +103,25 @@ function renderItem(item, tbody, level) {
     }
 }
 
-
 function renderCommand(command) {
     const main = document.getElementById("main");
     if (!main) return;
 
+    // Apply dark theme classes to main content
     main.innerHTML = `
-        <h3>${command.name}</h3>
-        <hr />
-        <p><strong>Command</strong></p>
-        <pre>${command.command}</pre>
-        ${
+        <div class="dark-main-content">
+            <h3 class="dark-text">${command.name}</h3>
+            <hr style="border-color: #3a3a3a;">
+            <p class="dark-text"><strong>Command</strong></p>
+            <pre class="dark-pre">${command.command}</pre>
+            ${
         command.body
-            ? `<p><strong>Body</strong></p><pre>${command.body}</pre>`
+            ? `<p class="dark-text"><strong>Body</strong></p><pre class="dark-pre">${command.body}</pre>`
             : ""
     }
+        </div>
     `;
 }
-
 
 function initSidebarResize() {
     const sidebar = document.getElementById("sidebar");

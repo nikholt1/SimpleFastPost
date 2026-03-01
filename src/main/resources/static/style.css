@@ -1,0 +1,171 @@
+
+html, body {
+    height: 100%;
+    margin: 0;
+    background: #2b2d30;
+    color: lightgrey;
+    font-family: sans-serif;
+}
+
+
+#layout {
+    display: flex;
+    height: 100vh;
+}
+
+#resizer {
+    width: 2px;
+    cursor: col-resize;
+    background: #2b2d30;
+}
+
+
+#sidebar {
+    width: 260px;
+    min-width: 180px;
+    max-width: 500px;
+    height: 100vh;
+    background: #2b2d30;
+    border-right: 1px solid #1e1f22;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#sidebar.hidden {
+    width: 0;
+    min-width: 0;
+}
+
+.sidebar-header {
+    padding: 8px;
+    border-bottom: 1px solid #2b2d30;
+    background: #2b2d30;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: lightgrey;
+}
+
+.sidebar-content {
+    overflow-y: auto;
+    flex: 1;
+}
+
+
+table {
+    background: #2b2d30;
+    color: lightgrey;
+}
+
+thead th {
+    background: #2b2d30 !important;
+    color: lightgrey !important;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+tbody tr {
+    cursor: pointer;
+    background: #2b2d30;
+    color: lightgrey;
+}
+
+tbody tr:hover {
+    background: #3a3a3a;
+}
+
+.folder {
+    font-weight: bold;
+}
+
+#main {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #2b2d30;
+    color: lightgrey;
+}
+
+
+form {
+    padding: 20px;
+    border: 1px solid #3a3a3a;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    margin-bottom: 2rem;
+    background: #2b2d30;
+    color: lightgrey;
+}
+
+form input, form button {
+    background: #2b2d30;
+    color: lightgrey;
+    border: 1px solid #3a3a3a;
+}
+
+form button.btn-primary {
+    background-color: #3a3a3a;
+    border-color: #3a3a3a;
+}
+
+
+button, .btn {
+    background-color: #3a3a3a;
+    color: lightgrey;
+    border: 1px solid #3a3a3a;
+}
+
+button:hover, .btn:hover {
+    background-color: #505050;
+    border-color: #505050;
+}
+
+
+table.table,
+table.table tbody,
+table.table tr,
+table.table td,
+table.table th {
+    background-color: #2b2d30 !important;
+    color: lightgrey !important;
+    border-color: #3a3a3a !important;
+}
+
+table.table tbody tr:hover {
+    background-color: #3a3a3a !important;
+}
+
+.dark-row {
+    background-color: #2b2d30 !important;
+    color: lightgrey !important;
+}
+
+.dark-cell {
+    background-color: #2b2d30 !important;
+    color: lightgrey !important;
+}
+
+.dark-main-content {
+    background-color: #2b2d30;
+    color: lightgrey;
+    padding: 10px;
+}
+
+.dark-text {
+    color: lightgrey;
+}
+
+.dark-pre {
+    background-color: #1e1f22;
+    color: lightgrey;
+    border: 1px solid #3a3a3a;
+    padding: 8px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.hidden {
+    display: none;
+}
