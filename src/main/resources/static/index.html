@@ -1,18 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
+    <title>SFP</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
     <style>
-        body {
-            padding: 20px;
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        /* Layout */
+        #layout {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            width: 260px;
+            min-width: 180px;
+            max-width: 500px;
+            height: 100vh;
+            background: #f8f9fa;
+            border-right: 1px solid #ccc;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+        }
+
+        #sidebar.hidden {
+            width: 0;
+            min-width: 0;
+        }
+
+        .sidebar-header {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            background: #e9ecef;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
         }
 
+        .sidebar-content {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+
+        #resizer {
+            width: 2px;
+            cursor: col-resize;
+            background: #ddd;
+        }
+
+
+        #main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Table styles */
+        tbody tr {
+            cursor: pointer;
+        }
+
+        .folder {
+            font-weight: bold;
+        }
+
+        /* Forms */
         form {
             padding: 20px;
             border: 1px solid #ccc;
@@ -26,48 +89,58 @@
         .hidden {
             display: none;
         }
-
-        tbody tr {
-            cursor: pointer;
-        }
-
-        tbody tr td button {
-            pointer-events: all;
-        }
     </style>
-    <title>SFP</title>
 </head>
 
 <body>
-<h1 class="text-center">Todo CRUD</h1>
 
-<form id="todoForm">
-    <input type="hidden" id="folderId" name="id">
-    <input type="text" id="todoTitle" name="title" placeholder="Enter todo title" required>
-    <input type="number" id="userId" name="userId" placeholder="Enter user ID" required>
-    <div class="form-check">
-        <input type="checkbox" id="todoCompleted" name="completed" class="form-check-input">
-        <label class="form-check-label" for="todoCompleted">Completed</label>
+<div id="layout">
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <strong>Commands</strong>
+            <button id="toggleSidebar" class="btn btn-sm btn-secondary">☰</button>
+        </div>
+
+        <div class="sidebar-content">
+            <table class="table table-sm mb-0">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
     </div>
-    <button type="button" id="cancelEditBtn" class="btn btn-secondary hidden">Cancel Edit</button>
-    <button type="submit" class="btn btn-primary">Add Todo</button>
-</form>
 
-<table class="table">
-    <thead>
-    <tr>
-        <th scope="col">ID</th>
-        <th scope="col">Title</th>
-        <th scope="col">User ID</th>
-        <th scope="col">Completed</th>
-        <th scope="col">Actions</th>
-    </tr>
-    </thead>
-    <tbody id="todoTableBody">
-    </tbody>
-</table>
 
-<script type="module" src="./app.js"></script>
+    <div id="resizer"></div>
+
+
+    <div id="main">
+
+
+        <form class="hidden" id="commandForm">
+            <h5>Add Command</h5>
+            <input type="text" placeholder="Command Name" required>
+            <input type="text" placeholder="Command" required>
+            <input type="text" placeholder="Command Body" required>
+            <button class="btn btn-primary">Add Command</button>
+        </form>
+
+
+        <form class="hidden" id="folderForm">
+            <h5>Add Folder</h5>
+            <input type="text" placeholder="Folder Name" required>
+            <button class="btn btn-primary">Add Folder</button>
+        </form>
+
+    </div>
+</div>
+
+<script src="app.js"></script>
+
 </body>
-
 </html>
