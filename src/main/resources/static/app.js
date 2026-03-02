@@ -21,7 +21,10 @@ async function initApp() {
     let addFolder = document.getElementById("addFolder");
     let addCommand = document.getElementById("addCommand");
 
+
+    addFolder.addEventListener("click", () => renderNewFolder())
     addCommand.addEventListener("click", () => renderNewCommand());
+
 }
 
 
@@ -113,10 +116,12 @@ function renderNewCommand() {
     if (!main) return;
 
     main.innerHTML = `
-        <form class="hidden" id="folderForm">
-            <h5>Add Folder</h5>
-            <input type="text" placeholder="Folder Name" required>
-            <button class="btn btn-primary">Add Folder</button>
+        <form id="commandForm">
+            <h5>Add Command</h5>
+            <input type="text" placeholder="Command Name" required>
+            <input type="text" placeholder="Command" required>
+            <input type="text" placeholder="Command Body" required>
+            <button class="btn btn-primary">Add Command</button>
         </form>
     `;
 }
@@ -137,6 +142,19 @@ function renderCommand(command) {
             : ""
     }
         </div>
+    `;
+}
+
+function renderNewFolder() {
+    const main = document.getElementById("main");
+    if (!main) return;
+
+    main.innerHTML = `
+        <form id="folderForm">
+            <h5>Add Folder</h5>
+            <input type="text" placeholder="Folder Name" required>
+            <button class="btn btn-primary">Add Folder</button>
+        </form>
     `;
 }
 
