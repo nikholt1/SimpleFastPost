@@ -159,7 +159,16 @@ table.table tbody tr:hover {
 
 .dark-pre {
     background-color: #1e1f22;
-    color: lightgrey;
+    color: #abd9f4;
+    border: 1px solid #3a3a3a;
+    padding: 8px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.dark-body {
+    background-color: #1e1f22;
+    color: #ea9b6d;
     border: 1px solid #3a3a3a;
     padding: 8px;
     border-radius: 4px;

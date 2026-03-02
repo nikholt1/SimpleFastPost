@@ -138,7 +138,7 @@ function renderCommand(command) {
             <pre class="dark-pre">${command.command}</pre>
             ${
         command.body
-            ? `<p class="dark-text"><strong>Body</strong></p><pre class="dark-pre">${command.body}</pre>`
+            ? `<p class="dark-text"><strong>Body</strong></p><pre class="dark-body">${command.body}</pre>`
             : ""
     }
         </div>
