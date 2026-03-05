@@ -121,7 +121,7 @@ function renderNewCommand() {
             <input type="text" placeholder="Command Name" required>
             <input type="text" placeholder="Command" required>
             <input type="text" placeholder="Command Body" required>
-            <button class="btn btn-primary">Add Command</button>
+            <button class="btn btn-primary" style="background-color: #238536; color: white">Add Command</button>
         </form>
     `;
 }
@@ -153,7 +153,7 @@ function renderNewFolder() {
         <form id="folderForm">
             <h5>Add Folder</h5>
             <input type="text" placeholder="Folder Name" required>
-            <button class="btn btn-primary">Add Folder</button>
+            <button class="btn btn-primary" style="background-color: #238536; color: white">Add Folder</button>
         </form>
     `;
 }

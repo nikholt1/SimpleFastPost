@@ -89,19 +89,40 @@ tbody tr:hover {
 
 form {
     padding: 20px;
-    border: 1px solid #3a3a3a;
+    border: 1px solid #238536;
     width: 400px;
     display: flex;
+    border-radius: 5px;
     flex-direction: column;
     gap: 1em;
     margin-bottom: 2rem;
     background: #2b2d30;
-    color: lightgrey;
+    color: #ffffff;
+}
+.button-row {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+
+}
+.addFolderButton {
+    padding: 5px;
+    border-radius: 5px;
+    background-color: #238536;
+    width: 50%;
+    margin: 5px;
+}
+.addRootCommandButton {
+    background-color: #238536;
+    padding: 5px;
+    border-radius: 5px;
+    width: 50%;
+    margin: 5px;
 }
 
 form input, form button {
     background: #2b2d30;
-    color: lightgrey;
+    color: #ffffff;
     border: 1px solid #3a3a3a;
 }
 
@@ -109,7 +130,6 @@ form button.btn-primary {
     background-color: #3a3a3a;
     border-color: #3a3a3a;
 }
-
 
 button, .btn {
     background-color: #3a3a3a;
