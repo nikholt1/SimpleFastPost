@@ -79,13 +79,13 @@ tbody tr:hover {
 }
 
 #main {
-    flex: 1;
-    padding: 20px;
+    padding: 0;
     overflow-y: auto;
     background: #2b2d30;
     color: lightgrey;
+    width: 100%;
+    height: 100vh; /* always full screen height */
 }
-
 
 form {
     padding: 20px;
@@ -105,6 +105,29 @@ form {
     justify-content: center;
 
 }
+html, body {
+    margin: 0;
+    height: 100%;
+}
+
+#startPage {
+    background-image: url("image/SFPbackground.PNG");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    display: flex;              /* REQUIRED */
+    justify-content: center;    /* horizontal center */
+    align-items: center;        /* vertical center */
+
+    width: 100%;
+    height: 100vh;
+}
+
+.startPageContent {
+    width: 500px;
+    text-align: left;
+}
 .addFolderButton {
     padding: 5px;
     border-radius: 5px;
@@ -119,7 +142,9 @@ form {
     width: 50%;
     margin: 5px;
 }
+#commandForm {
 
+}
 form input, form button {
     background: #2b2d30;
     color: #ffffff;

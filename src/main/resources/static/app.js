@@ -115,6 +115,8 @@ function renderNewCommand() {
     const main = document.getElementById("main");
     if (!main) return;
 
+
+
     main.innerHTML = `
         <form id="commandForm">
             <h5>Add Command</h5>
