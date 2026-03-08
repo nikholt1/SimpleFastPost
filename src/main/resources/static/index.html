@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>SFP</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/" href="image/SFPLogoNoBackground.png">
+    <link rel="icon" type="image/" href="image/SFPLogoNoBackground.jpg">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -18,7 +18,7 @@
 
         <div class="sidebar-top" style="display: flex; justify-content: space-between; align-items: center; padding: 4px 8px;">
             <strong id="homePress" style="display: flex; align-items: center;">
-                <img src="image/SFPLogoNoBackground.png" style="width: 20px; margin-right: 4px;">
+                <img src="image/SFPLogoNoBackground.jpg" style="width: 20px; margin-right: 4px;">
                 SimpleFastPost
             </strong>
             <span id="helpBtn" class="help-icon" style="cursor: pointer;">?</span>
@@ -53,7 +53,7 @@
 
         <div id="startPage">
             <div>
-                <img src="image/SFPLogoNoBackground.png" style="width: 200px">
+                <img src="image/SFPLogoNoBackground.jpg" style="width: 200px">
             </div>
             <div class="startPageContent">
                 <h1 style="color: white;">Welcome to SFP</h1>
@@ -80,10 +80,22 @@
         <input type="text" placeholder="Folder Name" required>
         <button class="btn btn-primary">Add Folder</button>
     </form>
-
+    <ul id="context-menu" style="
+    position: absolute;
+    display: none;
+    list-style: none;
+    padding: 4px 0;
+    margin: 0;
+    background: #333;
+    color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    z-index: 1000;
+">
+    </ul>
 </div>
 
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 
 </body>
 </html>

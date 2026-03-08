@@ -41,7 +41,7 @@ function renderHome() {
     main.innerHTML = `
        <div id="startPage">
         <div>
-            <img src="image/SFPLogoNoBackground.png" style="width: 200px">
+            <img src="image/SFPLogoNoBackground.jpg" style="width: 200px">
         </div>
         <div class="startPageContent">
             <h1 style="color: white;">Welcome to SFP</h1>
@@ -67,7 +67,7 @@ function renderHelp() {
 
             </div>
             <div class="startPageContent">
-                <h1><img src="image/SFPLogoNoBackground.png" style="width: 50px"> Help</h1>
+                <h1><img src="image/SFPLogoNoBackground.jpg" style="width: 50px"> Help</h1>
                 <h4>Commands</h4>
                 <strong>Creating commands:</strong><br>
                 <strong>Browser:</strong><br>
