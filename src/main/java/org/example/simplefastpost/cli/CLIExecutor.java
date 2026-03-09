@@ -125,8 +125,37 @@ public class CLIExecutor {
                     return;
 
                 case "run":
+
+                    // RUN ALL COMMANDS IN A FOLDER
+                    if (folderName != null && commandName == null) {
+
+                        List<Command> commands = cliFolderRepository.getCommandsInFolder(folderName);
+
+                        if (commands.isEmpty()) {
+                            System.err.println("No commands found in folder: " + folderName);
+                            return;
+                        }
+
+                        System.out.println("Running folder: " + folderName);
+
+                        for (Command c : commands) {
+
+                            if (c.getCommand().contains("run")) {
+                                System.err.println("Skipping recursive command: " + c.getName());
+                                continue;
+                            }
+
+                            System.out.println("> " + c.getCommand());
+
+                            execute(tokenize(c.getCommand()), depth + 1, true);
+                        }
+
+                        return;
+                    }
+
+                    // RUN SINGLE COMMAND
                     if (commandName == null) {
-                        System.err.println("run requires -scmd <commandName>");
+                        System.err.println("run requires -scmd <commandName> OR -f <folder>");
                         return;
                     }
 
