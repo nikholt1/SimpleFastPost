@@ -16,12 +16,15 @@
 
     <div id="sidebar">
 
-        <div class="sidebar-top" style="display: flex; justify-content: space-between; align-items: center; padding: 4px 8px;">
-            <strong id="homePress" style="display: flex; align-items: center;">
+        <div class="sidebar-top" style="display: flex; justify-content: space-between; align-items: center; padding: 4px 10px;">
+            <strong title="Start Page" id="homePress" style="display: flex; align-items: center;">
                 <img src="image/SFPLogoNoBackground.jpg" style="width: 20px; margin-right: 4px;">
                 SimpleFastPost
             </strong>
-            <span id="helpBtn" class="help-icon" style="cursor: pointer;">?</span>
+            <span id="syncBtn" class="syncBtn" title="Sync" style="margin-left: 30px">
+                <img class="syncImg" src="image/syncNoBG.png" style="width:20px;">
+            </span>
+            <span  id="helpBtn" class="help-icon" style="cursor: pointer;" title="Help">?</span>
         </div>
 
         <div class="sidebar-header">
@@ -40,8 +43,8 @@
             </table>
         </div>
         <div class="button-row">
-            <button id="addFolder" class="addFolderButton">+ folder</button>
-            <button id="addCommand" class="addRootCommandButton">+ Command</button>
+            <button id="addFolder" class="addFolderButton" title="Create a new folder in root">+ folder</button>
+            <button id="addCommand" class="addRootCommandButton" title="Create a new Command in root">+ Command</button>
         </div>
     </div>
 

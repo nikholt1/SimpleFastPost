@@ -22,17 +22,27 @@ async function initApp() {
     let addFolder = document.getElementById("addFolder");
     let addCommand = document.getElementById("addCommand");
     let helpButton = document.getElementById("helpBtn");
-
+    let syncBtn = document.getElementById("syncBtn");
 
     homeButton.addEventListener("click", () => renderHome());
 
     addFolder.addEventListener("click", () => renderNewFolder());
     addCommand.addEventListener("click", () => renderNewCommand());
     helpButton.addEventListener("click", () => renderHelp());
+
+    syncBtn.addEventListener("click", () => sync());
+
 }
 
 
+async function sync() {
+    const res = await fetch("http://localhost:8080/api/sync", {
+        method: "POST"
+    });
 
+    const text = await res.text();
+    console.log(text);
+}
 function renderHome() {
 
     const main = document.getElementById("main");

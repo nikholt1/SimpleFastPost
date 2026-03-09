@@ -114,7 +114,9 @@ public class CLIExecutor {
                         cliCommandService.listCommands();
                     }
                     return;
-
+                case "sync":
+                    System.out.println("syncing");
+                    return;
                 case "mkdir":
                     if (folderName == null) {
                         System.err.println("mkdir requires -f <folder>");

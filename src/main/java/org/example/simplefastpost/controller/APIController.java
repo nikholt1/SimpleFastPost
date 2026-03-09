@@ -11,6 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -119,4 +122,23 @@ public class APIController {
         commandService.deleteCommand(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/sync")
+    public ResponseEntity<String> sync() throws IOException {
+
+        String root = System.getProperty("user.dir");
+        Path file = Path.of(root, "sfp.http");
+
+        if (!Files.exists(file)) {
+            return ResponseEntity
+                    .status(404)
+                    .body("No sfp.http file found in: " + root);
+        }
+
+        // TODO parse file
+        System.out.println("Syncing file: " + file);
+
+        return ResponseEntity.ok("Sync completed");
+    }
+
 }
