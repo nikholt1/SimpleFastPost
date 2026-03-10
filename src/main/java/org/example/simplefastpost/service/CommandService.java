@@ -32,4 +32,5 @@ public interface CommandService {
     );
 
     void deleteCommand(Long commandId);
+    void deleteAllCommands();
 }

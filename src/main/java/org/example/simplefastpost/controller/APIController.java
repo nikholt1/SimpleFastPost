@@ -138,11 +138,9 @@ public class APIController {
                     .body("No sfp.http file found in: " + root);
         }
 
-        boolean run = httpSyncService.syncFile(file);
-        if (run){
-            return ResponseEntity.ok("Sync completed");
-        } else
-            return ResponseEntity.notFound().build();
+        int run = httpSyncService.syncFile(file);
+        System.out.println(run);
+        return ResponseEntity.ok("Sync completed with " + run + " folders and commands");
     }
 
 }

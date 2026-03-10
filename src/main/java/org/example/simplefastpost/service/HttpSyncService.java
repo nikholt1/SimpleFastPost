@@ -1,5 +1,10 @@
 package org.example.simplefastpost.service;
 
+import org.example.simplefastpost.cli.commandService.CLICommandService;
+import org.example.simplefastpost.cli.folderService.CLIFolderService;
+import org.example.simplefastpost.dto.FolderDTO;
+import org.example.simplefastpost.model.Command;
+import org.example.simplefastpost.model.Folder;
 import org.springframework.stereotype.Service;
 import org.springframework.stereotype.Service;
 
@@ -10,52 +15,196 @@ import java.util.*;
 @Service
 public class HttpSyncService {
 
-    public boolean syncFile(Path file) throws IOException {
+    private final CommandService cliCommandService;
+    private final FolderService cliFolderService;
+
+    public HttpSyncService(CommandService commandService, FolderService folderService) {
+        this.cliCommandService = commandService;
+        this.cliFolderService = folderService;
+    }
+
+    public int syncFile(Path file) throws IOException {
 
         List<String> lines = Files.readAllLines(file);
+
         String currentFolder = null;
+        int counter = 0;
+
+        try {
+            cliFolderService.deleteAllFolders();
+            cliCommandService.deleteAllCommands();
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
 
         for (int i = 0; i < lines.size(); i++) {
-            String line = lines.get(i).trim();
 
-            // Detect folder definition
-            if (line.startsWith("#mkdir folder")) {
-                // Look ahead for "#name;" line
-                if (i + 2 < lines.size() && lines.get(i + 1).trim().equals("#name;")) {
-                    currentFolder = lines.get(i + 2).trim().replace("\"", "");
-                    System.out.println("Detected folder to create: " + currentFolder);
+            String rawLine = lines.get(i);
+            String line = rawLine.trim();
+
+        /* -------------------------
+           MKDIR PARSING
+        ------------------------- */
+
+            boolean containsMkdir = line.contains("#mkdir");
+
+            if (containsMkdir) {
+
+                String mkdirLine = line;
+                String[] mkdirParts = mkdirLine.split("\\s+");
+
+                int partsLength = mkdirParts.length;
+
+                boolean validFormat = partsLength >= 4;
+
+                if (validFormat) {
+
+                    String rawFolderName = mkdirParts[3];
+                    String cleanedFolderName = rawFolderName.replace(";", "");
+
+                    currentFolder = cleanedFolderName;
+                    try {
+                        List<Command> commands = new ArrayList<>();
+                        cliFolderService.createFolder(currentFolder, commands);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println("Detected folder name: " + currentFolder);
                 }
             }
 
-            // Detect HTTP request blocks
-            if (line.startsWith("### place")) {
-                String[] parts = line.split(" ");
-                String location = parts[2]; // folder or root
-                String folderName = (parts.length > 3) ? parts[3] : null;
+        /* -------------------------
+           PLACE BLOCK PARSING
+        ------------------------- */
 
-                // Determine where to place this request
-                String targetFolder = "root";
-                if ("folder".equals(location) && folderName != null) {
-                    targetFolder = folderName;
-                }
+            boolean isPlaceLine = line.startsWith("### place folder");
 
-                System.out.println("Processing request to place: " + targetFolder);
+            if (isPlaceLine) {
 
-                // Collect the request lines
-                StringBuilder requestBuilder = new StringBuilder();
-                i++; // move past the "###" line
-                while (i < lines.size() && !lines.get(i).trim().startsWith("###")) {
-                    requestBuilder.append(lines.get(i)).append("\n");
+                /* PLACE LINE */
+
+                String placeLine = line;
+                String[] placeParts = placeLine.split("\\s+");
+
+                String rawFolderName = placeParts[3];
+                String targetFolder = rawFolderName.replace(";", "");
+
+                /* COMMAND NAME */
+
+                i++;
+                String commandLineRaw = lines.get(i);
+                String commandLine = commandLineRaw.trim();
+
+                String[] commandParts = commandLine.split("\\s+");
+
+                String rawCommandName = commandParts[3];
+                String commandName = rawCommandName.replace(";", "");
+
+                /* METHOD + URL */
+
+                i++;
+                String requestLineRaw = lines.get(i);
+                String requestLine = requestLineRaw.trim();
+
+                String[] requestParts = requestLine.split("\\s+");
+
+                String method = requestParts[0];
+                String url = requestParts[1];
+
+                /* HEADERS */
+
+                StringBuilder headersBuilder = new StringBuilder();
+
+                i++;
+
+                while (i < lines.size()) {
+
+                    String headerRawLine = lines.get(i);
+                    String headerLine = headerRawLine.trim();
+
+                    boolean nextBlock = headerLine.startsWith("###");
+
+                    if (nextBlock) {
+                        i--;
+                        break;
+                    }
+
+                    boolean emptyLine = headerLine.isEmpty();
+
+                    if (emptyLine) {
+                        break;
+                    }
+
+                    headersBuilder.append(headerLine).append("\n");
+
                     i++;
                 }
-                i--; // adjust index to not skip next block
 
-                String requestContent = requestBuilder.toString();
-                System.out.println("Request content:\n" + requestContent);
+                String headers = headersBuilder.toString();
 
-                // TODO: execute the request here or queue it for later
+                /* BODY */
+
+                StringBuilder bodyBuilder = new StringBuilder();
+
+                i++;
+
+                while (i < lines.size()) {
+
+                    String bodyRawLine = lines.get(i);
+                    String bodyLine = bodyRawLine.trim();
+
+                    boolean nextBlock = bodyLine.startsWith("###");
+
+                    if (nextBlock) {
+                        i--;
+                        break;
+                    }
+
+                    bodyBuilder.append(bodyLine).append("\n");
+
+                    i++;
+                }
+
+                String body = bodyBuilder.toString();
+
+                /* DEBUG OUTPUT */
+                String command = "-m " + method + " -u " + url;
+                Long folderId = null;
+                try {
+                    List<FolderDTO> foldersDTO = cliFolderService.getAllFolders();
+                    List<Folder> folders = new ArrayList<>();
+                    for (FolderDTO folderDTO : foldersDTO) {
+                        folders.add(FolderMapper.fromDTO(folderDTO));
+                    }
+                    for (Folder f : folders) {
+                        if (f.getProjectName().equals(currentFolder)) {
+                            System.out.println(currentFolder);
+                            folderId = f.getId();
+                        }
+                    }
+                } catch (Exception e ) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    cliCommandService.createCommand(commandName, command, body, folderId
+                    );
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println("Folder: " + targetFolder);
+                System.out.println("Command: " + commandName);
+                System.out.println("Method: " + method);
+                System.out.println("URL: " + url);
+                System.out.println("Headers:\n" + headers);
+                System.out.println("Body:\n" + body);
+
+                counter++;
             }
         }
-        return true;
+
+        return counter;
     }
 }

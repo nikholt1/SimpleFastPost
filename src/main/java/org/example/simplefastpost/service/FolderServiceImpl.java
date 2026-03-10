@@ -27,6 +27,10 @@ public class FolderServiceImpl implements FolderService {
 
     }
     @Override
+    public void deleteAllFolders() {
+        folderRepository.deleteAll();
+    }
+    @Override
     public Optional<FolderDTO> getFolderById(Long id) {
         Optional<Folder> folder = folderRepository.findById(id);
         if (folder.isPresent()) {

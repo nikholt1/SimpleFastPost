@@ -94,4 +94,8 @@ public class CommandServiceImpl implements CommandService {
 
         return CommandMapper.toDto(commandRepository.save(existing));
     }
+    @Override
+    public void deleteAllCommands() {
+        commandRepository.deleteAll();
+    }
 }
