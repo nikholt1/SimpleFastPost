@@ -121,7 +121,7 @@ public class HttpSyncService {
                 }
 
                 System.out.println(String.format(
-                        "| %-21s | Command: %-15s | Method: %-6s | URL: %s%s",
+                        " %-21s | Command: %-15s | Method: %-6s | URL: %s%s",
                         targetFolder,
                         (commandName != null ? commandName : "N/A"),
                         (httpMethod != null ? httpMethod : "N/A"),
@@ -131,7 +131,7 @@ public class HttpSyncService {
 
                 // Simulate execution
                 try {
-                    Thread.sleep(50);
+                    Thread.sleep(500);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -142,7 +142,7 @@ public class HttpSyncService {
         }
 
         System.out.println();
-        return 200;
+        return 100;
     }
 
     private void printProgressBar(int current, int total) {

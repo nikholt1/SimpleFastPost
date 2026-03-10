@@ -1,0 +1,12 @@
+Method: POST
+URL: https://jsonplaceholder.typicode.com/posts
+Headers:
+Content-Type: application/json
+X-Api-Key: 123456789
+somethingElse: thisIsAHEADER
+Body:
+{
+"title": "Hello World",
+"body": "This is a test",
+"userId": 1
+}
