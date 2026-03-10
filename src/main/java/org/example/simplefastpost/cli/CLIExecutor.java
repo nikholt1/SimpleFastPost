@@ -37,7 +37,7 @@ public class CLIExecutor {
         this.cliFolderRepository = new CLIFolderRepository(DB_URL);
         this.cliCommandService = new CLICommandService(cliCommandRepository);
         this.cliFolderService = new CLIFolderService(cliFolderRepository);
-        this.syncService = new HttpSyncService();
+        this.syncService = new HttpSyncService(cliCommandService, cliFolderService);
     }
 
     public void execute(String[] rawArgs) throws Exception {

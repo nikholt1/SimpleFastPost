@@ -1,5 +1,6 @@
 package org.example.simplefastpost;
 
+import org.example.simplefastpost.cli.CLIConfig.ConfigService;
 import org.example.simplefastpost.cli.CLIExecutor;
 import org.example.simplefastpost.setup.ApplicationSetup;
 import org.springframework.boot.SpringApplication;

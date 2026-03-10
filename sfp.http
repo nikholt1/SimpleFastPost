@@ -1,6 +1,5 @@
-#mkdir folder;
-    #name;
-        #foldername
+#mkdir folder name folderName;
+
 
 ### place folder foldername
 ### command name commandName2

@@ -1,5 +1,13 @@
 package org.example.simplefastpost.cli.syncService;
 
+import org.example.simplefastpost.cli.commandService.CLICommandService;
+import org.example.simplefastpost.cli.folderService.CLIFolderService;
+import org.example.simplefastpost.model.Folder;
+import org.example.simplefastpost.repository.CommandRepository;
+import org.example.simplefastpost.repository.FolderRepository;
+import org.example.simplefastpost.service.CommandService;
+import org.example.simplefastpost.service.FolderService;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,134 +23,192 @@ import java.util.List;
 
 public class HttpSyncService {
 
+    private final CLICommandService cliCommandService;
+    private final CLIFolderService cliFolderService;
+
+    public HttpSyncService(CLICommandService commandService, CLIFolderService folderService) {
+        this.cliCommandService = commandService;
+        this.cliFolderService = folderService;
+    }
+
     public int syncFile(Path file) throws IOException {
 
         List<String> lines = Files.readAllLines(file);
-        String currentFolder = null;
 
-        // Count total request blocks
-        int totalBlocks = (int) lines.stream().filter(l -> l.trim().startsWith("### place")).count();
-        int processedBlocks = 0;
+        String currentFolder = null;
+        int counter = 0;
+
+        try {
+            cliFolderService.deleteAllFolders();
+            cliCommandService.deleteAllCommands();
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
 
         for (int i = 0; i < lines.size(); i++) {
-            String line = lines.get(i).trim();
 
-            // --- Detect folder definition ---
-            if (line.startsWith("#mkdir folder")) {
-                if (i + 2 < lines.size() && lines.get(i + 1).trim().equals("#name;")) {
-                    currentFolder = lines.get(i + 2).trim().replace("\"", "").replace("#", "");
-                    Path folderPath = Paths.get(System.getProperty("user.dir"), currentFolder);
-                    Files.createDirectories(folderPath); // create folder
-                    System.out.println("Created folder: " + currentFolder);
+            String rawLine = lines.get(i);
+            String line = rawLine.trim();
+
+        /* -------------------------
+           MKDIR PARSING
+        ------------------------- */
+
+            boolean containsMkdir = line.contains("#mkdir");
+
+            if (containsMkdir) {
+
+                String mkdirLine = line;
+                String[] mkdirParts = mkdirLine.split("\\s+");
+
+                int partsLength = mkdirParts.length;
+
+                boolean validFormat = partsLength >= 4;
+
+                if (validFormat) {
+
+                    String rawFolderName = mkdirParts[3];
+                    String cleanedFolderName = rawFolderName.replace(";", "");
+
+                    currentFolder = cleanedFolderName;
+                    try {
+                        cliFolderService.createFolder(currentFolder);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println("Detected folder name: " + currentFolder);
                 }
             }
 
-            // --- Detect HTTP request block ---
-            if (line.startsWith("### place")) {
+        /* -------------------------
+           PLACE BLOCK PARSING
+        ------------------------- */
 
-                // Extract location and folder
-                String[] parts = line.trim().split("\\s+");
-                String location = parts[2]; // folder or root
-                String folderName = (parts.length > 3) ? parts[3].replace("#","") : null;
+            boolean isPlaceLine = line.startsWith("### place folder");
 
-                String targetFolder = "root";
-                if ("folder".equals(location) && folderName != null) {
-                    targetFolder = folderName;
-                }
+            if (isPlaceLine) {
 
-                // Initialize command info
-                String commandName = null;
-                String httpMethod = null;
-                String url = null;
-                StringBuilder headers = new StringBuilder();
-                StringBuilder body = new StringBuilder();
+                /* PLACE LINE */
 
-                // Collect the request lines
-                i++; // move past "### place" line
-                boolean inBody = false;
-                while (i < lines.size() && !lines.get(i).trim().startsWith("### place")) {
-                    String l = lines.get(i).trim();
+                String placeLine = line;
+                String[] placeParts = placeLine.split("\\s+");
 
-                    // Command name
-                    if (l.startsWith("### command name")) {
-                        String[] cmdParts = l.split("\\s+");
-                        if (cmdParts.length >= 4) {
-                            commandName = cmdParts[3].replace("#", "");
-                        }
+                String rawFolderName = placeParts[3];
+                String targetFolder = rawFolderName.replace(";", "");
+
+                /* COMMAND NAME */
+
+                i++;
+                String commandLineRaw = lines.get(i);
+                String commandLine = commandLineRaw.trim();
+
+                String[] commandParts = commandLine.split("\\s+");
+
+                String rawCommandName = commandParts[3];
+                String commandName = rawCommandName.replace(";", "");
+
+                /* METHOD + URL */
+
+                i++;
+                String requestLineRaw = lines.get(i);
+                String requestLine = requestLineRaw.trim();
+
+                String[] requestParts = requestLine.split("\\s+");
+
+                String method = requestParts[0];
+                String url = requestParts[1];
+
+                /* HEADERS */
+
+                StringBuilder headersBuilder = new StringBuilder();
+
+                i++;
+
+                while (i < lines.size()) {
+
+                    String headerRawLine = lines.get(i);
+                    String headerLine = headerRawLine.trim();
+
+                    boolean nextBlock = headerLine.startsWith("###");
+
+                    if (nextBlock) {
+                        i--;
+                        break;
                     }
-                    // HTTP method + URL
-                    else if (l.matches("^(GET|POST|PUT|DELETE).*")) {
-                        httpMethod = l.split("\\s+")[0];
-                        url = l.substring(httpMethod.length()).trim();
+
+                    boolean emptyLine = headerLine.isEmpty();
+
+                    if (emptyLine) {
+                        break;
                     }
-                    // Body detection
-                    else if (l.isEmpty()) {
-                        inBody = true;
-                    } else {
-                        if (inBody) {
-                            body.append(l).append("\n");
-                        } else {
-                            headers.append(l).append("\n");
-                        }
-                    }
+
+                    headersBuilder.append(headerLine).append("\n");
 
                     i++;
                 }
-                i--; // adjust index
 
-                // Ensure folder exists
-                Path folderPath;
-                if ("root".equals(targetFolder)) {
-                    folderPath = Paths.get(System.getProperty("user.dir"));
-                } else {
-                    folderPath = Paths.get(System.getProperty("user.dir"), targetFolder);
-                    Files.createDirectories(folderPath);
-                }
+                String headers = headersBuilder.toString();
 
-                // Save command as a text file
-                String fileName = (commandName != null ? commandName : "unnamed") + ".txt";
-                Path commandFile = folderPath.resolve(fileName);
-                StringBuilder content = new StringBuilder();
-                content.append("Method: ").append(httpMethod).append("\n");
-                content.append("URL: ").append(url).append("\n");
-                if (headers.length() > 0) content.append("Headers:\n").append(headers);
-                if (body.length() > 0) content.append("Body:\n").append(body);
+                /* BODY */
 
-                Files.writeString(commandFile, content.toString(),
-                        StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                StringBuilder bodyBuilder = new StringBuilder();
 
-                // Minimal logging including URL + headers + authorization if present
-                String authLine = "";
-                for (String h : headers.toString().split("\n")) {
-                    if (h.toLowerCase().startsWith("authorization")) {
-                        authLine = " | Auth: " + h.split(":",2)[1].trim();
+                i++;
+
+                while (i < lines.size()) {
+
+                    String bodyRawLine = lines.get(i);
+                    String bodyLine = bodyRawLine.trim();
+
+                    boolean nextBlock = bodyLine.startsWith("###");
+
+                    if (nextBlock) {
+                        i--;
                         break;
                     }
+
+                    bodyBuilder.append(bodyLine).append("\n");
+
+                    i++;
                 }
 
-                System.out.println(String.format(
-                        " %-21s | Command: %-15s | Method: %-6s | URL: %s%s",
-                        targetFolder,
-                        (commandName != null ? commandName : "N/A"),
-                        (httpMethod != null ? httpMethod : "N/A"),
-                        (url != null ? url : "N/A"),
-                        authLine
-                ));
+                String body = bodyBuilder.toString();
 
-                // Simulate execution
+                /* DEBUG OUTPUT */
+                String command = "-m " + method + " -u " + url;
+                Long folderId = null;
                 try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                    List<Folder> folders = cliFolderService.getAllFolders();
+                    for (Folder f : folders) {
+                        if (f.getProjectName().equals(currentFolder)) {
+                            System.out.println(currentFolder);
+                            folderId = f.getId();
+                        }
+                    }
+                } catch (Exception e ) {
+                    e.printStackTrace();
                 }
 
-                processedBlocks++;
-                printProgressBar(processedBlocks, totalBlocks);
+                try {
+                    cliCommandService.createCommand(commandName, command, body, folderId
+                            );
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println("Folder: " + targetFolder);
+                System.out.println("Command: " + commandName);
+                System.out.println("Method: " + method);
+                System.out.println("URL: " + url);
+                System.out.println("Headers:\n" + headers);
+                System.out.println("Body:\n" + body);
+
+                counter++;
             }
         }
 
-        System.out.println();
-        return 100;
+        return counter;
     }
 
     private void printProgressBar(int current, int total) {
