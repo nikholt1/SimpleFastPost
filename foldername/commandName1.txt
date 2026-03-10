@@ -1,0 +1,10 @@
+Method: POST
+URL: https://jsonplaceholder.typicode.com/posts
+Headers:
+Content-Type: application/json
+Body:
+{
+"title": "Hello World",
+"body": "This is a test",
+"userId": 1
+}

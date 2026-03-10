@@ -7,6 +7,7 @@ import org.example.simplefastpost.dto.UpdateCommandRequest;
 import org.example.simplefastpost.model.Folder;
 import org.example.simplefastpost.service.CommandService;
 import org.example.simplefastpost.service.FolderService;
+import org.example.simplefastpost.service.HttpSyncService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -23,10 +24,12 @@ public class APIController {
 
     private final CommandService commandService;
     private final FolderService folderService;
+    private final HttpSyncService  httpSyncService;
 
-    public APIController(CommandService commandService, FolderService folderService) {
+    public APIController(CommandService commandService, FolderService folderService, HttpSyncService httpSyncService) {
         this.commandService = commandService;
         this.folderService = folderService;
+        this.httpSyncService = httpSyncService;
     }
 
     @GetMapping("/folders")
@@ -135,10 +138,11 @@ public class APIController {
                     .body("No sfp.http file found in: " + root);
         }
 
-        // TODO parse file
-        System.out.println("Syncing file: " + file);
-
-        return ResponseEntity.ok("Sync completed");
+        boolean run = httpSyncService.syncFile(file);
+        if (run){
+            return ResponseEntity.ok("Sync completed");
+        } else
+            return ResponseEntity.notFound().build();
     }
 
 }

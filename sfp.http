@@ -1,4 +1,73 @@
-mkdir folder;
-    name;
-        "foldername"
+#mkdir folder;
+    #name;
+        #foldername
 
+### place folder foldername
+### command name commandName2
+GET https://jsonplaceholder.typicode.com/posts/1
+Accept: application/json
+
+
+### place folder foldername
+### command name commandName1
+POST https://jsonplaceholder.typicode.com/posts
+Content-Type: application/json
+
+{
+  "title": "Hello World",
+  "body": "This is a test",
+  "userId": 1
+}
+
+
+### place folder foldername
+### command name commandName3
+PUT https://jsonplaceholder.typicode.com/posts/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "title": "Updated Title",
+  "body": "Updated body",
+  "userId": 1
+}
+
+
+### place root
+### command name commandName
+DELETE https://jsonplaceholder.typicode.com/posts/1
+
+### place folder foldername
+### command name commandName2
+GET https://jsonplaceholder.typicode.com/posts/1
+Accept: application/json
+
+
+### place folder foldername
+### command name commandName1
+POST https://jsonplaceholder.typicode.com/posts
+Content-Type: application/json
+
+{
+  "title": "Hello World",
+  "body": "This is a test",
+  "userId": 1
+}
+
+
+### place folder foldername
+### command name commandName3
+PUT https://jsonplaceholder.typicode.com/posts/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "title": "Updated Title",
+  "body": "Updated body",
+  "userId": 1
+}
+
+
+### place root
+### command name commandName
+DELETE https://jsonplaceholder.typicode.com/posts/1

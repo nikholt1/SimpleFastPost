@@ -5,8 +5,13 @@ import org.example.simplefastpost.cli.commandRepo.CLICommandRepository;
 import org.example.simplefastpost.cli.commandService.CLICommandService;
 import org.example.simplefastpost.cli.folderRepo.CLIFolderRepository;
 import org.example.simplefastpost.cli.folderService.CLIFolderService;
+import org.example.simplefastpost.cli.syncService.HttpSyncService;
 import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
+import org.springframework.http.ResponseEntity;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
@@ -22,6 +27,7 @@ public class CLIExecutor {
     private final CLIFolderRepository cliFolderRepository;
     private final CLICommandService cliCommandService;
     private final CLIFolderService cliFolderService;
+    private final HttpSyncService syncService;
     private boolean replayMode = false;
     private final RequestController requestController = new RequestController();
 
@@ -31,6 +37,7 @@ public class CLIExecutor {
         this.cliFolderRepository = new CLIFolderRepository(DB_URL);
         this.cliCommandService = new CLICommandService(cliCommandRepository);
         this.cliFolderService = new CLIFolderService(cliFolderRepository);
+        this.syncService = new HttpSyncService();
     }
 
     public void execute(String[] rawArgs) throws Exception {
@@ -115,7 +122,15 @@ public class CLIExecutor {
                     }
                     return;
                 case "sync":
-                    System.out.println("syncing");
+                    String root = System.getProperty("user.dir");
+                    Path file = Path.of(root, "sfp.http");
+
+                    if (!Files.exists(file)) {
+                        System.out.println("File not found in root directory");
+                    }
+
+                    int run = syncService.syncFile(file);
+                    System.out.println("Successfully found " + run + " commands to build in root .http file");
                     return;
                 case "mkdir":
                     if (folderName == null) {
