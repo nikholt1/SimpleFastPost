@@ -34,7 +34,7 @@ public class PushService {
 
 
                 for (Folder folder : folders) {
-                    writer.write("#mkdir "folder.getProjectName() + "\n");
+                    writer.write("#mkdir " + folder.getProjectName() + "\n");
                 }
             }
 
