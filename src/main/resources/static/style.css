@@ -12,22 +12,7 @@ html, body {
     display: flex;
     height: 100vh;
 }
-.syncBtn {
-    width: 15px;
-    height: 15px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
 
-.syncBtn:hover {
-    background-color: #238436;
-    border-radius: 50px;
-    cursor: pointer;
-}
-.syncImg {
-    margin-bottom: 2.2px;
-}
 #resizer {
     width: 2px;
     cursor: col-resize;
@@ -78,14 +63,51 @@ html, body {
     color: white;
 }
 .sidebar-content {
+    margin-left: 2px;
     overflow-y: auto;
     flex: 1;
 }
-.help-icon {
-    width: 25px;
-    text-align: center;
-    border-radius: 100px;
+.sidebar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* pushes header left, icons right */
+    padding: 4px 2px;
+}
 
+/* Header text/logo on the left */
+.sidebar-top strong {
+    display: flex;
+    align-items: center;
+}
+
+/* Logo styling */
+.sidebar-top .logo {
+    width: 20px;
+    margin-right: 4px; /* space between logo and text */
+}
+
+/* Container for all right-side icons */
+.sidebar-top .icons-group {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* small gap between icons */
+}
+
+/* Individual icons */
+.sidebar-top .icon-btn img,
+.sidebar-top .help-icon {
+    width: 18px;
+    cursor: pointer;
+    display: block;
+}
+
+/* Optional: hover effect for help icon */
+.sidebar-top .help-icon {
+    margin-top: 2px;
+    width: 25px;
+    font-size: 16px;
+    text-align: center;
+    border-radius: 50%;
 }
 .help-icon:hover {
     background-color: #505050;

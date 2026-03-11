@@ -141,4 +141,20 @@ public class APIController {
         return ResponseEntity.ok("Sync started"); // immediate response
     }
 
+    @PostMapping("/push")
+    public ResponseEntity<String> push() {
+        CompletableFuture.runAsync(() -> {
+            Path file = Path.of(System.getProperty("user.dir"), "sfp.http");
+
+            System.out.println("push to " + file);
+//            try {
+//                System.out.println("push");
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+        });
+
+        return ResponseEntity.ok("Sync started");
+    }
+
 }

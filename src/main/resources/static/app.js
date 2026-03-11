@@ -23,7 +23,7 @@ async function initApp() {
     let addCommand = document.getElementById("addCommand");
     let helpButton = document.getElementById("helpBtn");
     let syncBtn = document.getElementById("syncBtn");
-
+    let pushBtn = document.getElementById("pushBtn");
     homeButton.addEventListener("click", () => renderHome());
 
     addFolder.addEventListener("click", () => renderNewFolder());
@@ -31,15 +31,28 @@ async function initApp() {
     helpButton.addEventListener("click", () => renderHelp());
 
     syncBtn.addEventListener("click", () => sync());
-
+    pushBtn.addEventListener("click", () => pushSync());
 }
 
+async function pushSync() {
+    const loadingBar = document.getElementById("loadingBar");
+
+    // still does not work for some reason
+    loadingBar.classList.remove("hidden");
+    console.log("push")
+    await fetch("http://localhost:8080/api/push", { method: "POST" });
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    loadingBar.classList.add("hidden");
+    // window.location.reload();
+}
 
 
 async function sync() {
     const loadingBar = document.getElementById("loadingBar");
 
-    // still does not work for some reason
+
     loadingBar.classList.remove("hidden");
 
 
@@ -199,11 +212,11 @@ function renderItem(item, tbody, level) {
         });
     } else {
         const methodColors = {
-            "GET": "#28a745",      // green
-            "POST": "#007bff",     // blue
-            "PUT": "#ffc107",      // yellow/orange
-            "DELETE": "#dc3545",   // red
-            "PATCH": "#17a2b8",    // teal
+            "GET": "#4aa35a",      // green
+            "POST": "#387bb5",     // blue
+            "PUT": "#dc7e1f",      // yellow/orange
+            "DELETE": "#dc4c59",   // red
+            "PATCH": "#4cb6ca",    // teal
             "OPTIONS": "#6c757d"   // gray
         };
 

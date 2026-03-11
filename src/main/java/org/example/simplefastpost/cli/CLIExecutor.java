@@ -121,6 +121,9 @@ public class CLIExecutor {
                         cliCommandService.listCommands();
                     }
                     return;
+                case "push":
+                    System.out.println("Pushing");
+                    return;
                 case "sync":
                     String root = System.getProperty("user.dir");
                     Path file = Path.of(root, "sfp.http");
