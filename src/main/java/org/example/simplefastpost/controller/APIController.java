@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api")
@@ -127,20 +128,17 @@ public class APIController {
     }
 
     @PostMapping("/sync")
-    public ResponseEntity<String> sync() throws IOException {
+    public ResponseEntity<String> sync() {
+        CompletableFuture.runAsync(() -> {
+            Path file = Path.of(System.getProperty("user.dir"), "sfp.http");
+            try {
+                httpSyncService.syncFile(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
 
-        String root = System.getProperty("user.dir");
-        Path file = Path.of(root, "sfp.http");
-
-        if (!Files.exists(file)) {
-            return ResponseEntity
-                    .status(404)
-                    .body("No sfp.http file found in: " + root);
-        }
-
-        int run = httpSyncService.syncFile(file);
-        System.out.println(run);
-        return ResponseEntity.ok("Sync completed with " + run + " folders and commands");
+        return ResponseEntity.ok("Sync started"); // immediate response
     }
 
 }

@@ -35,13 +35,24 @@ async function initApp() {
 }
 
 
-async function sync() {
-    const res = await fetch("http://localhost:8080/api/sync", {
-        method: "POST"
-    });
 
-    const text = await res.text();
-    console.log(text);
+async function sync() {
+    const loadingBar = document.getElementById("loadingBar");
+
+    // still does not work for some reason
+    loadingBar.classList.remove("hidden");
+
+
+    await new Promise(requestAnimationFrame);
+
+
+    await fetch("http://localhost:8080/api/sync", { method: "POST" });
+
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+
+    window.location.reload();
 }
 function renderHome() {
 

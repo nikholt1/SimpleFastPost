@@ -21,7 +21,7 @@ public class CLICommandService {
     ) {
         try {
             cliCommandRepository.createCommand(name, command, body, folderId);
-            System.out.println("✔ Command created: " + name);
+
         } catch (Exception e) {
             System.err.println("✖ Failed to create command: " + e.getMessage());
         }
@@ -52,7 +52,7 @@ public class CLICommandService {
     ) {
         try {
             cliCommandRepository.updateCommand(id, name, command, body, folderId);
-            System.out.println("Command updated: " + id);
+
         } catch (Exception e) {
             System.err.println("Failed to update command: " + e.getMessage());
         }
@@ -65,7 +65,7 @@ public class CLICommandService {
     public void deleteCommand(long id) {
         try {
             cliCommandRepository.deleteCommand(id);
-            System.out.println("Command deleted: " + id);
+
         } catch (Exception e) {
             System.err.println("Failed to delete command: " + e.getMessage());
         }

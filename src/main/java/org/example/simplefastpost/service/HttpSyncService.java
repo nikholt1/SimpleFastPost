@@ -25,94 +25,73 @@ public class HttpSyncService {
 
     public int syncFile(Path file) throws IOException {
 
+        cliCommandService.deleteAllCommands();
+        cliFolderService.deleteAllFolders();
+
         List<String> lines = Files.readAllLines(file);
-
-        String currentFolder = null;
         int counter = 0;
-
-        try {
-            cliFolderService.deleteAllFolders();
-            cliCommandService.deleteAllCommands();
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
 
         for (int i = 0; i < lines.size(); i++) {
 
-            String rawLine = lines.get(i);
-            String line = rawLine.trim();
+            String line = lines.get(i).trim();
 
-        /* -------------------------
-           MKDIR PARSING
-        ------------------------- */
 
-            boolean containsMkdir = line.contains("#mkdir");
+            if (line.startsWith("#mkdir")) {
 
-            if (containsMkdir) {
+                String[] parts = line.split("\\s+");
 
-                String mkdirLine = line;
-                String[] mkdirParts = mkdirLine.split("\\s+");
+                if (parts.length >= 4) {
 
-                int partsLength = mkdirParts.length;
+                    String folderName = parts[3].replace(";", "");
 
-                boolean validFormat = partsLength >= 4;
-
-                if (validFormat) {
-
-                    String rawFolderName = mkdirParts[3];
-                    String cleanedFolderName = rawFolderName.replace(";", "");
-
-                    currentFolder = cleanedFolderName;
                     try {
                         List<Command> commands = new ArrayList<>();
-                        cliFolderService.createFolder(currentFolder, commands);
+                        cliFolderService.createFolder(folderName, commands);
+
+                        System.out.println("Created folder: " + folderName);
+                        counter++;
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
-                    System.out.println("Detected folder name: " + currentFolder);
                 }
             }
 
-        /* -------------------------
-           PLACE BLOCK PARSING
-        ------------------------- */
 
-            boolean isPlaceLine = line.startsWith("### place folder");
+            if (line.startsWith("### place")) {
 
-            if (isPlaceLine) {
+                String[] placeParts = line.split("\\s+");
 
-                /* PLACE LINE */
+                String target;
 
-                String placeLine = line;
-                String[] placeParts = placeLine.split("\\s+");
+                if (placeParts[2].equalsIgnoreCase("root")) {
+                    target = "root";
+                }
+                else if (placeParts[2].equalsIgnoreCase("folder")) {
+                    target = placeParts[3].replace(";", "");
+                }
+                else {
+                    target = "unknown";
+                }
 
-                String rawFolderName = placeParts[3];
-                String targetFolder = rawFolderName.replace(";", "");
+                System.out.println("Place detected: " + target);
 
-                /* COMMAND NAME */
+
 
                 i++;
-                String commandLineRaw = lines.get(i);
-                String commandLine = commandLineRaw.trim();
-
+                String commandLine = lines.get(i).trim();
                 String[] commandParts = commandLine.split("\\s+");
+                String commandName = commandParts[3].replace(";", "");
 
-                String rawCommandName = commandParts[3];
-                String commandName = rawCommandName.replace(";", "");
 
-                /* METHOD + URL */
 
                 i++;
-                String requestLineRaw = lines.get(i);
-                String requestLine = requestLineRaw.trim();
-
+                String requestLine = lines.get(i).trim();
                 String[] requestParts = requestLine.split("\\s+");
 
                 String method = requestParts[0];
                 String url = requestParts[1];
 
-                /* HEADERS */
 
                 StringBuilder headersBuilder = new StringBuilder();
 
@@ -120,19 +99,14 @@ public class HttpSyncService {
 
                 while (i < lines.size()) {
 
-                    String headerRawLine = lines.get(i);
-                    String headerLine = headerRawLine.trim();
+                    String headerLine = lines.get(i).trim();
 
-                    boolean nextBlock = headerLine.startsWith("###");
-
-                    if (nextBlock) {
-                        i--;
+                    if (headerLine.isEmpty()) {
                         break;
                     }
 
-                    boolean emptyLine = headerLine.isEmpty();
-
-                    if (emptyLine) {
+                    if (headerLine.startsWith("###")) {
+                        i--;
                         break;
                     }
 
@@ -143,7 +117,7 @@ public class HttpSyncService {
 
                 String headers = headersBuilder.toString();
 
-                /* BODY */
+
 
                 StringBuilder bodyBuilder = new StringBuilder();
 
@@ -151,12 +125,9 @@ public class HttpSyncService {
 
                 while (i < lines.size()) {
 
-                    String bodyRawLine = lines.get(i);
-                    String bodyLine = bodyRawLine.trim();
+                    String bodyLine = lines.get(i).trim();
 
-                    boolean nextBlock = bodyLine.startsWith("###");
-
-                    if (nextBlock) {
+                    if (bodyLine.startsWith("###")) {
                         i--;
                         break;
                     }
@@ -168,33 +139,52 @@ public class HttpSyncService {
 
                 String body = bodyBuilder.toString();
 
-                /* DEBUG OUTPUT */
-                String command = "-m " + method + " -u " + url;
+
+
                 Long folderId = null;
-                try {
-                    List<FolderDTO> foldersDTO = cliFolderService.getAllFolders();
-                    List<Folder> folders = new ArrayList<>();
-                    for (FolderDTO folderDTO : foldersDTO) {
-                        folders.add(FolderMapper.fromDTO(folderDTO));
-                    }
-                    for (Folder f : folders) {
-                        if (f.getProjectName().equals(currentFolder)) {
-                            System.out.println(currentFolder);
-                            folderId = f.getId();
+
+                if (!target.equals("root")) {
+
+                    try {
+
+                        List<Folder> folders = new ArrayList<>();
+                        List<FolderDTO> dtos = cliFolderService.getAllFolders();
+
+                        for (FolderDTO folderDTO : dtos) {
+                            folders.add(FolderMapper.fromDTO(folderDTO));
                         }
+                        for (Folder f : folders) {
+
+                            if (f.getProjectName().equals(target)) {
+
+                                folderId = f.getId();
+                                break;
+                            }
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                } catch (Exception e ) {
-                    e.printStackTrace();
                 }
 
+
+
+                String command = "-m " + method + " -u " + url;
+
                 try {
-                    cliCommandService.createCommand(commandName, command, body, folderId
+
+                    cliCommandService.createCommand(
+                            commandName,
+                            command,
+                            body,
+                            folderId
                     );
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
-                System.out.println("Folder: " + targetFolder);
+
                 System.out.println("Command: " + commandName);
                 System.out.println("Method: " + method);
                 System.out.println("URL: " + url);
@@ -207,4 +197,5 @@ public class HttpSyncService {
 
         return counter;
     }
+
 }

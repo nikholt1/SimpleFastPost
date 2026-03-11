@@ -1,13 +1,13 @@
-#mkdir folder name folderName;
+#mkdir folder name thisIsfolderName;
 
 
-### place folder foldername
+### place folder thisIsfolderName
 ### command name commandName2
 GET https://jsonplaceholder.typicode.com/posts/1
 Accept: application/json
 
 
-### place folder foldername
+### place folder thisIsfolderName
 ### command name commandName1
 POST https://jsonplaceholder.typicode.com/posts
 Content-Type: application/json
@@ -20,7 +20,7 @@ Authorization: Bearer fnjuein12ni21n892182dsn129dn2
 }
 
 
-### place folder foldername
+### place folder thisIsfolderName
 ### command name commandWithHeader
 POST https://jsonplaceholder.typicode.com/posts
 Content-Type: application/json
@@ -37,16 +37,6 @@ somethingElse: thisIsAHEADER
 ### command name commandName
 DELETE https://jsonplaceholder.typicode.com/posts/1
 
-### place folder foldername
-### command name commandName2
-GET https://jsonplaceholder.typicode.com/posts/1
-Accept: application/json
-
-
-### place folder foldername
-### command name commandName1
-POST https://jsonplaceholder.typicode.com/posts
-Content-Type: application/json
 
 {
   "title": "Hello World",
@@ -55,7 +45,7 @@ Content-Type: application/json
 }
 
 
-### place folder foldername
+### place folder thisIsfolderName
 ### command name commandName3
 PUT https://jsonplaceholder.typicode.com/posts/1
 Content-Type: application/json
@@ -67,7 +57,3 @@ Content-Type: application/json
   "userId": 1
 }
 
-
-### place root
-### command name commandName
-DELETE https://jsonplaceholder.typicode.com/posts/1

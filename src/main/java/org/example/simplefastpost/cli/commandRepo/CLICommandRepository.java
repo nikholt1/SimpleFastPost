@@ -49,7 +49,7 @@ public class CLICommandRepository {
             }
 
             stmt.executeUpdate();
-            System.out.println("Command created: " + name);
+
         }
     }
 

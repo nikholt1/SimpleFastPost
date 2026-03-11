@@ -34,193 +34,166 @@ public class HttpSyncService {
     public int syncFile(Path file) throws IOException {
 
         List<String> lines = Files.readAllLines(file);
-
-        String currentFolder = null;
         int counter = 0;
 
         try {
             cliFolderService.deleteAllFolders();
             cliCommandService.deleteAllCommands();
-        } catch (Exception exception) {
-            exception.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
+        int total = lines.size();
+        int lastPercent = -1;
 
         for (int i = 0; i < lines.size(); i++) {
 
-            String rawLine = lines.get(i);
-            String line = rawLine.trim();
+            String line = lines.get(i).trim();
 
         /* -------------------------
-           MKDIR PARSING
+           MKDIR
         ------------------------- */
+            if (line.startsWith("#mkdir")) {
 
-            boolean containsMkdir = line.contains("#mkdir");
-
-            if (containsMkdir) {
-
-                String mkdirLine = line;
-                String[] mkdirParts = mkdirLine.split("\\s+");
-
-                int partsLength = mkdirParts.length;
-
-                boolean validFormat = partsLength >= 4;
-
-                if (validFormat) {
-
-                    String rawFolderName = mkdirParts[3];
-                    String cleanedFolderName = rawFolderName.replace(";", "");
-
-                    currentFolder = cleanedFolderName;
+                String[] parts = line.split("\\s+");
+                if (parts.length >= 4) {
+                    String folderName = parts[3].replace(";", "");
                     try {
-                        cliFolderService.createFolder(currentFolder);
+                        cliFolderService.createFolder(folderName);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
-                    System.out.println("Detected folder name: " + currentFolder);
                 }
             }
 
         /* -------------------------
-           PLACE BLOCK PARSING
+           PLACE BLOCK
         ------------------------- */
+            if (line.startsWith("### place")) {
 
-            boolean isPlaceLine = line.startsWith("### place folder");
+                String[] placeParts = line.split("\\s+");
+                String targetFolder;
 
-            if (isPlaceLine) {
-
-                /* PLACE LINE */
-
-                String placeLine = line;
-                String[] placeParts = placeLine.split("\\s+");
-
-                String rawFolderName = placeParts[3];
-                String targetFolder = rawFolderName.replace(";", "");
+                if (placeParts[2].equals("root")) {
+                    targetFolder = "root";
+                } else if (placeParts[2].equals("folder")) {
+                    targetFolder = placeParts[3].replace(";", "");
+                } else {
+                    throw new IllegalArgumentException("Invalid place syntax: " + line);
+                }
 
                 /* COMMAND NAME */
-
                 i++;
-                String commandLineRaw = lines.get(i);
-                String commandLine = commandLineRaw.trim();
+                if (i >= lines.size()) break;
 
+                String commandLine = lines.get(i).trim();
                 String[] commandParts = commandLine.split("\\s+");
-
-                String rawCommandName = commandParts[3];
-                String commandName = rawCommandName.replace(";", "");
+                String commandName = commandParts[3].replace(";", "");
 
                 /* METHOD + URL */
-
                 i++;
-                String requestLineRaw = lines.get(i);
-                String requestLine = requestLineRaw.trim();
+                if (i >= lines.size()) break;
 
+                String requestLine = lines.get(i).trim();
                 String[] requestParts = requestLine.split("\\s+");
-
                 String method = requestParts[0];
                 String url = requestParts[1];
 
                 /* HEADERS */
-
                 StringBuilder headersBuilder = new StringBuilder();
-
                 i++;
 
                 while (i < lines.size()) {
+                    String headerLine = lines.get(i).trim();
 
-                    String headerRawLine = lines.get(i);
-                    String headerLine = headerRawLine.trim();
-
-                    boolean nextBlock = headerLine.startsWith("###");
-
-                    if (nextBlock) {
+                    if (headerLine.isEmpty()) break;
+                    if (headerLine.startsWith("###")) {
                         i--;
                         break;
                     }
 
-                    boolean emptyLine = headerLine.isEmpty();
-
-                    if (emptyLine) {
-                        break;
-                    }
-
                     headersBuilder.append(headerLine).append("\n");
-
                     i++;
                 }
 
-                String headers = headersBuilder.toString();
-
                 /* BODY */
-
                 StringBuilder bodyBuilder = new StringBuilder();
-
                 i++;
 
                 while (i < lines.size()) {
+                    String bodyLine = lines.get(i).trim();
 
-                    String bodyRawLine = lines.get(i);
-                    String bodyLine = bodyRawLine.trim();
-
-                    boolean nextBlock = bodyLine.startsWith("###");
-
-                    if (nextBlock) {
+                    if (bodyLine.startsWith("###")) {
                         i--;
                         break;
                     }
 
                     bodyBuilder.append(bodyLine).append("\n");
-
                     i++;
                 }
 
                 String body = bodyBuilder.toString();
 
-                /* DEBUG OUTPUT */
-                String command = "-m " + method + " -u " + url;
+                /* FIND FOLDER */
                 Long folderId = null;
-                try {
-                    List<Folder> folders = cliFolderService.getAllFolders();
-                    for (Folder f : folders) {
-                        if (f.getProjectName().equals(currentFolder)) {
-                            System.out.println(currentFolder);
-                            folderId = f.getId();
+
+                if (!targetFolder.equals("root")) {
+                    try {
+                        List<Folder> folders = cliFolderService.getAllFolders();
+
+                        for (Folder f : folders) {
+                            if (f.getProjectName().equals(targetFolder)) {
+                                folderId = f.getId();
+                                break;
+                            }
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                } catch (Exception e ) {
-                    e.printStackTrace();
                 }
 
+                /* SAVE COMMAND */
+                String command = "-m " + method + " -u " + url;
+
                 try {
-                    cliCommandService.createCommand(commandName, command, body, folderId
-                            );
+                    cliCommandService.createCommand(commandName, command, body, folderId);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
-                System.out.println("Folder: " + targetFolder);
-                System.out.println("Command: " + commandName);
-                System.out.println("Method: " + method);
-                System.out.println("URL: " + url);
-                System.out.println("Headers:\n" + headers);
-                System.out.println("Body:\n" + body);
-
                 counter++;
             }
+
+            /* PROGRESS BAR UPDATE */
+
+            int percent = (int) ((i / (double) total) * 100);
+            if (percent > 100) percent = 100;
+
+            if (percent != lastPercent) {
+                printProgressBar(percent);
+                lastPercent = percent;
+            }
         }
+
+        printProgressBar(100);
+        System.out.println();
 
         return counter;
     }
 
-    private void printProgressBar(int current, int total) {
+    private void printProgressBar(int percent) {
+
         int barLength = 30;
-        int filled = (int) ((current / (double) total) * barLength);
+        int filled = (percent * barLength) / 100;
 
-        StringBuilder bar = new StringBuilder("[");
-        for (int i = 0; i < filled; i++) bar.append("=");
-        for (int i = filled; i < barLength; i++) bar.append(" ");
-        bar.append("] ");
+        String bar =
+                "[" +
+                        "=".repeat(filled) +
+                        " ".repeat(barLength - filled) +
+                        "] " +
+                        percent + "%";
 
-        int percent = (int) ((current / (double) total) * 100);
-        System.out.print("\r" + bar + percent + "%");
+        System.out.print("\r" + bar);
+        System.out.flush();
     }
 }
