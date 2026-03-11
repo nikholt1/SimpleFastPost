@@ -360,23 +360,60 @@ function renderNewCommand(folderId = null) {
     main.innerHTML = `
         <form id="commandForm">
             <h5>Add Command</h5>
+    
+            <!-- Styled method dropdown -->
             <input type="text" id="commandName" placeholder="Command Name" required>
+            <div>
+                <select id="requestMethod" class="method-select">
+                    <option class="method" value="GET" selected>GET</option>
+                    <option class="method" value="POST">POST</option>
+                    <option class="method" value="PUT">PUT</option>
+                    <option class="method" value="DELETE">DELETE</option>
+                    <option class="method" value="PATCH">PATCH</option>
+                </select>
+                <input style="width: 80%" type="text" id="commandURL" placeholder="URL">
+    
+            </div>
             <input type="text" id="commandCmd" placeholder="Command" required>
-            <input type="text" id="commandBody" placeholder="Command Body (optional)">
-            <button type="submit" class="btn btn-primary"
-                style="background-color: #238536; color: white">
+            <textarea id="commandBody" placeholder="Command Body (optional)" style="background-color: rgba(43,45,48,0.5); color: white; width: 100%; height: 200px; padding: 6px; font-size: 14px; box-sizing: border-box;"></textarea>
+            <button class="hidden"
+                    style="background-color: #815cd7; color: white; width: 200px">Add more headers</button>
+    
+            <button  type="submit" class="btn btn-primary"
+                    style="background-color: #238536; color: white">
                 Add Command
             </button>
         </form>
     `;
-
     const commandForm = document.getElementById("commandForm");
+
+    const methodSelect = document.getElementById("requestMethod");
+    const urlInput = document.getElementById("commandURL");
+    const commandInput = document.getElementById("commandCmd");
+
+// Function to keep the command synced
+    function updateCommand() {
+        const method = methodSelect.value;
+        const url = urlInput.value.trim();
+
+        commandInput.value = `-m ${method} -u ${url}`;
+    }
+
+// Initial value
+    updateCommand();
+
+// Update when method changes
+    methodSelect.addEventListener("change", updateCommand);
+
+// Update when URL changes
+    urlInput.addEventListener("input", updateCommand);
 
     commandForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         const name = document.getElementById("commandName").value.trim();
-        const command = document.getElementById("commandCmd").value.trim();
+        const command = commandInput.value.trim();
+
         const bodyInput = document.getElementById("commandBody").value.trim();
         const body = bodyInput === "" ? null : bodyInput;
 
@@ -422,7 +459,7 @@ function renderCommand(command) {
     main.innerHTML = `
         <div class="dark-main-content">
 
-            <h3 class="dark-text" id="commandTitle">${command.name}</h3>
+            <h4 class="dark-text" id="commandTitle">${command.name}</h4>
 
             <hr style="border-color: #3a3a3a;">
 

@@ -26,7 +26,14 @@ public class CLICommandService {
             System.err.println("✖ Failed to create command: " + e.getMessage());
         }
     }
-
+    public List<Command> getAllCommands() {
+        try {
+            return cliCommandRepository.getAllCommands();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     public void listCommands() {
         try {
             cliCommandRepository.listCommands();

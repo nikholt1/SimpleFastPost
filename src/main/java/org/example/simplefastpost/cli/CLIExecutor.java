@@ -7,6 +7,7 @@ import org.example.simplefastpost.cli.config.CLIconfig;
 import org.example.simplefastpost.cli.folderRepo.CLIFolderRepository;
 import org.example.simplefastpost.cli.folderService.CLIFolderService;
 import org.example.simplefastpost.cli.syncService.HttpSyncService;
+import org.example.simplefastpost.cli.syncService.PushService;
 import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,7 @@ public class CLIExecutor {
     private final CLICommandService cliCommandService;
     private final CLIFolderService cliFolderService;
     private final HttpSyncService syncService;
+    private final PushService pushService;
     private boolean replayMode = false;
     private final RequestController requestController = new RequestController();
     private final CLIconfig clIconfig = new CLIconfig();
@@ -46,6 +48,7 @@ public class CLIExecutor {
         this.cliCommandService = new CLICommandService(cliCommandRepository);
         this.cliFolderService = new CLIFolderService(cliFolderRepository);
         this.syncService = new HttpSyncService(cliCommandService, cliFolderService);
+        this.pushService = new PushService(cliFolderService, cliCommandService);
     }
 
     public void execute(String[] rawArgs) throws Exception {
@@ -130,7 +133,15 @@ public class CLIExecutor {
                     }
                     return;
                 case "push":
-                    System.out.println("Pushing");
+                    String findRoot = System.getProperty("user.dir");
+                    Path fileToFind = Path.of(findRoot, "sfp.http");
+
+                    if (!Files.exists(fileToFind)) {
+                        System.out.println("File not found in root directory");
+                    }
+                    int runner = pushService.pushFile(fileToFind);
+                    System.out.println("Successfully found " + runner + " commands to build in root .http file");
+
                     return;
                 case "sync":
                     String root = System.getProperty("user.dir");

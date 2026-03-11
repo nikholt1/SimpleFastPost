@@ -53,6 +53,42 @@ public class CLICommandRepository {
         }
     }
 
+    public List<Command> getAllCommands() throws SQLException {
+        List<Command> commands = new ArrayList<>();
+
+        String sql = """
+        SELECT id, name, command, body, folder_id
+        FROM command
+    """;
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+
+                long id = rs.getLong("id");
+                String name = rs.getString("name");
+                String command = rs.getString("command");
+                String body = rs.getString("body");
+
+                Object folderObj = rs.getObject("folder_id");
+                Long folderId = folderObj == null ? null : ((Number) folderObj).longValue();
+
+                Command cmd = new Command();
+                cmd.setId(id);
+                cmd.setName(name);
+                cmd.setCommand(command);
+                cmd.setBody(body);
+                cmd.setFolderId(folderId);
+
+                commands.add(cmd);
+            }
+        }
+
+        return commands;
+    }
+
     public void listCommands() throws SQLException {
         String sql = """
         SELECT id, name, command, body, folder_id

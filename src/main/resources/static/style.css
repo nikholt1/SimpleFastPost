@@ -150,9 +150,10 @@ tbody tr:hover {
 }
 
 form {
+    height: 100%;
     padding: 20px;
-    border: 1px solid #238536;
-    width: 400px;
+    border: 1px solid #9976af;
+    width: 100%;
     display: flex;
     border-radius: 5px;
     flex-direction: column;
@@ -160,7 +161,53 @@ form {
     margin-bottom: 2rem;
     background: #2b2d30;
     color: #ffffff;
+
 }
+
+/* Style the select element */
+.method-select {
+    width: 120px;
+    background-color: #333; /* dark gray */
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+
+.method-select::after {
+    content: "▼";
+    float: right;
+    margin-left: 8px;
+    font-size: 10px;
+}
+
+
+.method-select option {
+    padding: 2px 6px;
+    margin: 2px 0;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    border: 1px solid #fff;
+}
+
+
+
+
+
+.method-select option:hover {
+    cursor: pointer;
+    background-color: inherit;
+}
+
 .button-row {
     display: flex;
     gap: 5px;
