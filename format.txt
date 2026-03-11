@@ -1,0 +1,36 @@
+#mkdir folder name folderName;
+
+### place <location> <folderName_if_needed>;
+### command name <commandName>;
+
+
+### place root;
+### command name <commandName>;
+
+GET https://jsonplaceholder.typicode.com/posts/1
+Accept: application/json
+Authorization: Bearer xyz123
+{
+    "title": "foo",
+    "body": "bar",
+    "userId": 1
+}
+
+
+#mkdir folder name MyFolder;
+
+### place folder MyFolder;
+### command name GetPost1;
+GET https://jsonplaceholder.typicode.com/posts/1
+Accept: application/json
+
+### place root;
+### command name CreatePost;
+POST https://jsonplaceholder.typicode.com/posts
+Content-Type: application/json
+
+{
+    "title": "foo",
+    "body": "bar",
+    "userId": 1
+}
