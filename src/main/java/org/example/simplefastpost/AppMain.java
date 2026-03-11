@@ -1,6 +1,5 @@
 package org.example.simplefastpost;
 
-import org.example.simplefastpost.cli.CLIConfig.ConfigService;
 import org.example.simplefastpost.cli.CLIExecutor;
 import org.example.simplefastpost.setup.ApplicationSetup;
 import org.springframework.boot.SpringApplication;
@@ -61,8 +60,8 @@ public class AppMain {
 
         } else {
             // CLI mode: create CLIExecutor directly, pass args
-            CLIExecutor cli = new CLIExecutor(DB_URL);
-            System.out.println(DB_URL + " in CLI executor call");
+            CLIExecutor cli = new CLIExecutor();
+
             try {
                 cli.execute(args);
             } catch (Exception e) {

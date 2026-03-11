@@ -3,6 +3,7 @@ package org.example.simplefastpost.cli;
 import org.example.simplefastpost.cli.RequestController.RequestController;
 import org.example.simplefastpost.cli.commandRepo.CLICommandRepository;
 import org.example.simplefastpost.cli.commandService.CLICommandService;
+import org.example.simplefastpost.cli.config.CLIconfig;
 import org.example.simplefastpost.cli.folderRepo.CLIFolderRepository;
 import org.example.simplefastpost.cli.folderService.CLIFolderService;
 import org.example.simplefastpost.cli.syncService.HttpSyncService;
@@ -21,7 +22,7 @@ public class CLIExecutor {
 
     private static final int MAX_RECURSION_DEPTH = 5;
 
-    private final String DB_URL;
+    private String DB_URL;
 
     private final CLICommandRepository cliCommandRepository;
     private final CLIFolderRepository cliFolderRepository;
@@ -30,9 +31,16 @@ public class CLIExecutor {
     private final HttpSyncService syncService;
     private boolean replayMode = false;
     private final RequestController requestController = new RequestController();
+    private final CLIconfig clIconfig = new CLIconfig();
 
-    public CLIExecutor(String DB_URL) {
-        this.DB_URL = DB_URL;
+    public CLIExecutor() {
+        try {
+            this.DB_URL = clIconfig.getDBUrl();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //this.DB_URL = DB_URL;
         this.cliCommandRepository = new CLICommandRepository(DB_URL);
         this.cliFolderRepository = new CLIFolderRepository(DB_URL);
         this.cliCommandService = new CLICommandService(cliCommandRepository);
@@ -169,6 +177,7 @@ public class CLIExecutor {
 
                             execute(tokenize(c.getCommand()), depth + 1, true);
                         }
+
 
                         return;
                     }
