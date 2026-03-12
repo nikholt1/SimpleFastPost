@@ -100,7 +100,7 @@ function renderHelp() {
             <div>
 
             </div>
-            <div class="startPageContent">
+            <div class="startPageContent" style="width: 80%;">
                 <h1><img src="image/SFPLogoNoBackground.jpg" style="width: 50px"> Help</h1>
                 <h4>Commands</h4>
                 <strong>Creating commands:</strong><br>

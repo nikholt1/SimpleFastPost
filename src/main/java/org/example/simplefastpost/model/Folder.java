@@ -20,6 +20,10 @@ public class Folder {
     private List<Command> commands = new ArrayList<>();
     public Folder() {
     }
+    public  Folder(Long id, String projectName) {
+        this.id = id;
+        this.projectName = projectName;
+    }
 
     public List<Command> getCommands() {
         return commands;

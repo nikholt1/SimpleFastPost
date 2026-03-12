@@ -26,7 +26,27 @@ public class CLIFolderRepository {
             System.out.println("Folder created: " + projectName);
         }
     }
+    public Folder fetchFolderById(Long id) throws SQLException {
+        String sql = "SELECT id, project_name FROM folder WHERE id = ?";
 
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Folder(
+                            rs.getLong("id"),
+                            rs.getString("project_name")
+                    );
+                } else {
+                    System.out.println("Folder not found: " + id);
+                    return null;
+                }
+            }
+        }
+    }
     /* READ ALL */
     public void listFolders() throws SQLException {
         String sql = "SELECT id, project_name FROM folder";

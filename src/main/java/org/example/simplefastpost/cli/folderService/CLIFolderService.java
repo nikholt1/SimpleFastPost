@@ -33,6 +33,15 @@ public class CLIFolderService {
         }
     }
 
+    public Folder fetchFolderById(Long id) {
+        try {
+            return cliFolderRepository.fetchFolderById(id);
+        }catch (Exception e) {
+            System.err.println("Failed to fetch folder: " + e.getMessage());
+        }
+        return null;
+    }
+
     public void getFolderById(long id) {
         try {
             cliFolderRepository.getFolderById(id);

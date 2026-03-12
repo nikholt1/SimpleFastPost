@@ -4,6 +4,7 @@ import org.example.simplefastpost.cli.commandService.CLICommandService;
 import org.example.simplefastpost.cli.folderService.CLIFolderService;
 import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -34,13 +35,66 @@ public class PushService {
 
 
                 for (Folder folder : folders) {
-                    writer.write("#mkdir " + folder.getProjectName() + "\n");
+                    writer.write("#mkdir folder name " + folder.getProjectName() + ";\n");
+                    writer.write("\n \n");
+                }
+                for (Command command : commands) {
+                    Folder folder = null;
+                    if (command.getFolderId() != null) {
+                        folder = folderService.fetchFolderById(command.getFolderId());
+                    }
+                    if (folder == null) {
+                        writer.write("### place root" + ";\n");
+
+                    } else {
+                        writer.write("### place folder " + folder.getProjectName() + ";\n");
+
+
+                    }
+                    writer.write("### command name " + command.getName() + ";\n");
+                    String commandString = command.getCommand();
+
+                    String method = null;
+                    String url = null;
+                    String finalCommand = commandString;
+
+                    if (commandString.contains("-m") && commandString.contains("-u")) {
+                        String[] parts = commandString.split("\\s+");
+
+                        for (int i = 0; i < parts.length; i++) {
+                            if (parts[i].equals("-m") && i + 1 < parts.length) {
+                                method = parts[i + 1];
+                            }
+                            if (parts[i].equals("-u") && i + 1 < parts.length) {
+                                url = parts[i + 1];
+                            }
+
+                        }
+                        writer.write(method + " " + url + "\n" );
+                        writer.write("\n");
+                    } else {
+                        finalCommand = commandString;
+                        writer.write(finalCommand);
+                        writer.write("\n");
+                    }
+
+                    ObjectMapper mapper = new ObjectMapper();
+
+                    String body = command.getBody();
+                    if (body != null && !body.isBlank()) {
+                        Object json = mapper.readValue(body, Object.class);
+                        writer.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json));
+                        writer.write("\n");
+                        writer.write("\n \n");
+                    }
+
+
+
+
                 }
             }
 
-            for (Command command : commands) {
-                System.out.println(command);
-            }
+
 
 
 
