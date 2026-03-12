@@ -17,4 +17,5 @@ public interface FolderService {
     FolderDTO updateFolder(Long folderId, String projectName, List<Command> commands);
     void deleteFolder(Long folderId);
     void deleteAllFolders();
+    List<Folder> getAllFolderEntitiesForPush();
 }

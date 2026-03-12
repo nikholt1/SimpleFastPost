@@ -40,6 +40,11 @@ public class FolderServiceImpl implements FolderService {
     }
 
     @Override
+    public List<Folder> getAllFolderEntitiesForPush() {
+        return folderRepository.findAll();
+    }
+
+    @Override
     public FolderDTO createFolder(String projectName, List<Command> commands) {
         Folder folder = new Folder();
         folder.setProjectName(projectName);

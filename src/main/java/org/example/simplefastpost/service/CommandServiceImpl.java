@@ -34,6 +34,11 @@ public class CommandServiceImpl implements CommandService {
     }
 
     @Override
+    public List<Command> getCommandEntitiesForPush() {
+        return commandRepository.findAll();
+    }
+
+    @Override
     public Optional<CommandDTO> getCommandById(Long id) {
         Optional<Command> command = commandRepository.findById(id);
         if (command.isPresent()) {

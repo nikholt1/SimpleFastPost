@@ -8,6 +8,7 @@ import org.example.simplefastpost.model.Folder;
 import org.example.simplefastpost.service.CommandService;
 import org.example.simplefastpost.service.FolderService;
 import org.example.simplefastpost.service.HttpSyncService;
+import org.example.simplefastpost.service.PushService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -26,11 +27,13 @@ public class APIController {
     private final CommandService commandService;
     private final FolderService folderService;
     private final HttpSyncService  httpSyncService;
+    private final PushService pushService;
 
-    public APIController(CommandService commandService, FolderService folderService, HttpSyncService httpSyncService) {
+    public APIController(CommandService commandService, FolderService folderService, HttpSyncService httpSyncService, PushService pushService) {
         this.commandService = commandService;
         this.folderService = folderService;
         this.httpSyncService = httpSyncService;
+        this.pushService = pushService;
     }
 
     @GetMapping("/folders")
@@ -147,6 +150,11 @@ public class APIController {
             Path file = Path.of(System.getProperty("user.dir"), "sfp.http");
 
             System.out.println("push to " + file);
+            try {
+                pushService.pushFile(file);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 //            try {
 //                System.out.println("push");
 //            } catch (IOException e) {

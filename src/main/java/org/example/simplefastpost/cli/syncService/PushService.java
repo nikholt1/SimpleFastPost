@@ -37,6 +37,7 @@ public class PushService {
                 for (Folder folder : folders) {
                     writer.write("#mkdir folder name " + folder.getProjectName() + ";\n");
                     writer.write("\n \n");
+                    counter++;
                 }
                 for (Command command : commands) {
                     Folder folder = null;
@@ -45,13 +46,14 @@ public class PushService {
                     }
                     if (folder == null) {
                         writer.write("### place root" + ";\n");
-
+                        counter++;
                     } else {
                         writer.write("### place folder " + folder.getProjectName() + ";\n");
-
+                        counter++;
 
                     }
                     writer.write("### command name " + command.getName() + ";\n");
+                    counter++;
                     String commandString = command.getCommand();
 
                     String method = null;

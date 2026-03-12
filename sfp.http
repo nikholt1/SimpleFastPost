@@ -2,7 +2,7 @@
 
  
 ### place folder thisIsfolderName;
-### command name commandName2;
+### command name commandNameAfterPush;
 GET https://jsonplaceholder.typicode.com/posts/1
 
 ### place folder thisIsfolderName;
@@ -27,7 +27,7 @@ POST https://jsonplaceholder.typicode.com/posts
 }
 
  
-### place root;
+### place folder thisIsfolderName;
 ### command name commandName;
 DELETE https://jsonplaceholder.typicode.com/posts/1
 
@@ -38,7 +38,7 @@ DELETE https://jsonplaceholder.typicode.com/posts/1
 }
 
  
-### place folder thisIsfolderName;
+### place root;
 ### command name commandName3;
 PUT https://jsonplaceholder.typicode.com/posts/1
 
