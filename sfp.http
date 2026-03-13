@@ -39,7 +39,7 @@ DELETE https://jsonplaceholder.typicode.com/posts/1
 
  
 ### place root;
-### command name commandName3;
+### command name thisIsFromThePush;
 PUT https://jsonplaceholder.typicode.com/posts/1
 
 {

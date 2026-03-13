@@ -1,6 +1,10 @@
 package org.example.simplefastpost;
 
 import org.example.simplefastpost.cli.CLIExecutor;
+import org.example.simplefastpost.cli.OSService.OSService;
+import org.example.simplefastpost.cli.apiRepository.ApiRepository;
+import org.example.simplefastpost.cli.apiService.ApiService;
+import org.example.simplefastpost.cli.config.CLIconfig;
 import org.example.simplefastpost.setup.ApplicationSetup;
 import org.springframework.boot.SpringApplication;
 import org.springframework.stereotype.Component;
@@ -13,8 +17,11 @@ import java.util.Map;
 @Component
 public class AppMain {
 
-    public static void main(String[] args) {
-
+    public static void main(String[] args) throws Exception {
+        CLIconfig cliConfig = new CLIconfig();
+        ApiRepository apiRepository = new ApiRepository(cliConfig.getDBUrl());
+        OSService osService = new OSService();
+        ApiService apiService = new ApiService(cliConfig, apiRepository, osService);
 
         String DB_URL = "jdbc:sqlite:../sfpDB.db";
         try {
@@ -41,22 +48,22 @@ public class AppMain {
         }
 
         if (isApiMode) {
-            // Configure Spring Boot properties programmatically
-            SpringApplication app = new SpringApplication(SimpleFastPostApplication.class);
-
-            // Set port dynamically
-            app.setDefaultProperties(
-                    Map.of("server.port", port)
-            );
-
             if (isDetached) {
-                // Optionally: suppress console output or logging for "detached" mode
+                // Start API in a detached/background process
                 System.out.println("Starting API in detached mode on port " + port);
+
+                apiService.startApiDaemon(); // spawns new process and saves PID
             } else {
+                // Foreground: run Spring Boot API normally
                 System.out.println("Starting API on port " + port);
+
+                SpringApplication app = new SpringApplication(SimpleFastPostApplication.class);
+
+                // Set port dynamically
+                app.setDefaultProperties(Map.of("server.port", port));
+                app.run(args);
             }
 
-            app.run(args);
 
         } else {
             // CLI mode: create CLIExecutor directly, pass args

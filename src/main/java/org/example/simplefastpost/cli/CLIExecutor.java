@@ -1,6 +1,9 @@
 package org.example.simplefastpost.cli;
 
+import org.example.simplefastpost.cli.OSService.OSService;
 import org.example.simplefastpost.cli.RequestController.RequestController;
+import org.example.simplefastpost.cli.apiRepository.ApiRepository;
+import org.example.simplefastpost.cli.apiService.ApiService;
 import org.example.simplefastpost.cli.commandRepo.CLICommandRepository;
 import org.example.simplefastpost.cli.commandService.CLICommandService;
 import org.example.simplefastpost.cli.config.CLIconfig;
@@ -35,7 +38,8 @@ public class CLIExecutor {
     private final RequestController requestController = new RequestController();
     private final CLIconfig clIconfig = new CLIconfig();
 
-    public CLIExecutor() {
+    public CLIExecutor() throws Exception {
+
         try {
             this.DB_URL = clIconfig.getDBUrl();
 
@@ -56,6 +60,12 @@ public class CLIExecutor {
     }
 
     private void execute(String[] rawArgs, int depth, boolean replayMode) throws Exception {
+        CLIconfig cliConfig = new CLIconfig();
+        ApiRepository apiRepository = new ApiRepository(cliConfig.getDBUrl());
+        OSService osService = new OSService();
+        ApiService apiService = new ApiService(cliConfig, apiRepository, osService);
+
+
         this.replayMode = replayMode;
 
         if (depth > MAX_RECURSION_DEPTH) {
@@ -107,6 +117,34 @@ public class CLIExecutor {
             } else if (arg.equalsIgnoreCase("--version")) {
                 System.out.println("sfp version: 0.0.1 beta");
                 return;
+            } else if (arg.equalsIgnoreCase("api")) {
+                // Check if there's a subcommand after "api"
+                if (i + 1 < rawArgs.length) {
+                    String subCommand = rawArgs[++i];
+
+                    if (subCommand.equalsIgnoreCase("ls")) {
+                        // List all API instances
+                        apiService.listAllInstances();
+
+                    } else if (subCommand.equalsIgnoreCase("delete") && i + 1 < rawArgs.length) {
+                        try {
+                            Long pid = Long.parseLong(rawArgs[++i]); // get the PID
+                            apiService.stopApiDaemon(pid);
+                            System.out.println("Stopped API instance with PID " + pid);
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid PID: " + rawArgs[i]);
+                        } catch (Exception e) {
+                            System.out.println("Failed to stop API instance: " + e.getMessage());
+                        }
+
+                    } else {
+                        System.out.println("Unknown API subcommand. Use 'ls' or 'delete <pid>'.");
+                    }
+                } else {
+                    // No subcommand: maybe start API in normal/foreground mode
+                    // Or start detached if you want
+                    System.out.println("No API subcommand provided. Use 'ls' or 'delete <pid>'.");
+                }
             }
         }
 
@@ -132,6 +170,7 @@ public class CLIExecutor {
                         cliCommandService.listCommands();
                     }
                     return;
+
                 case "push":
                     String findRoot = System.getProperty("user.dir");
                     Path fileToFind = Path.of(findRoot, "sfp.http");

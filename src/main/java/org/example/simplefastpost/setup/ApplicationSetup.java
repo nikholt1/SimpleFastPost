@@ -44,6 +44,14 @@ public class ApplicationSetup {
                     )
                 """);
 
+                    stmt.execute("""
+                    CREATE TABLE IF NOT EXISTS apiInstance (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        pid INTEGER NOT NULL,
+                        created TEXT DEFAULT (datetime('now','localtime'))
+                    )
+                """);
+
                     System.out.println("Database created");
 
                 }

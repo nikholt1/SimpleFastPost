@@ -4,11 +4,15 @@ import org.example.simplefastpost.AppMain;
 import org.example.simplefastpost.cli.OSService.OSService;
 import org.example.simplefastpost.cli.apiRepository.ApiRepository;
 import org.example.simplefastpost.cli.config.CLIconfig;
+import org.example.simplefastpost.model.APIEntity;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ApiService {
 
@@ -56,23 +60,30 @@ public class ApiService {
         LocalDateTime startedAt = LocalDateTime.now();
 
         // apiRepository.saveApiRun();
+        APIEntity apiEntity = new APIEntity(pid, startedAt);
+        apiRepository.createNewInstance(apiEntity);
 
     }
-    /// TODO: save database instance pid or id in database
+
 
     /// TODO: list all entities in database
-
-    /// TODO: stop all instances in database
-
-    /// TODO: stop instance by id
-    public void stopApiDaemon(Long id) throws Exception {
-//        Long pid = apiRepository.getAPIById();
-        Long pid = null;
-        ProcessHandle.of(pid).ifPresent(ProcessHandle::destroy);
-
-//        apiRepository.deleteApiById(id);
+    public void listAllInstances() throws SQLException {
+        List<APIEntity> entities = apiRepository.listAllInstances();
+        for (APIEntity entity : entities) {
+            System.out.println(entity.getpId() + "     " + entity.getCreated());
+        }
 
     }
-    /// TODO: restart instance by id
+
+
+    /// TODO: stop instance by id
+    public void stopApiDaemon(Long pid) throws Exception {
+//        APIEntity apiEntity = apiRepository.getInstanceByPid(pid);
+
+        ProcessHandle.of(pid).ifPresent(ProcessHandle::destroy);
+
+        apiRepository.deleteByPid(pid);
+    }
+
 
 }
