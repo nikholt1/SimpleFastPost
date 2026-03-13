@@ -23,7 +23,7 @@ public class CLIconfig {
         return dbUrl;
     }
 
-    private Path getDataDir() {
+    public Path getDataDir() {
         // Check environment variable first
         String env = System.getenv("SFP_DATA_DIR");
         if (env != null && !env.isBlank()) {
