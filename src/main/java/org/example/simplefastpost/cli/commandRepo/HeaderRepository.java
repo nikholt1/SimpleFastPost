@@ -1,6 +1,6 @@
 package org.example.simplefastpost.cli.commandRepo;
 
-import org.example.simplefastpost.model.Header;
+import org.example.simplefastpost.model.Headers;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -15,7 +15,7 @@ public class HeaderRepository {
         this.DB_URL = DB_URL;
     }
 
-    public void createHeader(Header header) throws SQLException {
+    public void createHeader(Headers header) throws SQLException {
         System.out.println(DB_URL);
         String sql = """
             INSERT INTO headers (command_id, key, value)
@@ -33,7 +33,7 @@ public class HeaderRepository {
         }
         System.out.println("saved header " + header.getKey());
     }
-    public Header getHeader(Long headerId) throws SQLException {
+    public Headers getHeader(Long headerId) throws SQLException {
         String sql = "SELECT * FROM headers WHERE id = ?";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
@@ -43,7 +43,7 @@ public class HeaderRepository {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    Header header = new Header();
+                    Headers header = new Headers();
                     header.setId(rs.getLong("id"));
                     header.setCommandId(rs.getLong("command_id"));
                     header.setKey(rs.getString("key"));
@@ -58,8 +58,8 @@ public class HeaderRepository {
         }
     }
 
-    public List<Header> getAllHeadersFromCommandId(Long commandId) throws SQLException {
-        List<Header> headers = new ArrayList<>();
+    public List<Headers> getAllHeadersFromCommandId(Long commandId) throws SQLException {
+        List<Headers> headers = new ArrayList<>();
 
         String sql = "SELECT * FROM headers WHERE command_id = ?";
 
@@ -70,7 +70,7 @@ public class HeaderRepository {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    Header header = new Header();
+                    Headers header = new Headers();
                     header.setId(rs.getLong("id"));
                     header.setCommandId(rs.getLong("command_id"));
                     header.setKey(rs.getString("key"));
@@ -85,7 +85,7 @@ public class HeaderRepository {
     }
 
 
-    public Header updateHeader(Header header) throws SQLException {
+    public Headers updateHeader(Headers header) throws SQLException {
         String sql = "UPDATE headers SET key = ?, value = ? WHERE id = ?";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
@@ -105,7 +105,7 @@ public class HeaderRepository {
             return header;
         }
     }
-    public void deleteHeader(Header header) throws SQLException {
+    public void deleteHeader(Headers header) throws SQLException {
         String sql = "DELETE FROM headers WHERE id = ?";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);

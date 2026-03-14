@@ -15,8 +15,7 @@ import org.example.simplefastpost.cli.syncService.HttpSyncService;
 import org.example.simplefastpost.cli.syncService.PushService;
 import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
-import org.example.simplefastpost.model.Header;
-import org.springframework.http.ResponseEntity;
+import org.example.simplefastpost.model.Headers;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -183,9 +182,9 @@ public class CLIExecutor {
                                 if (command.getFolderId() == folder.getId()) {
                                     System.out.printf("         Name: %s | Command: %s%n", command.getName(), command.getCommand());
 
-                                    List<Header> headers = headerService.getAllHeadersFromCommandId(command.getId());
+                                    List<Headers> headers = headerService.getAllHeadersFromCommandId(command.getId());
                                     if (!headers.isEmpty()) {
-                                        for (Header header : headers) {
+                                        for (Headers header : headers) {
                                             System.out.println("         " + header.getKey() + ": " + header.getValue());
                                         }
                                     }
@@ -207,9 +206,9 @@ public class CLIExecutor {
                                 System.out.println("\n{} Root Commands");
                                 System.out.printf("Name: %s | Command: %s%n", command.getName(), command.getCommand());
 
-                                List<Header> headers = headerService.getAllHeadersFromCommandId(command.getId());
+                                List<Headers> headers = headerService.getAllHeadersFromCommandId(command.getId());
                                 if (!headers.isEmpty()) {
-                                    for (Header header : headers) {
+                                    for (Headers header : headers) {
                                         System.out.println(header.getKey() + ": " + header.getValue());
                                     }
                                 }
@@ -436,10 +435,10 @@ public class CLIExecutor {
                     folderId
             );
             Command savedCommand = cliCommandService.getCommandByName(commandName);
-            List<Header> headersToAdd = readHeadersInteractively();
+            List<Headers> headersToAdd = readHeadersInteractively();
 
 
-            for (Header header : headersToAdd) {
+            for (Headers header : headersToAdd) {
                 header.setCommandId(savedCommand.getId());
                 headerService.createHeader(header);
             }
@@ -495,8 +494,8 @@ public class CLIExecutor {
         return command.trim().split("\\s+");
     }
 
-    private List<Header> readHeadersInteractively() {
-        List<Header> headers = new ArrayList<>();
+    private List<Headers> readHeadersInteractively() {
+        List<Headers> headers = new ArrayList<>();
         Scanner sc = new Scanner(System.in);
 
         while (true) {
@@ -512,7 +511,7 @@ public class CLIExecutor {
                 System.out.print("Header value: ");
                 String value = sc.nextLine().trim();
 
-                headers.add(new Header(null, null, key, value)); // id and commandId will be set later
+                headers.add(new Headers(null, null, key, value)); // id and commandId will be set later
             } else {
                 System.out.println("Please enter y or n.");
             }
@@ -568,10 +567,11 @@ COMMANDS:
             Update a saved command
 
       Fields:
-        name        Rename the command
-        body        Edit JSON body interactively
-        command     Replace the raw command string
-
+        name                            Rename the command
+        body                            Edit JSON body interactively
+        command                         Replace the raw command string
+        header <header key>             fetches the key and prompts for new key and value
+        
       Examples:
         update command getUsers --set name:newGetUsers
         update command getUsers --set body

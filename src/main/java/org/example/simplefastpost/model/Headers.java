@@ -1,21 +1,28 @@
 package org.example.simplefastpost.model;
 
-public class Header {
+import jakarta.persistence.*;
 
+@Entity
+public class Headers {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "command_id", insertable = false, updatable = false)
     private Long commandId;
+
     private String key;
     private String value;
 
 
-    public Header(Long id, Long commandId, String key, String value) {
+    public Headers(Long id, Long commandId, String key, String value) {
         this.id = id;
         this.commandId = commandId;
         this.key = key;
         this.value = value;
     }
 
-    public Header() {}
+    public Headers() {}
     public Long getId() {
         return id;
     }

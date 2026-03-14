@@ -1,9 +1,6 @@
 #mkdir folder name thisIsfolderName;
 
  
-#mkdir folder name thisIsfolderName2;
-
- 
 ### place folder thisIsfolderName;
 ### command name commandNameAfterPush;
 GET https://jsonplaceholder.typicode.com/posts/1
@@ -53,11 +50,3 @@ PUT https://jsonplaceholder.typicode.com/posts/1
 }
 
  
-### place folder thisIsfolderName2;
-### command name in foldername;
-GET gregregre
-
-### place folder thisIsfolderName2;
-### command name hello;
-GET google.com
-
