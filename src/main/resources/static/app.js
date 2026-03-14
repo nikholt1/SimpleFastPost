@@ -35,25 +35,32 @@ async function initApp() {
 }
 
 async function pushSync() {
-    const loadingBar = document.getElementById("loadingBar");
-
+    // const loadingBar = document.getElementById("loadingBar");
+    const loadingBar2 = document.getElementById("loading-dots");
+    loadingBar2.style.display="flex";
+    const loadingbarState = document.getElementById("loadingbarState");
+    loadingbarState.innerHTML="push"
     // still does not work for some reason
-    loadingBar.classList.remove("hidden");
+    // loadingBar.classList.remove("hidden");
     console.log("push")
     await fetch("http://localhost:8080/api/push", { method: "POST" });
 
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    loadingBar.classList.add("hidden");
+    loadingBar2.style.display="none";
+    // loadingBar.classList.add("hidden");
     // window.location.reload();
 }
 
 
 async function sync() {
-    const loadingBar = document.getElementById("loadingBar");
+    // const loadingBar = document.getElementById("loadingBar");
+    const loadingBar2 = document.getElementById("loading-dots");
+    loadingBar2.style.display="flex";
+    const loadingbarState = document.getElementById("loadingbarState");
+    loadingbarState.innerHTML="sync"
 
-
-    loadingBar.classList.remove("hidden");
+    // loadingBar.classList.remove("hidden");
 
 
     await new Promise(requestAnimationFrame);
@@ -362,7 +369,7 @@ function renderNewCommand(folderId = null) {
             <h5>Add Command</h5>
     
             <!-- Styled method dropdown -->
-            <input type="text" id="commandName" placeholder="Command Name" required>
+            <input class="formInput" type="text" id="commandName" placeholder="Command Name" required>
             <div>
                 <select id="requestMethod" class="method-select">
                     <option class="method" value="GET" selected>GET</option>
@@ -371,16 +378,16 @@ function renderNewCommand(folderId = null) {
                     <option class="method" value="DELETE">DELETE</option>
                     <option class="method" value="PATCH">PATCH</option>
                 </select>
-                <input style="width: 80%" type="text" id="commandURL" placeholder="URL">
+                <input style="width: 80%; background-color: rgba(30,31,34,0.5);" type="text" id="commandURL" placeholder="URL">
     
             </div>
             <input type="text" id="commandCmd" placeholder="Command" required>
-            <textarea id="commandBody" placeholder="Command Body (optional)" style="background-color: rgba(43,45,48,0.5); color: white; width: 100%; height: 200px; padding: 6px; font-size: 14px; box-sizing: border-box;"></textarea>
+            <textarea  id="commandBody" placeholder="Command Body (optional)" style="background-color: rgba(30,31,34,0.5); color: white; width: 100%; height: 200px; padding: 6px; font-size: 14px; box-sizing: border-box;"></textarea>
             <button class="hidden"
                     style="background-color: #815cd7; color: white; width: 200px">Add more headers</button>
     
             <button  type="submit" class="btn btn-primary"
-                    style="background-color: #238536; color: white">
+                    style="background-color: #238536; color: white; width: 200px;">
                 Add Command
             </button>
         </form>
@@ -463,12 +470,14 @@ function renderCommand(command) {
 
             <hr style="border-color: #3a3a3a;">
 
-            <p class="dark-text"><strong>Command</strong></p>
+            <p class="dark-text">Command</p>
             <textarea id="commandCmd" class="dark-pre">${command.command}</textarea>
 
-            <p class="dark-text"><strong>Body</strong></p>
+            <p class="dark-text">Body</p>
             <textarea id="commandBody" class="dark-body">${command.body ?? ""}</textarea>
-
+            <button class="hidden"
+                    style="background-color: #815cd7; color: white; width: 200px">Add more headers</button>
+          
         </div>
     `;
 
@@ -572,9 +581,9 @@ function renderNewFolder() {
     main.innerHTML = `
         <form id="folderForm">
             <h5>Add Folder</h5>
-            <input type="text" id="folderName" placeholder="Folder Name" required>
+            <input class="formInput" type="text" id="folderName" placeholder="Folder Name" required>
             <button type="submit" class="btn btn-primary" 
-                style="background-color: #238536; color: white">
+                style="background-color: #238536; color: white; width: 200px;">
                 Add Folder
             </button>
         </form>

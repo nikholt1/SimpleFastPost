@@ -49,11 +49,18 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
+        <div id="loading-dots" class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+            <p style="margin-top: 15px" id="loadingbarState">state</p>
+        </div>
         <img id="loadingBar" class="hidden" style="width: 40px; margin-left: 10px" src="image/loading.gif">
         <div class="button-row">
             <button id="addFolder" class="addFolderButton" title="Create a new folder in root">+ folder</button>
             <button id="addCommand" class="addRootCommandButton" title="Create a new Command in root">+ Command</button>
         </div>
+
     </div>
 
     <div id="resizer"></div>
@@ -76,6 +83,11 @@
                 </a>
             </div>
         </div>
+    </div>
+
+    <div id="contextMenu" class="context-menu">
+        <div id="ctxAddCommand">Add New Command</div>
+        <div id="ctxAddFolder">Add New Folder</div>
     </div>
 
 

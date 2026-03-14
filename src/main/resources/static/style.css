@@ -152,7 +152,7 @@ tbody tr:hover {
 form {
     height: 100%;
     padding: 20px;
-    border: 1px solid #9976af;
+    /*border: 1px solid #9976af;*/
     width: 100%;
     display: flex;
     border-radius: 5px;
@@ -163,7 +163,9 @@ form {
     color: #ffffff;
 
 }
-
+.formInput {
+    background-color: rgba(30,31,34,0.5);
+}
 /* Style the select element */
 .method-select {
     width: 120px;
@@ -308,7 +310,7 @@ table.table tbody tr:hover {
 }
 
 .dark-text {
-    color: lightgrey;
+    color: white;
 }
 
 .dark-pre {
@@ -334,4 +336,62 @@ table.table tbody tr:hover {
 
 .hidden {
     display: none;
+}
+
+.context-menu {
+    position: absolute;
+    background: #2b2b2b;
+    border: 1px solid #444;
+    padding: 5px 0;
+    display: none;
+    z-index: 1000;
+}
+
+.context-menu div {
+    padding: 6px 14px;
+    cursor: pointer;
+    color: white;
+}
+
+.context-menu div:hover {
+    background: #3a3a3a;
+}
+
+
+
+.loading-dots {
+    display: none;
+    margin-left: 10px;
+    
+    gap: 6px;
+    align-items: center;
+}
+
+.loading-dots span {
+    width: 8px;
+    height: 8px;
+    background: #238436;
+    border-radius: 50%;
+    opacity: 0;
+    animation: dotFade 1.2s infinite;
+}
+
+.loading-dots span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes dotFade {
+    0%   { opacity: 0; }
+    25%  { opacity: 1; }
+    50%  { opacity: 1; }
+    75%  { opacity: 0; }
+    100% { opacity: 0; }
 }
