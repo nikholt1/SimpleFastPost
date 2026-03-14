@@ -52,6 +52,15 @@ public class ApplicationSetup {
                     )
                 """);
 
+                    stmt.execute("""
+                    CREATE TABLE headers (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        command_id INTEGER NOT NULL,
+                        key TEXT NOT NULL,
+                        value TEXT,
+                        FOREIGN KEY(command_id) REFERENCES commands(id) ON DELETE CASCADE
+                    )
+                """);
                     System.out.println("Database created");
 
                 }

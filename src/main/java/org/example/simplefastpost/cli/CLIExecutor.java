@@ -5,7 +5,9 @@ import org.example.simplefastpost.cli.RequestController.RequestController;
 import org.example.simplefastpost.cli.apiRepository.ApiRepository;
 import org.example.simplefastpost.cli.apiService.ApiService;
 import org.example.simplefastpost.cli.commandRepo.CLICommandRepository;
+import org.example.simplefastpost.cli.commandRepo.HeaderRepository;
 import org.example.simplefastpost.cli.commandService.CLICommandService;
+import org.example.simplefastpost.cli.commandService.HeaderService;
 import org.example.simplefastpost.cli.config.CLIconfig;
 import org.example.simplefastpost.cli.folderRepo.CLIFolderRepository;
 import org.example.simplefastpost.cli.folderService.CLIFolderService;
@@ -13,6 +15,7 @@ import org.example.simplefastpost.cli.syncService.HttpSyncService;
 import org.example.simplefastpost.cli.syncService.PushService;
 import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
+import org.example.simplefastpost.model.Header;
 import org.springframework.http.ResponseEntity;
 
 import java.nio.file.Files;
@@ -37,6 +40,8 @@ public class CLIExecutor {
     private boolean replayMode = false;
     private final RequestController requestController = new RequestController();
     private final CLIconfig clIconfig = new CLIconfig();
+    private final HeaderService headerService;
+    private final HeaderRepository headerRepository;
 
     public CLIExecutor() throws Exception {
 
@@ -53,6 +58,8 @@ public class CLIExecutor {
         this.cliFolderService = new CLIFolderService(cliFolderRepository);
         this.syncService = new HttpSyncService(cliCommandService, cliFolderService);
         this.pushService = new PushService(cliFolderService, cliCommandService);
+        this.headerRepository = new HeaderRepository(DB_URL);
+        this.headerService = new HeaderService(headerRepository);
     }
 
     public void execute(String[] rawArgs) throws Exception {
@@ -174,6 +181,13 @@ public class CLIExecutor {
                             for (Command command : commands) {
                                 if (command.getFolderId() == folder.getId()) {
                                     System.out.printf("         Name: %s | Command: %s%n", command.getName(), command.getCommand());
+
+                                    List<Header> headers = headerService.getAllHeadersFromCommandId(command.getId());
+                                    if (!headers.isEmpty()) {
+                                        for (Header header : headers) {
+                                            System.out.println("         " + header.getKey() + ": " + header.getValue());
+                                        }
+                                    }
                                     String commandBody = command.getBody();
                                     if (commandBody != null && !commandBody.isBlank()) {
                                         String[] lines = commandBody.split("\\R");
@@ -191,6 +205,14 @@ public class CLIExecutor {
                             if (command.getFolderId() == null) {
                                 System.out.println("\n{} Root Commands");
                                 System.out.printf("Name: %s | Command: %s%n", command.getName(), command.getCommand());
+
+                                List<Header> headers = headerService.getAllHeadersFromCommandId(command.getId());
+                                if (!headers.isEmpty()) {
+                                    for (Header header : headers) {
+                                        System.out.println(header.getKey() + ": " + header.getValue());
+                                    }
+                                }
+
                                 String commandBody = command.getBody();
                                 if (commandBody != null && !commandBody.isBlank()) {
                                     String[] lines = commandBody.split("\\R");
@@ -205,8 +227,6 @@ public class CLIExecutor {
                             }
                         }
 
-//                        cliFolderService.listFolders();
-//                        cliCommandService.listCommands();
                     }
                     return;
 
