@@ -12,7 +12,8 @@ public class ApplicationSetup {
 
     public ApplicationSetup() {}
 
-    public static void initialize(String DB_URL) {
+    public void initialize(String DB_URL) {
+//        String DB_URL = "";
         String path = DB_URL.replace("jdbc:sqlite:", "");
         File dbFile = new File(path);
 
@@ -21,7 +22,7 @@ public class ApplicationSetup {
         } else {
             System.out.println("DB file not found, producing new...");
             try (Connection conn = DriverManager.getConnection(DB_URL)) {
-
+                System.out.println("No db found, creating new");
                 try (Statement stmt = conn.createStatement()) {
 
                     // Folder table
@@ -31,6 +32,7 @@ public class ApplicationSetup {
                         project_name TEXT NOT NULL
                     )
                 """);
+                    System.out.println("Table created");
 
                     // Command table
                     stmt.execute("""
@@ -43,7 +45,7 @@ public class ApplicationSetup {
                         FOREIGN KEY (folder_id) REFERENCES folder(id)
                     )
                 """);
-
+                    System.out.println("Table created");
                     stmt.execute("""
                     CREATE TABLE IF NOT EXISTS apiInstance (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,16 +53,16 @@ public class ApplicationSetup {
                         created TEXT DEFAULT (datetime('now','localtime'))
                     )
                 """);
-
+                    System.out.println("Table created");
                     stmt.execute("""
-                    CREATE TABLE headers (
+                    CREATE TABLE IF NOT EXISTS headers (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         command_id INTEGER NOT NULL,
                         key TEXT NOT NULL,
                         value TEXT,
-                        FOREIGN KEY(command_id) REFERENCES commands(id) ON DELETE CASCADE
+                        FOREIGN KEY(command_id) REFERENCES command(id) ON DELETE CASCADE
                     )
-                """);
+                    """);
                     System.out.println("Database created");
 
                 }

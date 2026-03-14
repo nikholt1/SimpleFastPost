@@ -16,17 +16,22 @@ public class HeaderRepository {
     }
 
     public void createHeader(Header header) throws SQLException {
+        System.out.println(DB_URL);
         String sql = """
-                INSERT INTO headers (command_id, key, value)
-                VALUES (?, ?, ?)
-                """;
+            INSERT INTO headers (command_id, key, value)
+            VALUES (?, ?, ?)
+            """;
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setLong(1, header.getCommandId());
             stmt.setString(2, header.getKey());
             stmt.setString(3, header.getValue());
-        }
 
+            // THIS LINE IS MISSING
+            stmt.executeUpdate();
+        }
+        System.out.println("saved header " + header.getKey());
     }
     public Header getHeader(Long headerId) throws SQLException {
         String sql = "SELECT * FROM headers WHERE id = ?";

@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -434,6 +435,14 @@ public class CLIExecutor {
                     body,
                     folderId
             );
+            Command savedCommand = cliCommandService.getCommandByName(commandName);
+            List<Header> headersToAdd = readHeadersInteractively();
+
+
+            for (Header header : headersToAdd) {
+                header.setCommandId(savedCommand.getId());
+                headerService.createHeader(header);
+            }
 
             requestController.sendRequest(method, url, body);
             return;
@@ -484,6 +493,32 @@ public class CLIExecutor {
 
     private String[] tokenize(String command) {
         return command.trim().split("\\s+");
+    }
+
+    private List<Header> readHeadersInteractively() {
+        List<Header> headers = new ArrayList<>();
+        Scanner sc = new Scanner(System.in);
+
+        while (true) {
+            System.out.print("Do you want to add a header? (y/n): ");
+            String input = sc.nextLine().trim().toLowerCase();
+
+            if (input.equals("n")) {
+                break;
+            } else if (input.equals("y")) {
+                System.out.print("Header key: ");
+                String key = sc.nextLine().trim();
+
+                System.out.print("Header value: ");
+                String value = sc.nextLine().trim();
+
+                headers.add(new Header(null, null, key, value)); // id and commandId will be set later
+            } else {
+                System.out.println("Please enter y or n.");
+            }
+        }
+
+        return headers;
     }
 
     private String readJsonBody(String name, boolean replayMode) {

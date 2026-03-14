@@ -234,7 +234,7 @@ public class CLICommandRepository {
                 if (command == null) {
                     return null;
                 }
-
+                System.out.println(command.getId() + " id of command");
                 if (multiple) {
                     System.out.println(
                             "Warning: multiple commands matched '" + commandName +
