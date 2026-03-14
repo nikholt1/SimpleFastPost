@@ -166,8 +166,47 @@ public class CLIExecutor {
                         cmds.forEach(c ->
                                 System.out.println(c.getName() + " -> " + c.getCommand()));
                     } else {
-                        cliFolderService.listFolders();
-                        cliCommandService.listCommands();
+                        List<Folder> folders = cliFolderService.getAllFolders();
+                        List<Command> commands = cliCommandService.getAllCommands();
+
+                        for (Folder folder  : folders) {
+                            System.out.println("[] " + folder.getProjectName());
+                            for (Command command : commands) {
+                                if (command.getFolderId() == folder.getId()) {
+                                    System.out.printf("         Name: %s | Command: %s%n", command.getName(), command.getCommand());
+                                    String commandBody = command.getBody();
+                                    if (commandBody != null && !commandBody.isBlank()) {
+                                        String[] lines = commandBody.split("\\R");
+                                        for (String line : lines) {
+                                            System.out.println("         ---> " + line);
+                                        }
+                                        System.out.println();
+                                    } else {
+                                        System.out.println();
+                                    }
+                                }
+                            }
+                        }
+                        for (Command command : commands) {
+                            if (command.getFolderId() == null) {
+                                System.out.println("\n{} Root Commands");
+                                System.out.printf("Name: %s | Command: %s%n", command.getName(), command.getCommand());
+                                String commandBody = command.getBody();
+                                if (commandBody != null && !commandBody.isBlank()) {
+                                    String[] lines = commandBody.split("\\R");
+                                    for (String line : lines) {
+                                        System.out.println("---> " + line);
+                                    }
+
+                                } else {
+                                    System.out.println();
+                                }
+
+                            }
+                        }
+
+//                        cliFolderService.listFolders();
+//                        cliCommandService.listCommands();
                     }
                     return;
 
@@ -448,10 +487,16 @@ USAGE:
   <command> [options]
 
 START SFP BROWSER
---api                                   start api
+  --api                                 start api
 
--d                                      detached mode
+  -d                                    detached mode
+MANAGE SFP BROWSER
 
+  api ls                                List all current instances
+  
+  api stop <pid>                        Stop instance with <pid>
+  
+   
 COMMANDS:
   ls                                    List all folders and root commands
 
@@ -462,6 +507,8 @@ COMMANDS:
   run -scmd <command> [-f <folder>]     Execute a saved command
                                         Prevents recursive execution
 
+  run -f <folder>                       Execute all commands in the folder
+  
   update command <commandName> --set <field>:<value>
             Update a saved command
 

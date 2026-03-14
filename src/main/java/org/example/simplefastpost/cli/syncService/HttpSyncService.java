@@ -69,14 +69,16 @@ public class HttpSyncService {
         /* -------------------------
            PLACE BLOCK
         ------------------------- */
-            if (line.startsWith("### place")) {
+            if (line.startsWith("### place ")) {
 
                 String[] placeParts = line.split("\\s+");
                 String targetFolder;
 
-                if (placeParts[2].equals("root")) {
+                String placeArg = placeParts[2].replace(";", ""); // remove semicolon
+
+                if (placeArg.equals("root")) {
                     targetFolder = "root";
-                } else if (placeParts[2].equals("folder")) {
+                } else if (placeArg.equals("folder")) {
                     targetFolder = placeParts[3].replace(";", "");
                 } else {
                     throw new IllegalArgumentException("Invalid place syntax: " + line);
