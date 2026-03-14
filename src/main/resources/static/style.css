@@ -57,6 +57,28 @@ html, body {
     background-color: #8b0000;
     color: white;
 }
+.removeHeaderbtn {
+    margin: 5px;
+    background-color: #2b2d30;
+    border-color: #2b2d30;
+    border-radius: 5px;
+    width: 25px;
+}
+.removeHeaderbtn:hover {
+    background-color: #8b0000;
+    color: white;
+}
+.addHeaderBtn {
+    margin: 5px;
+    background-color: #2b2d30;
+    border-color: #2b2d30;
+    border-radius: 5px;
+    width: 25px;
+}
+.addHeaderBtn:hover {
+    background-color: #805bd5;
+    color: white;
+}
 
 .sidebar-btn.add-btn:hover {
     background-color: #238536;
@@ -333,7 +355,14 @@ table.table tbody tr:hover {
     width: 100%;
     min-height: 200px;
 }
-
+.headersStyle {
+    background-color: #1e1f22;
+    color: white;
+    border: 1px solid #3a3a3a;
+    padding: 8px;
+    border-radius: 4px;
+    min-height: 15px;
+}
 .hidden {
     display: none;
 }
@@ -394,4 +423,35 @@ table.table tbody tr:hover {
     50%  { opacity: 1; }
     75%  { opacity: 0; }
     100% { opacity: 0; }
+}
+
+/* Apply globally */
+* {
+    scrollbar-width: thin;       /* Firefox */
+    scrollbar-color: #787878 rgba(43, 45, 48, 0); /* Firefox thumb & track */
+}
+
+/* Chrome, Edge, Safari */
+*::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: #878787;
+    border-radius: 6px;
+    border: 3px solid rgba(241, 241, 241, 0);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: #bdbdbd;
+}
+
+/* Remove the little arrows at the ends */
+*::-webkit-scrollbar-button {
+    display: none;
 }

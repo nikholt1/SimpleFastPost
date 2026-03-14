@@ -472,11 +472,19 @@ function renderCommand(command) {
 
             <p class="dark-text">Command</p>
             <textarea id="commandCmd" class="dark-pre">${command.command}</textarea>
+            
+            <p class="dark-text">Headers</p>
+            <div>
+            <input class="headersStyle" type="text" id="headerKey" placeholder="Key"><input class="headersStyle" type="text" id="headerValue" placeholder="Value"><button class="removeHeaderbtn">-</button>
+            </div>
+            <button id="addHeaderBtn" class="addHeaderBtn" >+</button>
 
+            
+
+            
             <p class="dark-text">Body</p>
             <textarea id="commandBody" class="dark-body">${command.body ?? ""}</textarea>
-            <button class="hidden"
-                    style="background-color: #815cd7; color: white; width: 200px">Add more headers</button>
+            
           
         </div>
     `;
