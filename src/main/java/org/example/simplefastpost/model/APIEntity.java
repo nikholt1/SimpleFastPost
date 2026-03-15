@@ -1,8 +1,17 @@
 package org.example.simplefastpost.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
 import java.time.LocalDateTime;
 
+@Entity
 public class APIEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Long pId;
     private LocalDateTime created;
@@ -17,6 +26,9 @@ public class APIEntity {
         this.created = created;
     }
 
+    public APIEntity() {
+
+    }
 
 
     public Long getId() {

@@ -1,9 +1,11 @@
 package org.example.simplefastpost.cli.syncService;
 
 import org.example.simplefastpost.cli.commandService.CLICommandService;
+import org.example.simplefastpost.cli.commandService.HeaderService;
 import org.example.simplefastpost.cli.folderService.CLIFolderService;
 import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
+import org.example.simplefastpost.model.Headers;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.FileWriter;
@@ -16,10 +18,12 @@ public class PushService {
 
     private final CLIFolderService folderService;
     private final CLICommandService commandService;
+    private final HeaderService headerService;
 
-    public PushService(CLIFolderService folderService, CLICommandService commandService) {
+    public PushService(CLIFolderService folderService, CLICommandService commandService,  HeaderService headerService) {
         this.folderService = folderService;
         this.commandService = commandService;
+        this.headerService = headerService;
     }
     public int pushFile(Path file) throws IOException {
         int counter = 0;
@@ -73,14 +77,18 @@ public class PushService {
 
                         }
                         writer.write(method + " " + url + "\n" );
-                        writer.write("\n");
+
                     } else {
                         finalCommand = commandString;
                         writer.write(finalCommand);
-                        writer.write("\n");
-                    }
 
-                    ObjectMapper mapper = new ObjectMapper();
+                    }
+                    List<Headers> headers = headerService.getAllHeadersFromCommandId(command.getId());
+                    for (Headers header : headers) {
+                        writer.write(header.getKey() + ": " + header.getValue() + "\n" );
+                    }
+                    writer.write("\n");
+                    ObjectMapper  mapper = new ObjectMapper();
 
                     String body = command.getBody();
                     if (body != null && !body.isBlank()) {

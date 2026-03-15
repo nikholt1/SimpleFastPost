@@ -13,18 +13,19 @@ public class CLICommandService {
     public CLICommandService(CLICommandRepository cliCommandRepository) {
         this.cliCommandRepository = cliCommandRepository;
     }
-    public void createCommand(
+    public Command createCommand(
             String name,
             String command,
             String body,
             Long folderId
     ) {
         try {
-            cliCommandRepository.createCommand(name, command, body, folderId);
+            return cliCommandRepository.createCommand(name, command, body, folderId);
 
         } catch (Exception e) {
             System.err.println("✖ Failed to create command: " + e.getMessage());
         }
+        return null;
     }
     public List<Command> getAllCommands() {
         try {

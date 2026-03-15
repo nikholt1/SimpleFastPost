@@ -8,7 +8,7 @@ public class Headers {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "command_id", insertable = false, updatable = false)
+    @Column(name = "command_id")
     private Long commandId;
 
     private String key;

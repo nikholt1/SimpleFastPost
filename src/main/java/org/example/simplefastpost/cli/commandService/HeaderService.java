@@ -32,5 +32,8 @@ public class HeaderService {
     public void deleteHeader(Headers header) throws SQLException {
         headerRepository.deleteHeader(header);
     }
+    public void deleteAllHeadersInDB() throws SQLException {
+        headerRepository.deleteAllHeadersInDB();
+    }
 
 }

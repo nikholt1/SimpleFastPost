@@ -31,7 +31,7 @@ public class HeaderRepository {
             // THIS LINE IS MISSING
             stmt.executeUpdate();
         }
-        System.out.println("saved header " + header.getKey());
+
     }
     public Headers getHeader(Long headerId) throws SQLException {
         String sql = "SELECT * FROM headers WHERE id = ?";
@@ -118,6 +118,17 @@ public class HeaderRepository {
             if (affectedRows == 0) {
                 throw new SQLException("Deleting header failed, no rows affected.");
             }
+        }
+    }
+
+    public void deleteAllHeadersInDB() throws SQLException {
+        String sql = "DELETE FROM headers";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            int deleted = stmt.executeUpdate();
+            System.out.println("Deleted headers: " + deleted);
         }
     }
 }

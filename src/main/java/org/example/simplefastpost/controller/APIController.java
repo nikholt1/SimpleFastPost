@@ -189,7 +189,7 @@ public class APIController {
         return ResponseEntity.ok(saved);
     }
 
-    @DeleteMapping("/headers")
+    @DeleteMapping("/headers/{id}")
     public ResponseEntity<Void> deleteHeaderById(@PathVariable Long id) {
         headerService.deleteHeaderById(id);
         return ResponseEntity.noContent().build();

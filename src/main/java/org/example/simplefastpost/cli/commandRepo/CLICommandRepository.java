@@ -18,7 +18,7 @@ public class CLICommandRepository {
     }
 
 
-    public void createCommand(
+    public Command createCommand(
             String name,
             String command,
             String body,
@@ -27,7 +27,7 @@ public class CLICommandRepository {
 
         if (commandNameExists(name)) {
             System.out.println("Command name already exists: " + name);
-            return;
+            return null; // return null instead of void
         }
 
         String sql = """
@@ -36,7 +36,7 @@ public class CLICommandRepository {
     """;
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, name);
             stmt.setString(2, command);
@@ -48,8 +48,29 @@ public class CLICommandRepository {
                 stmt.setNull(4, Types.INTEGER);
             }
 
-            stmt.executeUpdate();
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Creating command failed, no rows affected.");
+            }
 
+            // Retrieve the generated ID
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    long id = generatedKeys.getLong(1);
+
+                    // Return a new Command object
+                    Command createdCommand = new Command();
+                    createdCommand.setId(id);
+                    createdCommand.setName(name);
+                    createdCommand.setCommand(command);
+                    createdCommand.setBody(body);
+                    createdCommand.setFolderId(folderId);
+
+                    return createdCommand;
+                } else {
+                    throw new SQLException("Creating command failed, no ID obtained.");
+                }
+            }
         }
     }
 
