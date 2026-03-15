@@ -200,83 +200,106 @@ function renderItem(item, tbody, level) {
     const label = document.createElement("span");
 
     if (item.type === "folder") {
+
         const hasChildren = item.children.length > 0;
+
         const arrowIcon = hasChildren
             ? `<i class="bi ${item.expanded ? "bi-chevron-down" : "bi-chevron-right"}" style="font-size:0.7rem; margin-right:2px;"></i>`
             : "";
 
         label.innerHTML = `
-        ${arrowIcon}
-        <i class="bi bi-folder" style="color: lightgrey; margin-right:4px;"></i>
-        ${item.name}
-    `;
+        
+        <div style="display:flex;align-items:center;">
+            ${arrowIcon}
+            <i class="bi bi-folder" style="color:lightgrey;margin-right:4px;"></i>
+            ${item.name}
+            <img class="runAllInFolder" 
+                 style="margin-left:15px;width:17px;height:17px;cursor:pointer" 
+                 src="image/runAll.png">
+        </div>
+        `;
 
         label.classList.add("folder");
 
+        // Expand / collapse folder
         tr.addEventListener("click", () => {
             item.expanded = !item.expanded;
             renderSidebar(sidebarTree);
         });
+
+        // RUN ALL BUTTON
+        const runAllBtn = label.querySelector(".runAllInFolder");
+
+        if (runAllBtn) {
+            runAllBtn.addEventListener("click", (e) => {
+                e.stopPropagation(); // prevent folder toggle
+                runAllCommandsInFolder(item);
+            });
+        }
+
     } else {
+
         const methodColors = {
-            "GET": "#4aa35a",      // green
-            "POST": "#387bb5",     // blue
-            "PUT": "#dc7e1f",      // yellow/orange
-            "DELETE": "#dc4c59",   // red
-            "PATCH": "#4cb6ca",    // teal
-            "OPTIONS": "#6c757d"   // gray
+            "GET": "#4aa35a",
+            "POST": "#387bb5",
+            "PUT": "#dc7e1f",
+            "DELETE": "#dc4c59",
+            "PATCH": "#4cb6ca",
+            "OPTIONS": "#6c757d"
         };
 
-        // Find the HTTP method in the command
         let methodFound = null;
+
         for (const method of Object.keys(methodColors)) {
             if (item.command.includes(method)) {
                 methodFound = method;
-                break; // stop after first match
+                break;
             }
         }
 
-        // Clear previous content
         label.textContent = "";
 
         if (methodFound) {
-            // Create a colored span for the method
+
             const methodSpan = document.createElement("span");
+
             methodSpan.textContent = methodFound;
             methodSpan.style.backgroundColor = methodColors[methodFound];
             methodSpan.style.color = "#fff";
             methodSpan.style.padding = "2px 4px";
             methodSpan.style.borderRadius = "4px";
             methodSpan.style.marginRight = "6px";
-            methodSpan.style.fontSize = "12px"; // smaller than main label
+            methodSpan.style.fontSize = "12px";
             methodSpan.style.fontWeight = "bold";
 
             label.appendChild(methodSpan);
+
         } else {
-            // No method found → show "{ }" prefix
+
             const emptySpan = document.createElement("span");
+
             emptySpan.textContent = "{ }";
             emptySpan.style.marginRight = "6px";
+
             label.appendChild(emptySpan);
         }
 
-        // Append the item name as normal text
         const nameText = document.createTextNode(item.name);
+
         label.appendChild(nameText);
 
-        // Common style
         label.style.fontSize = "15px";
 
-        // Add click event
         tr.addEventListener("click", () => renderCommand(item));
     }
 
     const removeBtn = document.createElement("button");
+
     removeBtn.textContent = "-";
     removeBtn.classList.add("sidebar-btn", "remove-btn");
 
-
     removeBtn.addEventListener("click", async (e) => {
+
         e.stopPropagation();
 
         if (item.type === "folder") {
@@ -284,6 +307,7 @@ function renderItem(item, tbody, level) {
         } else {
             await deleteCommand(item.id);
         }
+
     });
 
     container.appendChild(label);
@@ -301,20 +325,201 @@ function renderItem(item, tbody, level) {
 
         const addRow = document.createElement("tr");
         const addTd = document.createElement("td");
+
         addTd.style.paddingLeft = `${(level + 1) * 16}px`;
 
         const addBtn = document.createElement("button");
+
         addBtn.textContent = "+";
         addBtn.classList.add("sidebar-btn", "add-btn");
 
         addBtn.addEventListener("click", (e) => {
+
             e.stopPropagation();
+
             renderNewCommand(item.id);
+
         });
 
         addTd.appendChild(addBtn);
         addRow.appendChild(addTd);
         tbody.appendChild(addRow);
+    }
+}
+
+async function runAllCommandsInFolder(folder) {
+
+    console.log("Running all commands in folder:", folder.name);
+    const loadingBar2 = document.getElementById("loading-dots");
+    loadingBar2.style.display="flex";
+    const loadingbarState = document.getElementById("loadingbarState");
+    loadingbarState.innerHTML="running all"
+    const main = document.getElementById("main");
+
+    main.innerHTML = `
+        <div style="padding: 10px;">
+        <h3>${folder.name}</h3>
+        <div id="commandStatusList" style="margin-bottom:20px"></div>
+    `;
+
+    const statusList = document.getElementById("commandStatusList");
+
+    const statusMap = {}; // commandId -> icon element
+
+    // ---------- Create status indicators first ----------
+    for (const child of folder.children) {
+
+        if (child.type === "command") {
+
+            const row = document.createElement("div");
+            row.style.display = "flex";
+            row.style.alignItems = "center";
+            row.style.marginBottom = "4px";
+
+            const icon = document.createElement("span");
+
+            // Initial state = not run yet
+            icon.textContent = "✖";
+            icon.style.color = "#da3633";
+            icon.style.marginRight = "8px";
+            icon.style.fontWeight = "bold";
+
+            const name = document.createElement("span");
+            name.textContent = child.name;
+
+            row.appendChild(icon);
+            row.appendChild(name);
+
+            statusList.appendChild(row);
+
+            statusMap[child.id] = icon;
+        }
+    }
+
+    // ---------- Run commands ----------
+    for (const child of folder.children) {
+
+        if (child.type === "command") {
+
+            console.log("Run command:", child.name);
+
+            const result = await executeCommand(child);
+
+            const icon = statusMap[child.id];
+
+            // Determine success
+            const success =
+                typeof result.status === "number" &&
+                result.status >= 200 &&
+                result.status < 300;
+
+            if (icon) {
+
+                if (success) {
+                    icon.textContent = "✔";
+                    icon.style.color = "#44bd4f"; // green
+                } else {
+                    icon.textContent = "✖";
+                    icon.style.color = "#da3633"; // red
+                }
+
+            }
+
+            const responseColor =
+                result.status >= 200 && result.status < 300 ? "#238636" :
+                    result.status >= 400 && result.status < 500 ? "#d29922" :
+                        result.status >= 500 ? "#da3633" :
+                            result.status === "ERR" ? "#da3633" :
+                                "#6e7681";
+
+            const commandBlock = document.createElement("div");
+
+            commandBlock.innerHTML = `
+
+                <div style="margin-top:10px; padding: 10px;">
+
+                    <p style="font-weight:bold">${child.name}</p>
+
+                    <div style="margin-bottom:10px;display:flex;align-items:center">
+                        <p class="dark-text" style="margin:0">Response</p>
+
+                        <span 
+                            style="
+                                background-color:${responseColor};
+                                color:white;
+                                border-radius:4px;
+                                padding:2px 4px;
+                                margin-left:6px;
+                                font-size:12px;
+                                font-weight:bold
+                            ">
+                            ${result.status}
+                        </span>
+                    </div>
+
+                    <textarea 
+                        class="dark-body"
+                        readonly
+                        rows="6"
+                        style="width:100%"
+                    >${result.body}</textarea>
+
+                </div>
+                </div>
+            `;
+
+            main.appendChild(commandBlock);
+        }
+
+        if (child.type === "folder") {
+            await runAllCommandsInFolder(child);
+        }
+        loadingBar2.style.display="none";
+    }
+}
+async function executeCommand(command) {
+    const loadingBar2 = document.getElementById("loading-dots");
+    loadingBar2.style.display="flex";
+    const { method, url } = parseCommand(command.command);
+
+    if (!url) {
+        return { status: "ERR", body: "Invalid command: Missing URL (-u)" };
+    }
+
+    // Fetch headers from backend
+    const headersRes = await fetch(`${BASE_URL}/headers/byCommand/${command.id}`);
+    const headersData = await headersRes.json();
+
+    const headers = {};
+    headersData.forEach(h => {
+        if (h.key) headers[h.key] = h.value;
+    });
+
+    let body = command.body?.trim();
+    if (!body) body = undefined;
+
+    try {
+        loadingBar2.style.display="none";
+        const res = await fetch(url, {
+            method: method,
+            headers: headers,
+            body: body
+        });
+
+        const text = await res.text();
+
+        return {
+            status: res.status,
+            body: text
+        };
+
+    } catch (err) {
+        loadingBar2.style.display="none";
+        return {
+            status: "ERR",
+            body: err.message
+        };
+
     }
 }
 async function deleteCommand(id) {
@@ -564,7 +769,7 @@ async function renderCommand(command) {
 
             <p class="dark-text">Body</p>
             <textarea id="commandBody" class="dark-body">${command.body ?? ""}</textarea>
-            <div style="display: flex; align-items: center">
+            <div style="margin-bottom: 10px; display: flex; align-items: center">
             <p class="dark-text" style="padding-bottom: 0px; margin-bottom: 0;">Response</p><span id="responseNumber" style="background-color: #238436; color:white; border-radius: 4px;padding: 2px 4px; margin-left: 6px; font-size: 12px; font-weight: bold">200</span>
             </div>
             
@@ -579,6 +784,9 @@ async function renderCommand(command) {
     const cmdInput = document.getElementById("commandCmd");
     const bodyInput = document.getElementById("commandBody");
 
+    const sendBtn = document.getElementById("sendBtn");
+    const responseTextarea = document.querySelector("textarea[readonly]");
+    const responseNumber = document.getElementById("responseNumber");
     // ----------------- Fetch and render existing headers -----------------
     const response = await fetch(`${BASE_URL}/headers/byCommand/${command.id}`);
     const existingHeaders = await response.json();
@@ -677,7 +885,63 @@ async function renderCommand(command) {
         // Remove unsaved header
         removeBtn.addEventListener("click", () => row.remove());
     });
+    sendBtn.addEventListener("click", async () => {
 
+        const { method, url } = parseCommand(cmdInput.value);
+
+        if (!url) {
+            responseTextarea.value = "Invalid command: Missing URL (-u)";
+            return;
+        }
+
+        // Collect headers
+        const headers = {};
+        document.querySelectorAll(".headerRow").forEach(row => {
+            const key = row.querySelector(".headerKey").value.trim();
+            const value = row.querySelector(".headerValue").value.trim();
+            if (key) headers[key] = value;
+        });
+
+        // Get body
+        let body = bodyInput.value.trim();
+        if (!body) body = undefined;
+
+        try {
+
+            const res = await fetch(url, {
+                method: method,
+                headers: headers,
+                body: body
+            });
+
+            const text = await res.text();
+
+            // Print response
+            responseTextarea.value = text;
+
+            // Set status code
+            responseNumber.textContent = res.status;
+
+            // Color status
+            if (res.status >= 200 && res.status < 300) {
+                responseNumber.style.backgroundColor = "#238636"; // green
+            } else if (res.status >= 400 && res.status < 500) {
+                responseNumber.style.backgroundColor = "#d29922"; // orange
+            } else if (res.status >= 500) {
+                responseNumber.style.backgroundColor = "#da3633"; // red
+            } else {
+                responseNumber.style.backgroundColor = "#6e7681"; // gray
+            }
+
+        } catch (err) {
+
+            responseTextarea.value = err.message;
+            responseNumber.textContent = "ERR";
+            responseNumber.style.backgroundColor = "#da3633";
+
+        }
+
+    });
     // ----------------- Command title rename -----------------
     title.addEventListener("dblclick", () => {
         const input = document.createElement("input");
@@ -719,6 +983,16 @@ async function renderCommand(command) {
         }
     });
 }
+function parseCommand(cmd) {
+    const methodMatch = cmd.match(/-m\s+(\w+)/i);
+    const urlMatch = cmd.match(/-u\s+([^\s]+)/i);
+
+    return {
+        method: methodMatch ? methodMatch[1].toUpperCase() : "GET",
+        url: urlMatch ? urlMatch[1] : null
+    };
+}
+
 async function updateCommandField(command, updates) {
     try {
         const response = await fetch(BASE_URL + `/commands/${command.id}`, {

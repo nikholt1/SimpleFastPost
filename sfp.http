@@ -1,6 +1,9 @@
 #mkdir folder name thisIsfolderName;
 
  
+#mkdir folder name newFolder;
+
+ 
 ### place folder thisIsfolderName;
 ### command name commandNameAfterPush;
 GET https://jsonplaceholder.typicode.com/posts/1
@@ -67,4 +70,8 @@ key: value
 ### command name new;
 GET google.com
 key: value
+
+### place folder newFolder;
+### command name getCommand;
+GET https://jsonplaceholder.typicode.com/posts/1
 
