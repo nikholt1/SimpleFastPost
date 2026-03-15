@@ -5,10 +5,8 @@ import org.example.simplefastpost.dto.CreateCommandRequest;
 import org.example.simplefastpost.dto.FolderDTO;
 import org.example.simplefastpost.dto.UpdateCommandRequest;
 import org.example.simplefastpost.model.Folder;
-import org.example.simplefastpost.service.CommandService;
-import org.example.simplefastpost.service.FolderService;
-import org.example.simplefastpost.service.HttpSyncService;
-import org.example.simplefastpost.service.PushService;
+import org.example.simplefastpost.model.Headers;
+import org.example.simplefastpost.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -28,12 +26,14 @@ public class APIController {
     private final FolderService folderService;
     private final HttpSyncService  httpSyncService;
     private final PushService pushService;
+    private final HeaderService headerService;
 
-    public APIController(CommandService commandService, FolderService folderService, HttpSyncService httpSyncService, PushService pushService) {
+    public APIController(CommandService commandService, FolderService folderService, HttpSyncService httpSyncService, PushService pushService, HeaderService headerService) {
         this.commandService = commandService;
         this.folderService = folderService;
         this.httpSyncService = httpSyncService;
         this.pushService = pushService;
+        this.headerService = headerService;
     }
 
     @GetMapping("/folders")
@@ -164,5 +164,42 @@ public class APIController {
 
         return ResponseEntity.ok("Sync started");
     }
+
+
+    @GetMapping("/headers")
+    public ResponseEntity<List<Headers>> getAllHeaders() {
+        List<Headers> headers = headerService.getAllHeaders();
+        return ResponseEntity.ok(headers);
+    }
+
+    @GetMapping("/headers/{id}")
+    public ResponseEntity<Headers> getHeaderById(@PathVariable Long id) {
+        Headers header = headerService.getHeaderById(id);
+        return ResponseEntity.ok(header);
+    }
+    @GetMapping("/headers/byCommand/{commandId}")
+    public ResponseEntity<List<Headers>> getHeadersByCommandId(@PathVariable Long commandId) {
+        List<Headers> headers = headerService.getHeadersByCommandId(commandId);
+        return ResponseEntity.ok(headers);
+    }
+
+    @PostMapping("/headers")
+    public ResponseEntity<Headers> createHeader(@RequestBody Headers header) {
+        Headers saved = headerService.createNewHeader(header);
+        return ResponseEntity.ok(saved);
+    }
+
+    @DeleteMapping("/headers/{id}")
+    public ResponseEntity<Void> deleteHeaderById(@PathVariable Long id) {
+        headerService.deleteHeaderById(id);
+        return ResponseEntity.noContent().build();
+    }
+    @DeleteMapping("/headers/deleteAll")
+    public ResponseEntity<Void> deleteAllHeaders() {
+        headerService.deleteAllHeaders();
+        return ResponseEntity.noContent().build();
+    }
+
+
 
 }

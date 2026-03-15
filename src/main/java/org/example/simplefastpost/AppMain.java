@@ -18,19 +18,20 @@ import java.util.Map;
 public class AppMain {
 
     public static void main(String[] args) throws Exception {
+        ApplicationSetup applicationSetup = new ApplicationSetup();
         CLIconfig cliConfig = new CLIconfig();
         ApiRepository apiRepository = new ApiRepository(cliConfig.getDBUrl());
         OSService osService = new OSService();
         ApiService apiService = new ApiService(cliConfig, apiRepository, osService);
 
-        String DB_URL = "jdbc:sqlite:../sfpDB.db";
+//        String DB_URL = "jdbc:sqlite:../sfpDB.db";
         try {
             Class.forName("org.sqlite.JDBC");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("SQLite JDBC driver not found", e);
         }
-        ApplicationSetup applicationSetup = new ApplicationSetup();
-        applicationSetup.initialize(DB_URL);
+//        ApplicationSetup applicationSetup = new ApplicationSetup();
+//        applicationSetup.initialize();
 
         List<String> argList = Arrays.asList(args);
         boolean isApiMode = argList.contains("--api");
@@ -69,6 +70,7 @@ public class AppMain {
             // CLI mode: create CLIExecutor directly, pass args
             CLIExecutor cli = new CLIExecutor();
 
+            applicationSetup.initialize(cliConfig.getDBUrl());
             try {
                 cli.execute(args);
             } catch (Exception e) {

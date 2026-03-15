@@ -368,37 +368,87 @@ function renderNewCommand(folderId = null) {
         <form id="commandForm">
             <h5>Add Command</h5>
     
-            <!-- Styled method dropdown -->
             <input class="formInput" type="text" id="commandName" placeholder="Command Name" required>
+
             <div>
                 <select id="requestMethod" class="method-select">
-                    <option class="method" value="GET" selected>GET</option>
-                    <option class="method" value="POST">POST</option>
-                    <option class="method" value="PUT">PUT</option>
-                    <option class="method" value="DELETE">DELETE</option>
-                    <option class="method" value="PATCH">PATCH</option>
+                    <option value="GET" selected>GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                    <option value="PATCH">PATCH</option>
                 </select>
-                <input style="width: 80%; background-color: rgba(30,31,34,0.5);" type="text" id="commandURL" placeholder="URL">
-    
+
+                <input style="border-radius:4px;width:80%;background-color:rgb(30,31,34);" 
+                       type="text" id="commandURL" placeholder="URL">
             </div>
+
             <input type="text" id="commandCmd" placeholder="Command" required>
-            <textarea  id="commandBody" placeholder="Command Body (optional)" style="background-color: rgba(30,31,34,0.5); color: white; width: 100%; height: 200px; padding: 6px; font-size: 14px; box-sizing: border-box;"></textarea>
-            <button class="hidden"
-                    style="background-color: #815cd7; color: white; width: 200px">Add more headers</button>
-    
-            <button  type="submit" class="btn btn-primary"
-                    style="background-color: #238536; color: white; width: 200px;">
+
+            <p class="dark-text">Headers</p>
+            
+            <div id="headersContainer">
+                <div class="headerRow">
+                    <input class="headersStyle headerKey" type="text" placeholder="Key">
+                    <input class="headersStyle headerValue" type="text" placeholder="Value">
+                    <button type="button" class="removeHeaderBtn">-</button>
+                </div>
+            </div>
+            
+            <button type="button" id="addHeaderBtn" class="addHeaderBtn">+</button>
+
+            <textarea id="commandBody"
+                placeholder="Command Body (optional)"
+                style="border-radius:4px;background-color:rgb(30,31,34);color:white;width:100%;height:200px;padding:6px;font-size:14px;box-sizing:border-box;">
+            </textarea>
+
+            <button type="submit" class="btn btn-primary"
+                style="background-color:#238536;color:white;width:200px;">
                 Add Command
             </button>
         </form>
     `;
+
+    const headersContainer = document.getElementById("headersContainer");
+    const addHeaderBtn = document.getElementById("addHeaderBtn");
+
+    /* ---------------- ADD HEADER ROW ---------------- */
+
+    addHeaderBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+
+        const row = document.createElement("div");
+        row.className = "headerRow";
+
+        row.innerHTML = `
+            <input class="headersStyle headerKey" type="text" placeholder="Key">
+            <input class="headersStyle headerValue" type="text" placeholder="Value">
+            <button type="button" class="removeHeaderBtn">-</button>
+        `;
+
+        headersContainer.appendChild(row);
+    });
+
+    /* ---------------- REMOVE HEADER ROW ---------------- */
+
+    headersContainer.addEventListener("click", (e) => {
+        if (e.target.classList.contains("removeHeaderBtn")) {
+            e.preventDefault();
+
+            if (headersContainer.children.length > 1) {
+                e.target.parentElement.remove();
+            }
+        }
+    });
+
     const commandForm = document.getElementById("commandForm");
 
     const methodSelect = document.getElementById("requestMethod");
     const urlInput = document.getElementById("commandURL");
     const commandInput = document.getElementById("commandCmd");
 
-// Function to keep the command synced
+    /* ---------------- AUTO BUILD COMMAND ---------------- */
+
     function updateCommand() {
         const method = methodSelect.value;
         const url = urlInput.value.trim();
@@ -406,30 +456,62 @@ function renderNewCommand(folderId = null) {
         commandInput.value = `-m ${method} -u ${url}`;
     }
 
-// Initial value
     updateCommand();
 
-// Update when method changes
     methodSelect.addEventListener("change", updateCommand);
-
-// Update when URL changes
     urlInput.addEventListener("input", updateCommand);
+
+    /* ---------------- SUBMIT ---------------- */
 
     commandForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         const name = document.getElementById("commandName").value.trim();
         const command = commandInput.value.trim();
-
         const bodyInput = document.getElementById("commandBody").value.trim();
         const body = bodyInput === "" ? null : bodyInput;
 
-        await requestAddCommand({
+        /* -------- collect headers -------- */
+
+        const headers = [];
+
+        document.querySelectorAll(".headerRow").forEach(row => {
+            const key = row.querySelector(".headerKey").value.trim();
+            const value = row.querySelector(".headerValue").value.trim();
+
+            if (key && value) {
+                headers.push({ key, value });
+            }
+        });
+
+        /* -------- create command first -------- */
+
+        const createdCommand = await requestAddCommand({
             name,
             command,
             body,
             folderId
         });
+
+        const commandId = createdCommand.id;
+
+        /* -------- save headers -------- */
+
+        for (const header of headers) {
+            await fetch(BASE_URL + "/headers", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    commandId: commandId,
+                    key: header.key,
+                    value: header.value
+                })
+            });
+        }
+
+        console.log("Command and headers saved successfully");
     });
 }
 
@@ -448,10 +530,14 @@ async function requestAddCommand({ name, command, body, folderId = null }) {
 
         if (!response.ok) throw new Error("Failed to create command");
 
+        const createdCommand = await response.json(); // ← important
+
         await refreshSidebar();
 
         const main = document.getElementById("main");
         main.innerHTML = "";
+
+        return createdCommand; // ← THIS FIXES EVERYTHING
 
     } catch (err) {
         console.error(err);
@@ -459,37 +545,133 @@ async function requestAddCommand({ name, command, body, folderId = null }) {
     }
 }
 
-function renderCommand(command) {
+async function renderCommand(command) {
     const main = document.getElementById("main");
     if (!main) return;
 
     main.innerHTML = `
         <div class="dark-main-content">
-
-            <h4 class="dark-text" id="commandTitle">${command.name}</h4>
-
+            <h4 class="dark-text" id="commandTitle" style="font-size: 20px; height: 15px; padding 2px;">${command.name}</h4>
             <hr style="border-color: #3a3a3a;">
-
             <p class="dark-text">Command</p>
             <textarea id="commandCmd" class="dark-pre">${command.command}</textarea>
 
+            <p class="dark-text">Headers</p>
+            <div id="headersContainer"></div>
+            <button id="addHeaderBtn" class="addHeaderBtn">+</button>
+
             <p class="dark-text">Body</p>
             <textarea id="commandBody" class="dark-body">${command.body ?? ""}</textarea>
-            <button class="hidden"
-                    style="background-color: #815cd7; color: white; width: 200px">Add more headers</button>
-          
         </div>
     `;
 
+    const headersContainer = document.getElementById("headersContainer");
+    const addHeaderBtn = document.getElementById("addHeaderBtn");
     const title = document.getElementById("commandTitle");
     const cmdInput = document.getElementById("commandCmd");
     const bodyInput = document.getElementById("commandBody");
 
-    /*
-    NAME RENAME
-    */
-    title.addEventListener("dblclick", () => {
+    // ----------------- Fetch and render existing headers -----------------
+    const response = await fetch(`${BASE_URL}/headers/byCommand/${command.id}`);
+    const existingHeaders = await response.json();
 
+    function renderHeaderRow(header) {
+        const row = document.createElement("div");
+        row.className = "headerRow";
+
+        row.innerHTML = `
+            <input class="headersStyle headerKey" type="text" placeholder="Key" value="${header.key ?? ''}">
+            <input class="headersStyle headerValue" type="text" placeholder="Value" value="${header.value ?? ''}">
+            <button type="button" class="removeHeaderBtn">-</button>
+        `;
+
+        headersContainer.appendChild(row);
+
+        const keyInput = row.querySelector(".headerKey");
+        const valueInput = row.querySelector(".headerValue");
+        const removeBtn = row.querySelector(".removeHeaderBtn");
+
+        // Save on blur (only for existing headers)
+        keyInput.addEventListener("blur", async () => {
+            if (!header.id) return; // skip unsaved headers
+            await fetch(`${BASE_URL}/headers/${header.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...header, key: keyInput.value })
+            });
+            header.key = keyInput.value;
+        });
+
+        valueInput.addEventListener("blur", async () => {
+            if (!header.id) return;
+            await fetch(`${BASE_URL}/headers/${header.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...header, value: valueInput.value })
+            });
+            header.value = valueInput.value;
+        });
+
+        // Remove specific header
+        removeBtn.addEventListener("click", async () => {
+            if (header.id) {
+                await fetch(`${BASE_URL}/headers/${header.id}`, { method: "DELETE" });
+            }
+            row.remove();
+        });
+    }
+
+    existingHeaders.forEach(renderHeaderRow);
+
+    // ----------------- Add new header -----------------
+    addHeaderBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+
+        const tempHeader = {}; // empty temporary header
+
+        const row = document.createElement("div");
+        row.className = "headerRow";
+
+        row.innerHTML = `
+            <input class="headersStyle headerKey" type="text" placeholder="Key">
+            <input class="headersStyle headerValue" type="text" placeholder="Value">
+            <button type="button" class="removeHeaderBtn">-</button>
+        `;
+
+        headersContainer.appendChild(row);
+
+        const keyInput = row.querySelector(".headerKey");
+        const valueInput = row.querySelector(".headerValue");
+        const removeBtn = row.querySelector(".removeHeaderBtn");
+
+        const trySaveHeader = async () => {
+            const key = keyInput.value.trim();
+            const value = valueInput.value.trim();
+            if (key && value) {
+                // Create header in backend
+                const res = await fetch(`${BASE_URL}/headers`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ commandId: command.id, key, value })
+                });
+                const createdHeader = await res.json();
+
+                // Replace temporary row with proper saved row
+                row.remove();
+                renderHeaderRow(createdHeader);
+            }
+        };
+
+        // Save when both fields blurred
+        keyInput.addEventListener("blur", trySaveHeader);
+        valueInput.addEventListener("blur", trySaveHeader);
+
+        // Remove unsaved header
+        removeBtn.addEventListener("click", () => row.remove());
+    });
+
+    // ----------------- Command title rename -----------------
+    title.addEventListener("dblclick", () => {
         const input = document.createElement("input");
         input.type = "text";
         input.value = command.name;
@@ -500,50 +682,31 @@ function renderCommand(command) {
 
         input.addEventListener("keydown", async (e) => {
             if (e.key === "Enter") {
-
                 const newName = input.value.trim();
                 if (!newName) return;
-
-                await updateCommandField(command, {
-                    name: newName
-                });
-
+                await updateCommandField(command, { name: newName });
                 command.name = newName;
                 renderCommand(command);
             }
         });
     });
 
-    /*
-    UPDATE COMMAND
-    */
+    // ----------------- Update command -----------------
     cmdInput.addEventListener("keydown", async (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
-
             const newCommand = cmdInput.value.trim();
-
-            await updateCommandField(command, {
-                command: newCommand
-            });
-
+            await updateCommandField(command, { command: newCommand });
             command.command = newCommand;
         }
     });
 
-    /*
-    UPDATE BODY
-    */
+    // ----------------- Update body -----------------
     bodyInput.addEventListener("keydown", async (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
-
             const newBody = bodyInput.value.trim() || null;
-
-            await updateCommandField(command, {
-                body: newBody
-            });
-
+            await updateCommandField(command, { body: newBody });
             command.body = newBody;
         }
     });

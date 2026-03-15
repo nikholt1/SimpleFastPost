@@ -5,7 +5,9 @@ import org.example.simplefastpost.cli.RequestController.RequestController;
 import org.example.simplefastpost.cli.apiRepository.ApiRepository;
 import org.example.simplefastpost.cli.apiService.ApiService;
 import org.example.simplefastpost.cli.commandRepo.CLICommandRepository;
+import org.example.simplefastpost.cli.commandRepo.HeaderRepository;
 import org.example.simplefastpost.cli.commandService.CLICommandService;
+import org.example.simplefastpost.cli.commandService.HeaderService;
 import org.example.simplefastpost.cli.config.CLIconfig;
 import org.example.simplefastpost.cli.folderRepo.CLIFolderRepository;
 import org.example.simplefastpost.cli.folderService.CLIFolderService;
@@ -13,11 +15,12 @@ import org.example.simplefastpost.cli.syncService.HttpSyncService;
 import org.example.simplefastpost.cli.syncService.PushService;
 import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
-import org.springframework.http.ResponseEntity;
+import org.example.simplefastpost.model.Headers;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -37,6 +40,8 @@ public class CLIExecutor {
     private boolean replayMode = false;
     private final RequestController requestController = new RequestController();
     private final CLIconfig clIconfig = new CLIconfig();
+    private final HeaderService headerService;
+    private final HeaderRepository headerRepository;
 
     public CLIExecutor() throws Exception {
 
@@ -51,8 +56,10 @@ public class CLIExecutor {
         this.cliFolderRepository = new CLIFolderRepository(DB_URL);
         this.cliCommandService = new CLICommandService(cliCommandRepository);
         this.cliFolderService = new CLIFolderService(cliFolderRepository);
-        this.syncService = new HttpSyncService(cliCommandService, cliFolderService);
-        this.pushService = new PushService(cliFolderService, cliCommandService);
+        this.headerRepository = new HeaderRepository(DB_URL);
+        this.headerService = new HeaderService(headerRepository);
+        this.pushService = new PushService(cliFolderService, cliCommandService, headerService);
+        this.syncService = new HttpSyncService(cliCommandService, cliFolderService, headerService);
     }
 
     public void execute(String[] rawArgs) throws Exception {
@@ -118,17 +125,17 @@ public class CLIExecutor {
                 System.out.println("sfp version: 0.0.1 beta");
                 return;
             } else if (arg.equalsIgnoreCase("api")) {
-                // Check if there's a subcommand after "api"
+
                 if (i + 1 < rawArgs.length) {
                     String subCommand = rawArgs[++i];
 
                     if (subCommand.equalsIgnoreCase("ls")) {
-                        // List all API instances
+
                         apiService.listAllInstances();
 
                     } else if (subCommand.equalsIgnoreCase("delete") && i + 1 < rawArgs.length) {
                         try {
-                            Long pid = Long.parseLong(rawArgs[++i]); // get the PID
+                            Long pid = Long.parseLong(rawArgs[++i]);
                             apiService.stopApiDaemon(pid);
                             System.out.println("Stopped API instance with PID " + pid);
                         } catch (NumberFormatException e) {
@@ -141,8 +148,7 @@ public class CLIExecutor {
                         System.out.println("Unknown API subcommand. Use 'ls' or 'delete <pid>'.");
                     }
                 } else {
-                    // No subcommand: maybe start API in normal/foreground mode
-                    // Or start detached if you want
+
                     System.out.println("No API subcommand provided. Use 'ls' or 'delete <pid>'.");
                 }
             }
@@ -174,6 +180,13 @@ public class CLIExecutor {
                             for (Command command : commands) {
                                 if (command.getFolderId() == folder.getId()) {
                                     System.out.printf("         Name: %s | Command: %s%n", command.getName(), command.getCommand());
+
+                                    List<Headers> headers = headerService.getAllHeadersFromCommandId(command.getId());
+                                    if (!headers.isEmpty()) {
+                                        for (Headers header : headers) {
+                                            System.out.println("         " + header.getKey() + ": " + header.getValue());
+                                        }
+                                    }
                                     String commandBody = command.getBody();
                                     if (commandBody != null && !commandBody.isBlank()) {
                                         String[] lines = commandBody.split("\\R");
@@ -191,6 +204,14 @@ public class CLIExecutor {
                             if (command.getFolderId() == null) {
                                 System.out.println("\n{} Root Commands");
                                 System.out.printf("Name: %s | Command: %s%n", command.getName(), command.getCommand());
+
+                                List<Headers> headers = headerService.getAllHeadersFromCommandId(command.getId());
+                                if (!headers.isEmpty()) {
+                                    for (Headers header : headers) {
+                                        System.out.println(header.getKey() + ": " + header.getValue());
+                                    }
+                                }
+
                                 String commandBody = command.getBody();
                                 if (commandBody != null && !commandBody.isBlank()) {
                                     String[] lines = commandBody.split("\\R");
@@ -205,8 +226,6 @@ public class CLIExecutor {
                             }
                         }
 
-//                        cliFolderService.listFolders();
-//                        cliCommandService.listCommands();
                     }
                     return;
 
@@ -297,7 +316,7 @@ public class CLIExecutor {
 
                 case "update":
                     if (rawArgs.length < 3) {
-                        System.err.println("Usage: update <command|folder> <name> [options]");
+                        System.err.println("Usage: update <command|folder> <header> <headerkey> <name> [options]");
                         return;
                     }
 
@@ -352,15 +371,61 @@ public class CLIExecutor {
                         }
 
                         case "command" -> {
-//                            Command cmdS = resolveCommand(targetName, null);
 
                             Command command = cliCommandService.getCommandByName(targetName);
                             if (command == null) {
                                 System.err.println("Command not found: " + targetName);
                                 return;
                             }
+
                             id = command.getId();
                             folderId = command.getFolderId();
+
+                            // HEADER UPDATE MODE
+                            if (rawArgs.length >= 5 && rawArgs[3].equalsIgnoreCase("header")) {
+
+                                String headerKey = rawArgs[4];
+
+                                List<Headers> headers = headerService.getAllHeadersFromCommandId(command.getId());
+
+                                Headers header = null;
+                                for (Headers h : headers) {
+                                    if (h.getKey().equalsIgnoreCase(headerKey)) {
+                                        header = h;
+                                        break;
+                                    }
+                                }
+
+                                if (header == null) {
+                                    System.err.println("Header not found: " + headerKey);
+                                    return;
+                                }
+
+                                Scanner scanner = new Scanner(System.in);
+
+                                System.out.print("New header key (" + header.getKey() + "): ");
+                                String newKey = scanner.nextLine();
+
+                                System.out.print("New header value (" + header.getValue() + "): ");
+                                String newValue = scanner.nextLine();
+
+                                if (!newKey.isBlank()) {
+                                    header.setKey(newKey);
+                                }
+
+                                if (!newValue.isBlank()) {
+                                    header.setValue(newValue);
+                                }
+
+                                headerService.updateHeader(header);
+
+                                System.out.println("Header updated successfully.");
+                                return;
+                            }
+                        }
+
+                        case "header" -> {
+                            System.out.println("updating header key and value");
                         }
 
                         default -> {
@@ -378,6 +443,7 @@ public class CLIExecutor {
                 case "purge":
                     cliFolderService.deleteAllFolders();
                     cliCommandService.deleteAllCommands();
+                    headerService.deleteAllHeadersInDB();
                     return;
 
 
@@ -414,8 +480,16 @@ public class CLIExecutor {
                     body,
                     folderId
             );
+            Command savedCommand = cliCommandService.getCommandByName(commandName);
+            List<Headers> headersToAdd = readHeadersInteractively();
 
-            requestController.sendRequest(method, url, body);
+
+            for (Headers header : headersToAdd) {
+                header.setCommandId(savedCommand.getId());
+                headerService.createHeader(header);
+            }
+
+            requestController.sendRequest(method, url, body, headersToAdd);
             return;
         }
 
@@ -445,7 +519,15 @@ public class CLIExecutor {
                 }
             }
         }
-        requestController.sendRequest(method, url, body);
+        Command savedCommand = cliCommandService.getCommandByName(commandName);
+        List<Headers> headersToAdd = readHeadersInteractively();
+
+
+        for (Headers header : headersToAdd) {
+            header.setCommandId(savedCommand.getId());
+            headerService.createHeader(header);
+        }
+        requestController.sendRequest(method, url, body, headersToAdd);
     }
 
     private Command resolveCommand(String name, String folder) throws SQLException {
@@ -464,6 +546,32 @@ public class CLIExecutor {
 
     private String[] tokenize(String command) {
         return command.trim().split("\\s+");
+    }
+
+    private List<Headers> readHeadersInteractively() {
+        List<Headers> headers = new ArrayList<>();
+        Scanner sc = new Scanner(System.in);
+
+        while (true) {
+            System.out.print("Do you want to add a header? (y/n): ");
+            String input = sc.nextLine().trim().toLowerCase();
+
+            if (input.equals("n")) {
+                break;
+            } else if (input.equals("y")) {
+                System.out.print("Header key: ");
+                String key = sc.nextLine().trim();
+
+                System.out.print("Header value: ");
+                String value = sc.nextLine().trim();
+
+                headers.add(new Headers(null, null, key, value)); // id and commandId will be set later
+            } else {
+                System.out.println("Please enter y or n.");
+            }
+        }
+
+        return headers;
     }
 
     private String readJsonBody(String name, boolean replayMode) {
@@ -513,10 +621,11 @@ COMMANDS:
             Update a saved command
 
       Fields:
-        name        Rename the command
-        body        Edit JSON body interactively
-        command     Replace the raw command string
-
+        name                            Rename the command
+        body                            Edit JSON body interactively
+        command                         Replace the raw command string
+        header <header key>             fetches the key and prompts for new key and value
+        
       Examples:
         update command getUsers --set name:newGetUsers
         update command getUsers --set body

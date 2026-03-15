@@ -1,8 +1,11 @@
 package org.example.simplefastpost.cli.syncService;
 
 import org.example.simplefastpost.cli.commandService.CLICommandService;
+import org.example.simplefastpost.cli.commandService.HeaderService;
 import org.example.simplefastpost.cli.folderService.CLIFolderService;
+import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
+import org.example.simplefastpost.model.Headers;
 import org.example.simplefastpost.repository.CommandRepository;
 import org.example.simplefastpost.repository.FolderRepository;
 import org.example.simplefastpost.service.CommandService;
@@ -11,6 +14,7 @@ import org.example.simplefastpost.service.FolderService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import java.io.IOException;
@@ -25,10 +29,14 @@ public class HttpSyncService {
 
     private final CLICommandService cliCommandService;
     private final CLIFolderService cliFolderService;
+    private final HeaderService headerService;
 
-    public HttpSyncService(CLICommandService commandService, CLIFolderService folderService) {
+    public HttpSyncService(CLICommandService commandService,
+                           CLIFolderService folderService,
+                           HeaderService headerService) {
         this.cliCommandService = commandService;
         this.cliFolderService = folderService;
+        this.headerService = headerService;
     }
 
     public int syncFile(Path file) throws IOException {
@@ -36,9 +44,12 @@ public class HttpSyncService {
         List<String> lines = Files.readAllLines(file);
         int counter = 0;
 
+        // Clear existing data
         try {
+
             cliFolderService.deleteAllFolders();
             cliCommandService.deleteAllCommands();
+            headerService.deleteAllHeadersInDB();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -50,11 +61,8 @@ public class HttpSyncService {
 
             String line = lines.get(i).trim();
 
-        /* -------------------------
-           MKDIR
-        ------------------------- */
+            // ---------------- MKDIR ----------------
             if (line.startsWith("#mkdir")) {
-
                 String[] parts = line.split("\\s+");
                 if (parts.length >= 4) {
                     String folderName = parts[3].replace(";", "");
@@ -66,15 +74,13 @@ public class HttpSyncService {
                 }
             }
 
-        /* -------------------------
-           PLACE BLOCK
-        ------------------------- */
+            // ---------------- PLACE BLOCK ----------------
             if (line.startsWith("### place ")) {
 
                 String[] placeParts = line.split("\\s+");
                 String targetFolder;
 
-                String placeArg = placeParts[2].replace(";", ""); // remove semicolon
+                String placeArg = placeParts[2].replace(";", "");
 
                 if (placeArg.equals("root")) {
                     targetFolder = "root";
@@ -84,7 +90,7 @@ public class HttpSyncService {
                     throw new IllegalArgumentException("Invalid place syntax: " + line);
                 }
 
-                /* COMMAND NAME */
+                // ---------------- COMMAND NAME ----------------
                 i++;
                 if (i >= lines.size()) break;
 
@@ -92,57 +98,67 @@ public class HttpSyncService {
                 String[] commandParts = commandLine.split("\\s+");
                 String commandName = commandParts[3].replace(";", "");
 
-                /* METHOD + URL */
+                // ---------------- METHOD + URL ----------------
                 i++;
                 if (i >= lines.size()) break;
 
                 String requestLine = lines.get(i).trim();
                 String[] requestParts = requestLine.split("\\s+");
-                String method = requestParts[0];
-                String url = requestParts[1];
+                String method = requestParts[0].trim();
+                String url = requestParts.length > 1 ? requestParts[1].trim() : "";
 
-                /* HEADERS */
-                StringBuilder headersBuilder = new StringBuilder();
+                if (url.isEmpty()) {
+                    System.out.println("Skipping command '" + commandName + "' due to missing URL.");
+                    continue;
+                }
+
+                // ---------------- HEADERS ----------------
+                List<Headers> headersList = new ArrayList<>();
                 i++;
 
                 while (i < lines.size()) {
                     String headerLine = lines.get(i).trim();
 
-                    if (headerLine.isEmpty()) break;
+                    if (headerLine.isEmpty()) break; // empty line ends headers
                     if (headerLine.startsWith("###")) {
-                        i--;
+                        i--; // backtrack for next section
                         break;
                     }
 
-                    headersBuilder.append(headerLine).append("\n");
+                    int sep = headerLine.indexOf(':');
+                    if (sep != -1) {
+                        String key = headerLine.substring(0, sep).trim();
+                        String value = headerLine.substring(sep + 1).trim();
+
+                        if (!key.isEmpty()) {
+                            Headers h = new Headers();
+                            h.setKey(key);
+                            h.setValue(value);
+                            headersList.add(h);
+                        }
+                    }
                     i++;
                 }
 
-                /* BODY */
+                // ---------------- BODY ----------------
                 StringBuilder bodyBuilder = new StringBuilder();
                 i++;
-
                 while (i < lines.size()) {
                     String bodyLine = lines.get(i).trim();
-
                     if (bodyLine.startsWith("###")) {
                         i--;
                         break;
                     }
-
                     bodyBuilder.append(bodyLine).append("\n");
                     i++;
                 }
-
                 String body = bodyBuilder.toString();
 
-                /* FIND FOLDER */
+                // ---------------- FIND FOLDER ----------------
                 Long folderId = null;
-
                 if (!targetFolder.equals("root")) {
                     try {
                         List<Folder> folders = cliFolderService.getAllFolders();
-
                         for (Folder f : folders) {
                             if (f.getProjectName().equals(targetFolder)) {
                                 folderId = f.getId();
@@ -154,20 +170,33 @@ public class HttpSyncService {
                     }
                 }
 
-                /* SAVE COMMAND */
-                String command = "-m " + method + " -u " + url;
+                // ---------------- SAVE COMMAND ----------------
+                String commandStr = "-m " + method + " -u " + url;
+                Command createdCommand = null;
 
                 try {
-                    cliCommandService.createCommand(commandName, command, body, folderId);
+                    createdCommand = cliCommandService.createCommand(commandName, commandStr, body, folderId);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    continue; // skip headers if command creation fails
+                }
+
+                // ---------------- SAVE HEADERS ----------------
+                if (createdCommand != null && !headersList.isEmpty()) {
+                    for (Headers h : headersList) {
+                        h.setCommandId(createdCommand.getId());
+                        try {
+                            headerService.createHeader(h);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
 
                 counter++;
             }
 
-            /* PROGRESS BAR UPDATE */
-
+            // ---------------- PROGRESS BAR ----------------
             int percent = (int) ((i / (double) total) * 100);
             if (percent > 100) percent = 100;
 
@@ -184,17 +213,10 @@ public class HttpSyncService {
     }
 
     private void printProgressBar(int percent) {
-
         int barLength = 30;
         int filled = (percent * barLength) / 100;
 
-        String bar =
-                "[" +
-                        "=".repeat(filled) +
-                        " ".repeat(barLength - filled) +
-                        "] " +
-                        percent + "%";
-
+        String bar = "[" + "=".repeat(filled) + " ".repeat(barLength - filled) + "] " + percent + "%";
         System.out.print("\r" + bar);
         System.out.flush();
     }

@@ -5,6 +5,7 @@ import org.example.simplefastpost.dto.CommandDTO;
 import org.example.simplefastpost.dto.FolderDTO;
 import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
+import org.example.simplefastpost.model.Headers;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
@@ -17,10 +18,11 @@ import java.util.*;
 public class PushService {
     private final FolderService folderService;
     private final CommandService commandService;
-
-    public PushService(FolderService folderService, CommandService commandService) {
+    private final HeaderService headerService;
+    public PushService(FolderService folderService, CommandService commandService, HeaderService headerService) {
         this.folderService = folderService;
         this.commandService = commandService;
+        this.headerService = headerService;
     }
 
 
@@ -83,12 +85,19 @@ public class PushService {
 
                         }
                         writer.write(method + " " + url + "\n" );
-                        writer.write("\n");
+
                     } else {
                         finalCommand = commandString;
                         writer.write(finalCommand);
-                        writer.write("\n");
+
                     }
+
+                    List<Headers> headers = headerService.getHeadersByCommandId(command.getId());
+                    for (Headers header : headers) {
+                        writer.write(header.getKey() + ": " + header.getValue() + "\n" );
+                    }
+                    writer.write("\n");
+                    ObjectMapper map = new ObjectMapper();
 
                     ObjectMapper mapper = new ObjectMapper();
 
@@ -99,6 +108,9 @@ public class PushService {
                         writer.write("\n");
                         writer.write("\n \n");
                     }
+
+
+
 
 
 
