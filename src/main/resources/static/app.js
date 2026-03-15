@@ -551,7 +551,9 @@ async function renderCommand(command) {
 
     main.innerHTML = `
         <div class="dark-main-content">
-            <h4 class="dark-text" id="commandTitle" style="font-size: 20px; height: 15px; padding 2px;">${command.name}</h4>
+            <div style="display: flex;align-items: center">
+            <h4 class="dark-text" id="commandTitle" style="font-size: 20px; height: 15px; padding 2px;">${command.name}</h4><button id="sendBtn" class="sendBtn">Send</button>
+            </div>
             <hr style="border-color: #3a3a3a;">
             <p class="dark-text">Command</p>
             <textarea id="commandCmd" class="dark-pre">${command.command}</textarea>
@@ -562,6 +564,12 @@ async function renderCommand(command) {
 
             <p class="dark-text">Body</p>
             <textarea id="commandBody" class="dark-body">${command.body ?? ""}</textarea>
+            <div style="display: flex; align-items: center">
+            <p class="dark-text" style="padding-bottom: 0px; margin-bottom: 0;">Response</p><span id="responseNumber" style="background-color: #238436; color:white; border-radius: 4px;padding: 2px 4px; margin-left: 6px; font-size: 12px; font-weight: bold">200</span>
+            </div>
+            
+            <textarea class="dark-body" readonly rows="4" cols="50" style="background-image: url('image/logoStyledImg.jpg'); background-repeat: no-repeat;background-position: center;background-size: 100px 100px; "></textarea>
+        
         </div>
     `;
 
