@@ -548,10 +548,15 @@ async function requestAddCommand({ name, command, body, folderId = null }) {
 async function renderCommand(command) {
     const main = document.getElementById("main");
     if (!main) return;
+    const headersContainer = document.getElementById("headersContainer");
+
 
     main.innerHTML = `
         <div class="dark-main-content">
-            <h4 class="dark-text" id="commandTitle" style="font-size: 20px; height: 15px; padding 2px;">${command.name}</h4>
+            <div style="display: flex; align-items: center">
+            <h4 class="dark-text" id="commandTitle" style="font-size: 20px; height: 15px; padding 2px;">${command.name}</h4><button class="sendBtn">Send</button>
+            </div>
+            
             <hr style="border-color: #3a3a3a;">
             <p class="dark-text">Command</p>
             <textarea id="commandCmd" class="dark-pre">${command.command}</textarea>
@@ -562,10 +567,10 @@ async function renderCommand(command) {
 
             <p class="dark-text">Body</p>
             <textarea id="commandBody" class="dark-body">${command.body ?? ""}</textarea>
+            <p class="dark-text">Response</p>
+            <textarea id="responseField" class="dark-body" readonly rows="4" cols="50" placeholder="Response"></textarea>
         </div>
     `;
-
-    const headersContainer = document.getElementById("headersContainer");
     const addHeaderBtn = document.getElementById("addHeaderBtn");
     const title = document.getElementById("commandTitle");
     const cmdInput = document.getElementById("commandCmd");
