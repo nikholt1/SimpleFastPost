@@ -173,7 +173,7 @@ tbody tr:hover {
 
 form {
     height: 100%;
-    padding: 20px;
+    padding: 10px;
     /*border: 1px solid #9976af;*/
     width: 100%;
     display: flex;
@@ -186,7 +186,8 @@ form {
 
 }
 .formInput {
-    background-color: rgba(30,31,34,0.5);
+    border-radius: 4px;
+    background-color: rgb(30, 31, 34);
 }
 /* Style the select element */
 .method-select {
@@ -336,10 +337,12 @@ table.table tbody tr:hover {
 }
 
 .dark-pre {
+    min-height: 32px;
+    height: 32px;
     background-color: #1e1f22;
     color: #abd9f4;
     border: 1px solid #3a3a3a;
-    padding: 8px;
+    padding: 2px;
     border-radius: 4px;
     overflow-x: auto;
     width: 100%;
@@ -359,9 +362,10 @@ table.table tbody tr:hover {
     background-color: #1e1f22;
     color: white;
     border: 1px solid #3a3a3a;
-    padding: 8px;
+    padding: 2px;
     border-radius: 4px;
     min-height: 15px;
+    font-size: 15px;
 }
 .hidden {
     display: none;

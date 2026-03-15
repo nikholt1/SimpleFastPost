@@ -378,14 +378,19 @@ function renderNewCommand(folderId = null) {
                     <option class="method" value="DELETE">DELETE</option>
                     <option class="method" value="PATCH">PATCH</option>
                 </select>
-                <input style="width: 80%; background-color: rgba(30,31,34,0.5);" type="text" id="commandURL" placeholder="URL">
+                <input style="border-radius: 4px; width: 80%; background-color: rgb(30, 31, 34);" type="text" id="commandURL" placeholder="URL">
     
             </div>
             <input type="text" id="commandCmd" placeholder="Command" required>
-            <textarea  id="commandBody" placeholder="Command Body (optional)" style="background-color: rgba(30,31,34,0.5); color: white; width: 100%; height: 200px; padding: 6px; font-size: 14px; box-sizing: border-box;"></textarea>
-            <button class="hidden"
-                    style="background-color: #815cd7; color: white; width: 200px">Add more headers</button>
-    
+            <p class="dark-text">Headers</p>
+            <div>
+            <input class="headersStyle" type="text" id="headerKey" placeholder="Key"><input class="headersStyle" type="text" id="headerValue" placeholder="Value"><button class="removeHeaderbtn">-</button>
+            </div>
+            <button id="addHeaderBtn" class="addHeaderBtn" style="margin-top: -10px;">+</button>
+           
+           
+            <textarea  id="commandBody" placeholder="Command Body (optional)" style="border-radius: 4px; background-color: rgb(30,31,34); color: white; width: 100%; height: 200px; padding: 6px; font-size: 14px; box-sizing: border-box;"></textarea>
+
             <button  type="submit" class="btn btn-primary"
                     style="background-color: #238536; color: white; width: 200px;">
                 Add Command
@@ -466,7 +471,7 @@ function renderCommand(command) {
     main.innerHTML = `
         <div class="dark-main-content">
 
-            <h4 class="dark-text" id="commandTitle">${command.name}</h4>
+            <h4 class="dark-text" id="commandTitle" style="font-size: 20px; height: 15px; padding 2px;">${command.name}</h4>
 
             <hr style="border-color: #3a3a3a;">
 
