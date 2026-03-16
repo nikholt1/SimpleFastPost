@@ -109,28 +109,42 @@ function renderHelp() {
             </div>
             <div class="startPageContent" style="width: 80%;">
                 <h1><img src="image/SFPLogoNoBackground.jpg" style="width: 50px"> Help</h1>
-                <h4>Commands</h4>
-                <strong>Creating commands:</strong><br>
-                <strong>Browser:</strong><br>
-                <p>to create a new command in the browser, either choose the "+ Command" button at the bottom right corner of the side bar or
-                unfold a folder and press the "+" button. <br><br>
-                In the "Create command section" choose the methods and url that the command should point at, or input a custom command.
+                <h4>Browser</h4>
+                <strong>Commands:</strong>
+                <p>To build a command in root, press the + Command button, from there a form will pop up allowing you to
+                input a name for the command. Thereafter you can set the method by the dropdown menu, which by default is set to "GET".
+                After the method you can specify the url that the command should target.</p>
+                <p>The headers are seperated by key and value. to add more headers, press the "+" under the empty header. To delete a header press the "-" next to the header you want to delete</p>
+                <p>If the method allows it, you can specify the JSON body in the large field under the headers.</p>
+                <p>To save the command, press the "Add Command" button</p>
+                <p>To delete a command, press the "-" button in the sidebar that is next to the command you want to delete.</p>
                 <br><br>
-                    from there choose the rest of the command setup, and or extend it with body.
-                </p>
-                <strong>CLI:</strong><br>
-                <p>In cli mode run the application "sfp" command and choose the " -m " flag, to define the method and afterward define the method with POST, DELETE, PUT, GET, PATH or OPTIONS <br>
-                after that define the new flag for the url " - u example.com " <br><br>
-                For more flags and information use the " --help " flag</p>
+                <p>To update a command, press the command from the sidebar selection. From there a new window should appear, with the specifications for the command.</p>
+                <p>In the specified command window, you can update the command name, by pressing the command name and input a new name.</p>
+                <p>In the command you can change the commands actual command directly in the input field</p>
+                <p>To add more headers. press the "+" under the "Headers" headline.</p>
+                <p>To change the body of the header, simply press in the body textarea of the command and change it</p>
+                <p>All of the update fields are saved when clicking out of the specific field, and or by pressing "Enter"</p>
+                <p>The specific command allows you to send  the command  by pressing the blue "Send" button by the command name, and get the response in the response area at the bottom of the page.</p> 
                 <br><br>
-                <strong>Creating folders</strong><br>
-                <strong>Browser:</strong><br>
-                <p>Press the "+ folder " button in the bottom left corner of the sidebar, input the name of the folder and press "Add Folder" <br><br>
-                </p>
-                <strong>CLI: </strong>
-                <p>in the command write "sfp" followed by "mkdir" and the foldername -> run the command</p>
-
-
+                <strong>Folders:</strong>
+                <p>To create a new folder, press the "+ Folder" button and input the desired name of the folder in the input field. then press the "Add Folder" button.</p>
+                <p>To add a command to a specific folder, unfold the folder and press the "+" button inside the folder, and follow the steps for creating a command.</p>
+                <p>To delete a command, press the "-" button next to the command you want to delete</p>
+                <p>The UI allows you to send all the commands in a folder, by pressing the two arrows next to the folder name, of which you want to run all commands in. from there, a window will open, showing you the commands names and their respective response.</p>
+                <br><br>
+                <strong>Sync and push:</strong>
+                <p>For sync and push to work properly, the root directory where you started the api, must have a either empty or filled file called "sfp.http"</p>
+                <p>When pressing the "sync" button, which is a round arrow, the system updates the database and reloads the page, allowing you to receive and build the commands and folders from the .http file.</p>
+                <p>When pressing push, the system allows you to push your changes or the commands that are in your database to the .http file.</p>
+                <p><strong>Use case:</strong> When you are working on a project, the sfp.http file serves as a "one truth" for request testing. when you update your project and receive the updated sft.http file. pressing sync allows you to receive the changes. 
+                The UI allows you to easily modify, build new or delete unwanted commands, and then push to the one truth sfp.http file. When you then push the program to the master branch and the rest of the team pull the latest changes, they can easily sync their database and run all the requests.</p>
+                <br><br><br><br>
+                
+                <h4>CLI</h4>
+                <strong>Commands:</strong>
+                
+                
             </div>
             </div>
     `;
