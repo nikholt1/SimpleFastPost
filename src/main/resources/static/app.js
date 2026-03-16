@@ -80,7 +80,7 @@ function renderHome() {
     if (!main) return;
 
     main.innerHTML = `
-       <div id="startPage">
+       <div id="startPage" style="justify-content: center; align-items: center">
         <div>
             <img src="image/SFPLogoNoBackground.jpg" style="width: 200px">
         </div>
@@ -107,8 +107,10 @@ function renderHelp() {
             <div>
 
             </div>
-            <div class="startPageContent" style="width: 80%;">
-                <h1><img src="image/SFPLogoNoBackground.jpg" style="width: 50px"> Help</h1>
+                <div class="startPageContent" style="width: 80%;"><h1><img src="image/SFPLogoNoBackground.jpg" style="width: 50px"> Help</h1>
+                <h4>Setup:</h4>
+                <p></p>
+                
                 <h4>Browser</h4>
                 <strong>Commands:</strong>
                 <p>To build a command in root, press the + Command button, from there a form will pop up allowing you to
