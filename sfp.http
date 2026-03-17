@@ -41,7 +41,7 @@ DELETE https://jsonplaceholder.typicode.com/posts/1
 }
 
  
-### place root;
+### place folder newFolder;
 ### command name thisIsFromThePush;
 PUT https://jsonplaceholder.typicode.com/posts/1
 
@@ -71,7 +71,7 @@ key: value
 GET google.com
 key: value
 
-### place folder newFolder;
+### place root;
 ### command name getCommand;
 GET https://jsonplaceholder.typicode.com/posts/1
 

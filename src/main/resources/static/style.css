@@ -245,9 +245,10 @@ form {
 }
 
 .button-row {
+    margin-left: 5px;
     display: flex;
     gap: 5px;
-    justify-content: center;
+    justify-content: left;
 
 }
 html, body {

@@ -234,23 +234,50 @@ function buildSidebarTree(folders, commands) {
     return roots;
 }
 
+const expandedFolders = new Set();
 
 function renderSidebar(items) {
     const tbody = document.getElementById("tableBody");
     if (!tbody) return;
 
     tbody.innerHTML = "";
+
+
+    if (!document.body.dataset.globalDropInitialized) {
+        document.body.dataset.globalDropInitialized = "true";
+
+        document.body.addEventListener("dragover", (e) => {
+            e.preventDefault();
+        });
+
+        document.body.addEventListener("drop", async (e) => {
+            e.preventDefault();
+
+            const commandId = e.dataTransfer.getData("commandId");
+            if (!commandId) return;
+
+
+            const row = e.target.closest("tr");
+            if (row && row.dataset.type === "folder") return;
+
+
+            await updateCommandFolder(commandId, null);
+            renderSidebar(sidebarTree);
+        });
+    }
+
     items.forEach(item => renderItem(item, tbody, 0));
 }
 
 function renderItem(item, tbody, level) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-
     td.style.paddingLeft = `${level * 16}px`;
-
     tr.classList.add("dark-row");
     td.classList.add("dark-cell");
+
+    tr.dataset.type = item.type;
+    tr.dataset.id = item.id;
 
     const container = document.createElement("div");
     container.style.display = "flex";
@@ -259,46 +286,53 @@ function renderItem(item, tbody, level) {
 
     const label = document.createElement("span");
 
+    // 🔹 FOLDER
     if (item.type === "folder") {
-
+        const isExpanded = expandedFolders.has(item.id);
         const hasChildren = item.children.length > 0;
-
         const arrowIcon = hasChildren
-            ? `<i class="bi ${item.expanded ? "bi-chevron-down" : "bi-chevron-right"}" style="font-size:0.7rem; margin-right:2px;"></i>`
+            ? `<i class="bi ${isExpanded ? "bi-chevron-down" : "bi-chevron-right"}" style="font-size:0.7rem;margin-right:2px;"></i>`
             : "";
 
         label.innerHTML = `
-        
-        <div style="display:flex;align-items:center;">
-            ${arrowIcon}
-            <i class="bi bi-folder" style="color:lightgrey;margin-right:4px;"></i>
-            ${item.name}
-            <img class="runAllInFolder" 
-                 style="margin-left:15px;width:17px;height:17px;cursor:pointer" 
-                 src="image/runAll.png">
-        </div>
+            <div style="display:flex;align-items:center;">
+                ${arrowIcon}
+                <i class="bi bi-folder" style="color:lightgrey;margin-right:4px;"></i>
+                ${item.name}
+                <img class="runAllInFolder" 
+                     style="margin-left:15px;width:17px;height:17px;cursor:pointer" 
+                     src="image/runAll.png">
+            </div>
         `;
-
         label.classList.add("folder");
 
-        // Expand / collapse folder
         tr.addEventListener("click", () => {
-            item.expanded = !item.expanded;
+            if (expandedFolders.has(item.id)) expandedFolders.delete(item.id);
+            else expandedFolders.add(item.id);
             renderSidebar(sidebarTree);
         });
 
-        // RUN ALL BUTTON
         const runAllBtn = label.querySelector(".runAllInFolder");
-
         if (runAllBtn) {
             runAllBtn.addEventListener("click", (e) => {
-                e.stopPropagation(); // prevent folder toggle
+                e.stopPropagation();
                 runAllCommandsInFolder(item);
             });
         }
 
-    } else {
+        // Folder drop
+        tr.addEventListener("dragover", (e) => e.preventDefault());
+        tr.addEventListener("drop", async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const commandId = e.dataTransfer.getData("commandId");
+            if (!commandId) return;
+            await updateCommandFolder(commandId, item.id);
+            renderSidebar(sidebarTree);
+        });
 
+    } else {
+        // 🔹 COMMAND
         const methodColors = {
             "GET": "#4aa35a",
             "POST": "#387bb5",
@@ -309,7 +343,6 @@ function renderItem(item, tbody, level) {
         };
 
         let methodFound = null;
-
         for (const method of Object.keys(methodColors)) {
             if (item.command.includes(method)) {
                 methodFound = method;
@@ -317,12 +350,8 @@ function renderItem(item, tbody, level) {
             }
         }
 
-        label.textContent = "";
-
         if (methodFound) {
-
             const methodSpan = document.createElement("span");
-
             methodSpan.textContent = methodFound;
             methodSpan.style.backgroundColor = methodColors[methodFound];
             methodSpan.style.color = "#fff";
@@ -331,74 +360,56 @@ function renderItem(item, tbody, level) {
             methodSpan.style.marginRight = "6px";
             methodSpan.style.fontSize = "12px";
             methodSpan.style.fontWeight = "bold";
-
             label.appendChild(methodSpan);
-
         } else {
-
             const emptySpan = document.createElement("span");
-
             emptySpan.textContent = "{ }";
             emptySpan.style.marginRight = "6px";
-
             label.appendChild(emptySpan);
         }
 
-        const nameText = document.createTextNode(item.name);
-
-        label.appendChild(nameText);
-
+        label.appendChild(document.createTextNode(item.name));
         label.style.fontSize = "15px";
 
         tr.addEventListener("click", () => renderCommand(item));
     }
 
+    // 🔹 REMOVE BUTTON
     const removeBtn = document.createElement("button");
-
     removeBtn.textContent = "-";
     removeBtn.classList.add("sidebar-btn", "remove-btn");
-
     removeBtn.addEventListener("click", async (e) => {
-
         e.stopPropagation();
-
-        if (item.type === "folder") {
-            await deleteFolder(item.id);
-        } else {
-            await deleteCommand(item.id);
-        }
-
+        if (item.type === "folder") await deleteFolder(item.id);
+        else await deleteCommand(item.id);
     });
 
     container.appendChild(label);
     container.appendChild(removeBtn);
-
     td.appendChild(container);
     tr.appendChild(td);
     tbody.appendChild(tr);
 
-    if (item.type === "folder" && item.expanded) {
+    // 🔹 DRAG
+    tr.draggable = item.type !== "folder";
+    tr.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("commandId", item.id);
+    });
 
-        item.children.forEach(child =>
-            renderItem(child, tbody, level + 1)
-        );
+    // 🔹 CHILDREN
+    if (item.type === "folder" && expandedFolders.has(item.id)) {
+        item.children.forEach(child => renderItem(child, tbody, level + 1));
 
         const addRow = document.createElement("tr");
         const addTd = document.createElement("td");
-
         addTd.style.paddingLeft = `${(level + 1) * 16}px`;
 
         const addBtn = document.createElement("button");
-
         addBtn.textContent = "+";
         addBtn.classList.add("sidebar-btn", "add-btn");
-
         addBtn.addEventListener("click", (e) => {
-
             e.stopPropagation();
-
             renderNewCommand(item.id);
-
         });
 
         addTd.appendChild(addBtn);
@@ -407,6 +418,16 @@ function renderItem(item, tbody, level) {
     }
 }
 
+// 🔹 API
+async function updateCommandFolder(commandId, folderId) {
+    await fetch(`api/commands/${commandId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderId })
+    });
+    window.location.reload();
+
+}
 async function runAllCommandsInFolder(folder) {
 
     console.log("Running all commands in folder:", folder.name);
