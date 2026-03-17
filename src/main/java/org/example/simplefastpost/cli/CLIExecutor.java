@@ -447,6 +447,23 @@ public class CLIExecutor {
 
                             // 2️⃣ Special handling: --set folder:<folderName>
                             if ("folder".equalsIgnoreCase(updateField)) {
+
+                                // Special case: folder:0 → unset folder
+                                if ("0".equals(updateValue)) {
+                                    folderId = null;
+                                    command.setFolderId(null);
+                                    cliCommandService.updateCommand(
+                                            command.getId(),
+                                            command.getName(),
+                                            command.getCommand(),
+                                            command.getBody(),
+                                            folderId
+                                    );
+                                    System.out.println("Folder removed from command '" + targetName + "' (folderId set to null)");
+                                    return; // done
+                                }
+
+                                // Normal case: find folder by name
                                 List<Folder> folders = cliFolderService.getAllFolders();
                                 Folder targetFolder = null;
                                 for (Folder f : folders) {
@@ -462,12 +479,18 @@ public class CLIExecutor {
                                 }
 
                                 folderId = targetFolder.getId();
-                                command.setFolderId(folderId); // ✅ update the object directly
-                                cliCommandService.updateCommand(command.getId(), command.getName(), command.getCommand(), command.getBody(), folderId); // ✅ persist change
+                                command.setFolderId(folderId); // update command object
+                                cliCommandService.updateCommand(
+                                        command.getId(),
+                                        command.getName(),
+                                        command.getCommand(),
+                                        command.getBody(),
+                                        folderId
+                                ); // persist change
+
                                 System.out.println("Updated folderId of command '" + targetName + "' to folder '" + updateValue + "' (id=" + folderId + ")");
                                 return; // done
                             }
-
                             // HEADER UPDATE MODE (unchanged)
                             if (rawArgs.length >= 5 && rawArgs[3].equalsIgnoreCase("header")) {
 

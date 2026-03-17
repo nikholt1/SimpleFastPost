@@ -174,7 +174,8 @@ function renderHelp() {
                 Thereafter you are prompted for a new key and value for the header <br>
                 Example input: "update command newCommand header key"</p>
                 <p>To simply update the name of the command run "update command commandName --name newCommandName"</p>
-                
+                <p>To move the command to a new folder, run "update command commandName --set folder:foldername" <br>
+                If you want to move the command back to root, run "update command commandName --set folder:0" </p>
                 <br><br>
                 <strong>Folders:</strong>
                 <p>To create a new folder simply type "mkdir" followed by the foldername.</p>
