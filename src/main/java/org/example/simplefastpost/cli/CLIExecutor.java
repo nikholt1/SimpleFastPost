@@ -316,21 +316,67 @@ public class CLIExecutor {
                     return;
                 case "delete":
                     String flag = rawArgs[1].toLowerCase();
+
                     if (flag.equals("-cmd")) {
-                        String commandTarget = rawArgs[2];
-                        Command command = cliCommandService.getCommandByName(commandTarget);
-                        cliCommandService.deleteCommand(command.getId());
-                    } else if (flag.equals("-f")) {
-                        String folderTarget = rawArgs[2];
-                        List<Folder> folders = cliFolderService.getAllFolders();
-                        for (Folder folder : folders) {
-                            if (folder.getProjectName().equals(folderTarget)){
-                                cliFolderService.deleteFolder(folder.getId());
+
+
+                        if (rawArgs.length > 3 && "header".equalsIgnoreCase(rawArgs[3])) {
+
+                            if (rawArgs.length > 4) {
+                                String headerTarget = rawArgs[4];
+                                Headers header = headerService.getHeaderByName(headerTarget);
+                                if (header == null) {
+                                    System.out.println("Header not found in command");
+                                    return;
+                                }
+                                System.out.println("Deleting header '" + header.getKey() + "'");
+                                headerService.deleteHeader(header);
+
+                            } else {
+
+                                System.out.println("Please specify a header name");
                             }
+
+                            return;
                         }
-                    } else {
-                        System.out.println("delete requires specification of -cmd or -f of either the command or the foldername");
+
+
+                        if (rawArgs.length > 2) {
+                            String commandTarget = rawArgs[2];
+
+                            Command command = cliCommandService.getCommandByName(commandTarget);
+
+                            if (command == null) {
+                                System.out.println("Command not found, or multiple commands found");
+                            } else {
+                                cliCommandService.deleteCommand(command.getId());
+                            }
+                            return;
+                        }
+
+                        System.out.println("Please specify a command name");
+                        return;
+
+                    } else if (flag.equals("-f")) {
+
+                        // FOLDER MODE: delete -f <folderName>
+                        if (rawArgs.length > 2) {
+                            String folderTarget = rawArgs[2];
+                            List<Folder> folders = cliFolderService.getAllFolders();
+
+                            for (Folder folder : folders) {
+                                if (folder.getProjectName().equals(folderTarget)) {
+                                    cliFolderService.deleteFolder(folder.getId());
+                                }
+                            }
+                            return;
+                        }
+
+                        System.out.println("Please specify a folder name");
+                        return;
                     }
+
+                    System.out.println("delete requires specification of -cmd or -f");
                 case "update":
                     if (rawArgs.length < 3) {
                         System.err.println("Usage: update <command|folder> <header> <headerkey> <name> [options]");
@@ -389,6 +435,7 @@ public class CLIExecutor {
 
                         case "command" -> {
 
+                            // 1️⃣ Get command (must return something even if multiple exist)
                             Command command = cliCommandService.getCommandByName(targetName);
                             if (command == null) {
                                 System.err.println("Command not found: " + targetName);
@@ -398,7 +445,30 @@ public class CLIExecutor {
                             id = command.getId();
                             folderId = command.getFolderId();
 
-                            // HEADER UPDATE MODE
+                            // 2️⃣ Special handling: --set folder:<folderName>
+                            if ("folder".equalsIgnoreCase(updateField)) {
+                                List<Folder> folders = cliFolderService.getAllFolders();
+                                Folder targetFolder = null;
+                                for (Folder f : folders) {
+                                    if (f.getProjectName().equalsIgnoreCase(updateValue)) {
+                                        targetFolder = f;
+                                        break;
+                                    }
+                                }
+
+                                if (targetFolder == null) {
+                                    System.err.println("Folder not found: " + updateValue);
+                                    return;
+                                }
+
+                                folderId = targetFolder.getId();
+                                command.setFolderId(folderId); // ✅ update the object directly
+                                cliCommandService.updateCommand(command.getId(), command.getName(), command.getCommand(), command.getBody(), folderId); // ✅ persist change
+                                System.out.println("Updated folderId of command '" + targetName + "' to folder '" + updateValue + "' (id=" + folderId + ")");
+                                return; // done
+                            }
+
+                            // HEADER UPDATE MODE (unchanged)
                             if (rawArgs.length >= 5 && rawArgs[3].equalsIgnoreCase("header")) {
 
                                 String headerKey = rawArgs[4];

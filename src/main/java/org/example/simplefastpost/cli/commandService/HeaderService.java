@@ -21,6 +21,9 @@ public class HeaderService {
     public Headers getHeader(Long headerId) throws SQLException {
         return headerRepository.getHeader(headerId);
     }
+    public Headers getHeaderByName(String name) throws SQLException {
+        return headerRepository.getHeaderByName(name);
+    }
 
     public List<Headers> getAllHeadersFromCommandId(Long commandId) throws SQLException {
         return  headerRepository.getAllHeadersFromCommandId(commandId);

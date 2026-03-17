@@ -58,6 +58,31 @@ public class HeaderRepository {
         }
     }
 
+    public Headers getHeaderByName(String name) throws SQLException{
+        String sql = "SELECT * FROM headers WHERE key = ?";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, name);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Headers header = new Headers();
+                    header.setId(rs.getLong("id"));
+                    header.setCommandId(rs.getLong("command_id"));
+                    header.setKey(rs.getString("key"));
+                    header.setValue(rs.getString("value"));
+
+                    return header;
+                } else {
+
+                    return null;
+                }
+            }
+        }
+    }
+
     public List<Headers> getAllHeadersFromCommandId(Long commandId) throws SQLException {
         List<Headers> headers = new ArrayList<>();
 

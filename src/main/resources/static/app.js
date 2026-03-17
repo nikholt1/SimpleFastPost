@@ -164,15 +164,28 @@ function renderHelp() {
                 <p>To save a command, input the command you want to save, followed by "-sv" and "-cmd" to specify save mode, and that its a command. thereafter input the desired name of the command. <br>
                 If you want to save the command into a folder, specify it folder by "-f" for folder and the foldername <br>
                 Example input "sfp -m POST -u thisIsTheUrl.com -sv -cmd ThisIsTheCommandName -f ThisIsTheFolderIWantToSaveInto"</p>
+                <p>To delete a command, run "delete -cmd" followed by the command name</p>
+                <p>To delete a header in a command run "delete -cmd" followed by the command name, then "header" followed by the headername <br>
+                Example input: "delete -cmd commandName header headerName"</p>
+                <p>To update a command, run "update -cmd" followed by the command name then specify which field of the command you want to update with "--set" "field:value" <br>
+                Example input: "update commandName set url:theurl.com <br>
+                The commands have the following fields: name, url, method and body <br>
+                To update the commands header, run "update command commandName header headerKey/name <br>
+                Thereafter you are prompted for a new key and value for the header <br>
+                Example input: "update command newCommand header key"</p>
+                <p>To simply update the name of the command run "update command commandName --name newCommandName"</p>
+                
                 <br><br>
                 <strong>Folders:</strong>
                 <p>To create a new folder simply type "mkdir" followed by the foldername.</p>
+                <p>To delete a folder, run "delete -f" followed by the folder name</p>
+                <p>To update the folder run "update folder foldername --name newFolderName"</p>
+
                 <strong>API:</strong>
                 <p>To start the api, make sure you are in the same directory of where the "sfp.http" folder is located. (it can also be run from anywhere else, but then the sync and push functionality will not work) <br>
                 run "--api", this spins up the API on the default port 8080. <br>
                 If you want to run the API in detached mode, simply run "--api -d" for detatched mode. <br>
                 If you want to run the api at a specific port, run the api followed by the "-p" flag and input the desired port number.</p>
-            
             </div>
             </div>
     `;

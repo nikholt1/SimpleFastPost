@@ -261,6 +261,7 @@ public class CLICommandRepository {
                             "Warning: multiple commands matched '" + commandName +
                                     "', using first result: " + command.getName()
                     );
+                    return null;
                 }
 
                 return command;
