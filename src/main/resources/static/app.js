@@ -187,6 +187,10 @@ function renderHelp() {
                 run "--api", this spins up the API on the default port 8080. <br>
                 If you want to run the API in detached mode, simply run "--api -d" for detatched mode. <br>
                 If you want to run the api at a specific port, run the api followed by the "-p" flag and input the desired port number.</p>
+                <p>To list the running instances of the API, run "--api ls" this shows you the current running apis, and their pid/id's</p>
+                <p>To stop the detatched API, run "--api stop" followed by the pid <br>
+                Example input: "sfp --api stop 23qa1"</p>
+            
             </div>
             </div>
     `;
