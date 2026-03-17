@@ -851,7 +851,7 @@ async function renderCommand(command) {
             <p class="dark-text">Body</p>
             <textarea id="commandBody" class="dark-body">${command.body ?? ""}</textarea>
             <div style="margin-bottom: 10px; display: flex; align-items: center">
-            <p class="dark-text" style="padding-bottom: 0px; margin-bottom: 0;">Response</p><span id="responseNumber" style="background-color: #238436; color:white; border-radius: 4px;padding: 2px 4px; margin-left: 6px; font-size: 12px; font-weight: bold">200</span>
+            <p class="dark-text" style="padding-bottom: 0px; margin-bottom: 0;">Response</p><span id="responseNumber" style="background-color: #885ebb; color:white; border-radius: 4px;padding: 2px 4px; margin-left: 6px; font-size: 12px; font-weight: bold">ready</span>
             </div>
             
             <textarea class="dark-body" readonly rows="4" cols="50" style="background-image: url('image/logoStyledImg.jpg'); background-repeat: no-repeat;background-position: center;background-size: 100px 100px; "></textarea>
