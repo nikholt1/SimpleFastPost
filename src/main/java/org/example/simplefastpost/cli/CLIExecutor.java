@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 
 
@@ -313,7 +314,23 @@ public class CLIExecutor {
 
                     execute(tokenize(cmd.getCommand()), depth + 1, true);
                     return;
-
+                case "delete":
+                    String flag = rawArgs[1].toLowerCase();
+                    if (flag.equals("-cmd")) {
+                        String commandTarget = rawArgs[2];
+                        Command command = cliCommandService.getCommandByName(commandTarget);
+                        cliCommandService.deleteCommand(command.getId());
+                    } else if (flag.equals("-f")) {
+                        String folderTarget = rawArgs[2];
+                        List<Folder> folders = cliFolderService.getAllFolders();
+                        for (Folder folder : folders) {
+                            if (folder.getProjectName().equals(folderTarget)){
+                                cliFolderService.deleteFolder(folder.getId());
+                            }
+                        }
+                    } else {
+                        System.out.println("delete requires specification of -cmd or -f of either the command or the foldername");
+                    }
                 case "update":
                     if (rawArgs.length < 3) {
                         System.err.println("Usage: update <command|folder> <header> <headerkey> <name> [options]");
@@ -326,7 +343,7 @@ public class CLIExecutor {
                     Long id = null;
                     Long folderId = null;
 
-                    // Parse flags
+
                     for (int j = 3; j < rawArgs.length; j++) {
                         if (rawArgs[j].equalsIgnoreCase("--set") && j + 1 < rawArgs.length) {
                             String first = rawArgs[++j];

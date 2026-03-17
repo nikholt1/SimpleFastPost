@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080/api";
+const BASE_URL = "/api";
 
 let listOfFolders = [];
 let listOfCommands = [];
@@ -109,8 +109,20 @@ function renderHelp() {
             </div>
                 <div class="startPageContent" style="width: 80%;"><h1><img src="image/SFPLogoNoBackground.jpg" style="width: 50px"> Help</h1>
                 <h4>Setup:</h4>
-                <p></p>
+                <p>In the project you want to work on, place a empty "sfp.http" file</p>
+                <p>When running the program:</p>
+                <p>Make sure to navigate to the same directory as where the "sfp.http" file is placed.</p>
+                <p>From here either use the CLI commands, to sync and push and or run the api with "--api" and "-d" in detatched mode, for the program to be able to locate the .http file</p>
+                <p>All non sync and push related commands in the CLI can be run from anywhere. In other words, if you are not working with the "sfp.http" file, the system works from any directory.</p>
                 
+                <br><br>
+                <h4>Sync and push:</h4>
+                <p>For sync and push to work properly, the root directory where you started the api, must have a either empty or filled file called "sfp.http"</p>
+                <p>When pressing the "sync" button, which is a round arrow, the system updates the database and reloads the page, allowing you to receive and build the commands and folders from the .http file.</p>
+                <p>When pressing push, the system allows you to push your changes or the commands that are in your database to the .http file.</p>
+                <p><strong>Use case:</strong> When you are working on a project, the sfp.http file serves as a "one truth" for request testing. when you update your project and receive the updated sft.http file. pressing sync allows you to receive the changes. 
+                The UI allows you to easily modify, build new or delete unwanted commands, and then push to the one truth sfp.http file. When you then push the program to the master branch and the rest of the team pull the latest changes, they can easily sync their database and run all the requests.</p>
+                <br><br><br><br>
                 <h4>Browser</h4>
                 <strong>Commands:</strong>
                 <p>To build a command in root, press the + Command button, from there a form will pop up allowing you to
@@ -135,18 +147,32 @@ function renderHelp() {
                 <p>To delete a command, press the "-" button next to the command you want to delete</p>
                 <p>The UI allows you to send all the commands in a folder, by pressing the two arrows next to the folder name, of which you want to run all commands in. from there, a window will open, showing you the commands names and their respective response.</p>
                 <br><br>
-                <strong>Sync and push:</strong>
-                <p>For sync and push to work properly, the root directory where you started the api, must have a either empty or filled file called "sfp.http"</p>
-                <p>When pressing the "sync" button, which is a round arrow, the system updates the database and reloads the page, allowing you to receive and build the commands and folders from the .http file.</p>
-                <p>When pressing push, the system allows you to push your changes or the commands that are in your database to the .http file.</p>
-                <p><strong>Use case:</strong> When you are working on a project, the sfp.http file serves as a "one truth" for request testing. when you update your project and receive the updated sft.http file. pressing sync allows you to receive the changes. 
-                The UI allows you to easily modify, build new or delete unwanted commands, and then push to the one truth sfp.http file. When you then push the program to the master branch and the rest of the team pull the latest changes, they can easily sync their database and run all the requests.</p>
-                <br><br><br><br>
+
                 
                 <h4>CLI</h4>
+                <strong>sync and push</strong>
+                <p>To sync the sfp database make sure to navigate same directory as the desired sfp.http folder you want to sync with, thereafter simply run "sync"</p>
+                <p>To push to the sfp.http file, make sure to navigate to the same directory as the desired sfp.http folder you want to push to and run "push"</p>
+                <br><br>
                 <strong>Commands:</strong>
-                
-                
+                <p>To see all flags and commands type "--help"</p>
+                <p>To run a simple command, type "-m" flag for the method followed by the method for example "GET", thereafter type "-u" for the url followed by the url 
+                example input: "sfp -m GET -u thisIsTheURL.com" <br>
+                After running the command, the system asks you if you want to add headers, if not skip to the next step. <br>
+                If you want to include headers, the system prompts you for a key and a value for the headers.
+                If the method "-m" is a POST or PUT, the system automatically prompts you for a body.</p>
+                <p>To save a command, input the command you want to save, followed by "-sv" and "-cmd" to specify save mode, and that its a command. thereafter input the desired name of the command. <br>
+                If you want to save the command into a folder, specify it folder by "-f" for folder and the foldername <br>
+                Example input "sfp -m POST -u thisIsTheUrl.com -sv -cmd ThisIsTheCommandName -f ThisIsTheFolderIWantToSaveInto"</p>
+                <br><br>
+                <strong>Folders:</strong>
+                <p>To create a new folder simply type "mkdir" followed by the foldername.</p>
+                <strong>API:</strong>
+                <p>To start the api, make sure you are in the same directory of where the "sfp.http" folder is located. (it can also be run from anywhere else, but then the sync and push functionality will not work) <br>
+                run "--api", this spins up the API on the default port 8080. <br>
+                If you want to run the API in detached mode, simply run "--api -d" for detatched mode. <br>
+                If you want to run the api at a specific port, run the api followed by the "-p" flag and input the desired port number.</p>
+            
             </div>
             </div>
     `;
