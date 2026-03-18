@@ -105,8 +105,9 @@ function renderHelp() {
     main.innerHTML = `
 <div id="startPage">
             <div>
-
+                
             </div>
+                
                 <div class="startPageContent" style="width: 80%;"><h1><img src="image/SFPLogoNoBackground.jpg" style="width: 50px"> Help</h1>
                 <h4>Setup:</h4>
                 <p>In the project you want to work on, place a empty "sfp.http" file</p>
