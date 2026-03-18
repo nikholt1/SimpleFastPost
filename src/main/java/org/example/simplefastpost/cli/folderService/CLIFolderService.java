@@ -19,7 +19,7 @@ public class CLIFolderService {
     public void createFolder(String projectName) {
         try {
             cliFolderRepository.createFolder(projectName);
-            System.out.println("Folder created: " + projectName);
+//            System.out.println("Folder created: " + projectName);
         } catch (Exception e) {
             System.err.println("Failed to create folder: " + e.getMessage());
         }

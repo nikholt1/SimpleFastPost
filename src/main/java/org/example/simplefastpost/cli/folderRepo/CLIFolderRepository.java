@@ -23,7 +23,7 @@ public class CLIFolderRepository {
 
             stmt.setString(1, projectName);
             stmt.executeUpdate();
-            System.out.println("Folder created: " + projectName);
+//            System.out.println("Folder created: " + projectName);
         }
     }
     public Folder fetchFolderById(Long id) throws SQLException {

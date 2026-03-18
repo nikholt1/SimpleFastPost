@@ -72,6 +72,7 @@ public class HttpSyncService {
                         e.printStackTrace();
                     }
                 }
+                counter ++;
             }
 
             // ---------------- PLACE BLOCK ----------------

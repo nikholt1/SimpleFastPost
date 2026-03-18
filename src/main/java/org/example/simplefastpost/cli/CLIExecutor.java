@@ -123,7 +123,7 @@ public class CLIExecutor {
             } else if (arg.equalsIgnoreCase("--help")) {
                 helpMode = true;
             } else if (arg.equalsIgnoreCase("--version")) {
-                System.out.println("sfp version: 0.0.1 beta");
+                System.out.println("sfp version: 0.0.1 alpha");
                 return;
             } else if (arg.equalsIgnoreCase("api")) {
 

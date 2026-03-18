@@ -13,7 +13,7 @@ public class CLICommandRepository {
 
     public CLICommandRepository(String DB_URL) {
         this.DB_URL = DB_URL;
-        System.out.println(DB_URL + " in CommandRepository");
+
 
     }
 
