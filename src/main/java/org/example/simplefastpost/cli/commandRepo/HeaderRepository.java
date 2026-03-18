@@ -16,7 +16,7 @@ public class HeaderRepository {
     }
 
     public void createHeader(Headers header) throws SQLException {
-        System.out.println(DB_URL);
+
         String sql = """
             INSERT INTO headers (command_id, key, value)
             VALUES (?, ?, ?)

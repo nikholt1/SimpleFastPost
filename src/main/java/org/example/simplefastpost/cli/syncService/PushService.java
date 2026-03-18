@@ -50,10 +50,10 @@ public class PushService {
                     }
                     if (folder == null) {
                         writer.write("### place root" + ";\n");
-                        counter++;
+
                     } else {
                         writer.write("### place folder " + folder.getProjectName() + ";\n");
-                        counter++;
+
 
                     }
                     writer.write("### command name " + command.getName() + ";\n");
