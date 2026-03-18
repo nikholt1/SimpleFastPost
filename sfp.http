@@ -53,7 +53,7 @@ PUT https://jsonplaceholder.typicode.com/posts/1
 }
 
  
-### place root;
+### place folder newFolder;
 ### command name newCommand;
 GET google.com
 key: value
