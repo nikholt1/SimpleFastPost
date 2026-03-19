@@ -42,7 +42,6 @@ html, body {
     border-bottom: 1px solid #2b2d30;
     background: #2b2d30;
     display: flex;
-    justify-content: space-between;
     align-items: center;
     color: lightgrey;
 }
@@ -252,7 +251,6 @@ form {
 .button-row {
     margin-left: 5px;
     display: flex;
-    gap: 5px;
     justify-content: left;
 
 }

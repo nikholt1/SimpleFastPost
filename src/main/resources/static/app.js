@@ -500,7 +500,6 @@ async function runAllCommandsInFolder(folder) {
                 result.status < 300;
 
             if (icon) {
-
                 if (success) {
                     icon.textContent = "✔";
                     icon.style.color = "#44bd4f"; // green
@@ -508,7 +507,6 @@ async function runAllCommandsInFolder(folder) {
                     icon.textContent = "✖";
                     icon.style.color = "#da3633"; // red
                 }
-
             }
 
             const responseColor =
@@ -520,39 +518,41 @@ async function runAllCommandsInFolder(folder) {
 
             const commandBlock = document.createElement("div");
 
+            // ---------- Pretty-print JSON if possible ----------
+            let displayBody = result.body;
+            try {
+                const parsed = typeof result.body === "string" ? JSON.parse(result.body) : result.body;
+                displayBody = JSON.stringify(parsed, null, 2); // 2-space indentation
+            } catch {
+                // Not JSON, keep as-is
+            }
+
             commandBlock.innerHTML = `
-
-                <div style="margin-top:10px; padding: 10px;">
-
-                    <p style="font-weight:bold">${child.name}</p>
-
-                    <div style="margin-bottom:10px;display:flex;align-items:center">
-                        <p class="dark-text" style="margin:0">Response</p>
-
-                        <span 
-                            style="
-                                background-color:${responseColor};
-                                color:white;
-                                border-radius:4px;
-                                padding:2px 4px;
-                                margin-left:6px;
-                                font-size:12px;
-                                font-weight:bold
-                            ">
-                            ${result.status}
-                        </span>
-                    </div>
-
-                    <textarea 
-                        class="dark-body"
-                        readonly
-                        rows="6"
-                        style="width:100%"
-                    >${result.body}</textarea>
-
+            <div style="margin-top:10px; padding: 10px;">
+                <p style="font-weight:bold">${child.name}</p>
+                <div style="margin-bottom:10px;display:flex;align-items:center">
+                    <p class="dark-text" style="margin:0">Response</p>
+                    <span 
+                        style="
+                            background-color:${responseColor};
+                            color:white;
+                            border-radius:4px;
+                            padding:2px 4px;
+                            margin-left:6px;
+                            font-size:12px;
+                            font-weight:bold
+                        ">
+                        ${result.status}
+                    </span>
                 </div>
-                </div>
-            `;
+                <textarea 
+                    class="dark-body"
+                    readonly
+                    rows="6"
+                    style="width:100%; white-space: pre;"
+                >${displayBody}</textarea>
+            </div>
+        `;
 
             main.appendChild(commandBlock);
         }
@@ -560,52 +560,56 @@ async function runAllCommandsInFolder(folder) {
         if (child.type === "folder") {
             await runAllCommandsInFolder(child);
         }
-        loadingBar2.style.display="none";
+        loadingBar2.style.display = "none";
     }
 }
 async function executeCommand(command) {
     const loadingBar2 = document.getElementById("loading-dots");
-    loadingBar2.style.display="flex";
-    const { method, url } = parseCommand(command.command);
+    loadingBar2.style.display = "flex";
 
-    if (!url) {
-        return { status: "ERR", body: "Invalid command: Missing URL (-u)" };
-    }
+    const { method, url } = parseCommand(command.command);
+    if (!url) return { status: "ERR", body: "Invalid command: Missing URL (-u)" };
 
     // Fetch headers from backend
     const headersRes = await fetch(`${BASE_URL}/headers/byCommand/${command.id}`);
     const headersData = await headersRes.json();
-
     const headers = {};
-    headersData.forEach(h => {
-        if (h.key) headers[h.key] = h.value;
-    });
+    headersData.forEach(h => { if (h.key) headers[h.key] = h.value; });
 
-    let body = command.body?.trim();
-    if (!body) body = undefined;
+    let body = command.body?.trim() || undefined;
 
     try {
-        loadingBar2.style.display="none";
-        const res = await fetch(url, {
-            method: method,
-            headers: headers,
-            body: body
+        // Call backend proxy endpoint
+        const res = await fetch(`${BASE_URL}/executeCommand`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ method, url, headers, body })
         });
 
-        const text = await res.text();
+        let responseBody;
+        const contentType = res.headers.get("content-type") || "";
 
+        if (contentType.includes("application/json")) {
+            const json = await res.json();
+            responseBody = JSON.stringify(json, null, 2); // pretty-print JSON
+        } else {
+            responseBody = await res.text();
+        }
+
+        loadingBar2.style.display = "none";
         return {
             status: res.status,
-            body: text
+            ok: res.ok,
+            body: responseBody
         };
 
     } catch (err) {
-        loadingBar2.style.display="none";
+        loadingBar2.style.display = "none";
         return {
             status: "ERR",
+            ok: false,
             body: err.message
         };
-
     }
 }
 async function deleteCommand(id) {
@@ -973,11 +977,12 @@ async function renderCommand(command) {
         removeBtn.addEventListener("click", () => row.remove());
     });
     sendBtn.addEventListener("click", async () => {
-
         const { method, url } = parseCommand(cmdInput.value);
 
         if (!url) {
-            responseTextarea.value = "Invalid command: Missing URL (-u)";
+            responseTextarea.textContent = "Invalid command: Missing URL (-u)";
+            responseNumber.textContent = "ERR";
+            responseNumber.style.backgroundColor = "#da3633";
             return;
         }
 
@@ -990,44 +995,45 @@ async function renderCommand(command) {
         });
 
         // Get body
-        let body = bodyInput.value.trim();
-        if (!body) body = undefined;
+        let body = bodyInput.value.trim() || undefined;
 
         try {
-
-            const res = await fetch(url, {
-                method: method,
-                headers: headers,
-                body: body
+            // Call backend proxy function
+            const result = await executeCommand({
+                command: cmdInput.value,
+                body,
+                id: command.id
             });
 
-            const text = await res.text();
-
-            // Print response
-            responseTextarea.value = text;
-
-            // Set status code
-            responseNumber.textContent = res.status;
-
-            // Color status
-            if (res.status >= 200 && res.status < 300) {
-                responseNumber.style.backgroundColor = "#238636"; // green
-            } else if (res.status >= 400 && res.status < 500) {
-                responseNumber.style.backgroundColor = "#d29922"; // orange
-            } else if (res.status >= 500) {
-                responseNumber.style.backgroundColor = "#da3633"; // red
-            } else {
-                responseNumber.style.backgroundColor = "#6e7681"; // gray
+            // ---------- Pretty-print JSON if possible ----------
+            let displayBody = result.body;
+            try {
+                const parsed = typeof result.body === "string" ? JSON.parse(result.body) : result.body;
+                displayBody = JSON.stringify(parsed, null, 2); // 2-space indentation
+            } catch {
+                // Not JSON, keep as-is
             }
 
-        } catch (err) {
+            // Update response textarea
+            responseTextarea.textContent = displayBody;
 
-            responseTextarea.value = err.message;
+            // Update status number
+            responseNumber.textContent = result.status;
+
+            // Set color based on status
+            const bgColor =
+                result.status >= 200 && result.status < 300 ? "#238636" : // green
+                    result.status >= 400 && result.status < 500 ? "#d29922" : // orange
+                        result.status >= 500 ? "#da3633" : // red
+                            result.status === "ERR" ? "#da3633" : "#6e7681"; // gray
+
+            responseNumber.style.backgroundColor = bgColor;
+
+        } catch (err) {
+            responseTextarea.textContent = err.message;
             responseNumber.textContent = "ERR";
             responseNumber.style.backgroundColor = "#da3633";
-
         }
-
     });
     // ----------------- Command title rename -----------------
     title.addEventListener("dblclick", () => {

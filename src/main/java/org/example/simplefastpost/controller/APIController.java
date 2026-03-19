@@ -1,17 +1,20 @@
 package org.example.simplefastpost.controller;
 
-import org.example.simplefastpost.dto.CommandDTO;
-import org.example.simplefastpost.dto.CreateCommandRequest;
-import org.example.simplefastpost.dto.FolderDTO;
-import org.example.simplefastpost.dto.UpdateCommandRequest;
+import org.example.simplefastpost.dto.*;
 import org.example.simplefastpost.model.Folder;
 import org.example.simplefastpost.model.Headers;
 import org.example.simplefastpost.service.*;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -27,7 +30,7 @@ public class APIController {
     private final HttpSyncService  httpSyncService;
     private final PushService pushService;
     private final HeaderService headerService;
-
+    private final RestTemplate restTemplate = new RestTemplate();
     public APIController(CommandService commandService, FolderService folderService, HttpSyncService httpSyncService, PushService pushService, HeaderService headerService) {
         this.commandService = commandService;
         this.folderService = folderService;
@@ -201,5 +204,46 @@ public class APIController {
     }
 
 
+
+    @PostMapping("/executeCommand")
+    public ResponseEntity<String> executeCommand(@RequestBody CommandRequest commandRequest) {
+        try {
+            String url = commandRequest.getUrl();
+            // If no scheme, default to http://
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "http://" + url;
+            }
+
+            // Build HTTP headers
+            HttpHeaders headers = new HttpHeaders();
+            if (commandRequest.getHeaders() != null) {
+                commandRequest.getHeaders().forEach(headers::add);
+            }
+
+            HttpEntity<String> entity = new HttpEntity<>(commandRequest.getBody(), headers);
+
+            HttpMethod httpMethod = HttpMethod.valueOf(commandRequest.getMethod().toUpperCase());
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    httpMethod,
+                    entity,
+                    String.class
+            );
+
+            return ResponseEntity.status(response.getStatusCode())
+                    .body(response.getBody());
+
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(e.getResponseBodyAsString());
+        } catch (ResourceAccessException e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body("Network error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Unexpected error: " + e.getMessage());
+        }
+    }
 
 }

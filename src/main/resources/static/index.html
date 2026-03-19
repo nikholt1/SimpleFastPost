@@ -36,6 +36,10 @@
 
         <div class="sidebar-header">
             <strong>Projects</strong>
+            <div class="button-row">
+                <button id="addFolder" class="bi bi-folder" title="Create a new folder in root" style="background-color: transparent; border-color: transparent;"> +</button>
+                <button id="addCommand" class="" title="Create a new Command in root" style="background-color: transparent; border-color: transparent">{} +</button>
+            </div>
             <button id="toggleSidebar" class="btn btn-sm btn-secondary" style="display: none">☰</button>
         </div>
 
@@ -48,10 +52,7 @@
                 </thead>
                 <tbody id="tableBody"></tbody>
             </table>
-            <div class="button-row">
-                <button id="addFolder" class="bi bi-folder" title="Create a new folder in root" style="background-color: transparent; border-color: transparent;"> +</button>
-                <button id="addCommand" class="" title="Create a new Command in root" style="background-color: transparent; border-color: transparent">{} +</button>
-            </div>
+
         </div>
         <div class="loadingBarSpacer" style="height: 50px">
             <div id="loading-dots" class="loading-dots">
@@ -87,6 +88,7 @@
                 </a>
             </div>
         </div>
+
     </div>
 
     <div id="contextMenu" class="context-menu">
