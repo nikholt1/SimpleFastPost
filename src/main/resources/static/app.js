@@ -107,7 +107,11 @@ function renderHelp() {
             <div>
                 
             </div>
+                <div class="banner">
                 
+                
+                
+                </div>
                 <div class="startPageContent" style="width: 80%;"><h1><img src="image/SFPLogoNoBackground.jpg" style="width: 50px"> Help</h1>
                 <h4>Setup:</h4>
                 <p>In the project you want to work on, place a empty "sfp.http" file</p>
@@ -672,10 +676,10 @@ function renderNewCommand(folderId = null) {
 
             <input type="text" id="commandCmd" placeholder="Command" required>
 
-            <p class="dark-text">Headers</p>
+            <p class="dark-text" style="margin-bottom: 0px;">Headers</p>
             
             <div id="headersContainer">
-                <div class="headerRow">
+                <div class="headerRow" style="margin-top: 0px;">
                     <input class="headersStyle headerKey" type="text" placeholder="Key">
                     <input class="headersStyle headerValue" type="text" placeholder="Value">
                     <button type="button" class="removeHeaderBtn">-</button>
@@ -683,6 +687,7 @@ function renderNewCommand(folderId = null) {
             </div>
             
             <button type="button" id="addHeaderBtn" class="addHeaderBtn">+</button>
+            <p class="dark-text">Body</p>
 
             <textarea id="commandBody"
                 placeholder="Command Body (optional)"
@@ -845,17 +850,17 @@ async function renderCommand(command) {
             <p class="dark-text">Command</p>
             <textarea id="commandCmd" class="dark-pre">${command.command}</textarea>
 
-            <p class="dark-text">Headers</p>
-            <div id="headersContainer"></div>
+            <p class="dark-text" style="margin-bottom: 0px; margin-top: 10px">Headers</p>
+            <div id="headersContainer" style="margin-top: 5px"></div>
             <button id="addHeaderBtn" class="addHeaderBtn">+</button>
 
             <p class="dark-text">Body</p>
             <textarea id="commandBody" class="dark-body">${command.body ?? ""}</textarea>
-            <div style="margin-bottom: 10px; display: flex; align-items: center">
-            <p class="dark-text" style="padding-bottom: 0px; margin-bottom: 0;">Response</p><span id="responseNumber" style="background-color: #885ebb; color:white; border-radius: 4px;padding: 2px 4px; margin-left: 6px; font-size: 12px; font-weight: bold">ready</span>
+            <div style="margin-top: 10px; margin-bottom: 10px; display: flex; align-items: center">
+            <p class="dark-text" style="padding-bottom: 0px; margin-bottom: 0;">Response</p><span id="responseNumber" style="background-color: #885ebb; color:white; border-radius: 4px;padding: 2px 4px; margin-left: 6px; font-size: 12px; font-weight: bold;">ready</span>
             </div>
             
-            <textarea class="dark-body" readonly rows="4" cols="50" style="background-image: url('image/logoStyledImg.jpg'); background-repeat: no-repeat;background-position: center;background-size: 100px 100px; "></textarea>
+            <textarea class="dark-body" readonly rows="4" cols="50" style="background-image: url('image/logoStyledImg.jpg'); background-repeat: no-repeat;background-position: center;background-size: 100px 100px; height: 400px"></textarea>
         
         </div>
     `;
