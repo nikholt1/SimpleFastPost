@@ -943,6 +943,7 @@ async function renderCommand(command) {
             <input class="headersStyle headerKey" type="text" placeholder="Key">
             <input class="headersStyle headerValue" type="text" placeholder="Value">
             <button type="button" class="removeHeaderBtn">-</button>
+            
         `;
 
         headersContainer.appendChild(row);
@@ -1076,6 +1077,9 @@ async function renderCommand(command) {
         }
     });
 }
+
+
+
 function parseCommand(cmd) {
     const methodMatch = cmd.match(/-m\s+(\w+)/i);
     const urlMatch = cmd.match(/-u\s+([^\s]+)/i);
