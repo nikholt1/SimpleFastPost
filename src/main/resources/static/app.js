@@ -15,6 +15,8 @@ async function initApp() {
         getCommands()
     ]);
 
+    await renderProjectInfo();
+
     sidebarTree = buildSidebarTree(listOfFolders, listOfCommands);
     renderSidebar(sidebarTree);
 
@@ -32,7 +34,31 @@ async function initApp() {
 
     syncBtn.addEventListener("click", () => sync());
     pushBtn.addEventListener("click", () => pushSync());
+
+
 }
+
+
+
+async function getDirectoryPath() {
+    const res = await fetch(`${BASE_URL}/currentDir`);
+    const data = await res.json();
+    return data.currentDirectory;
+}
+
+async function renderProjectInfo() {
+    const directoryPath = document.getElementById("directoryPath");
+    const pathRootName = document.getElementById("pathRootName");
+
+    const directory = await getDirectoryPath();  // <-- MUST await
+    directoryPath.textContent = directory;
+
+    const rootName = directory.split(/[\\/]/).pop(); // get last folder
+    pathRootName.textContent = rootName;
+}
+
+// Run after page loads
+window.addEventListener("DOMContentLoaded", renderProjectInfo);
 
 async function pushSync() {
     // const loadingBar = document.getElementById("loadingBar");
@@ -562,7 +588,7 @@ async function runAllCommandsInFolder(folder) {
             const toggle = commandBlock.querySelector(".headers-toggle");
             const headersContainer = commandBlock.querySelector(".headers-container");
 
-            // ---------- Populate headers ----------
+
             if (headerCount > 0) {
 
                 headerEntries.forEach(([key, value]) => {
@@ -599,24 +625,21 @@ async function runAllCommandsInFolder(folder) {
                 headersContainer.appendChild(empty);
             }
 
-            // ---------- Toggle behavior ----------
-// ---------- Toggle behavior ----------
-// ---------- Toggle behavior ----------
-// ---------- Toggle behavior ----------
+
             let open = false;
 
-// Determine number color once
+
             const numberColor = headerCount > 0 ? "#36ca53" : "white";
 
-// Set initial toggle HTML with green number if needed
+
             toggle.innerHTML = `<i style="font-size:0.7rem;margin-right:2px;" class="bi bi-chevron-right"></i> Headers <span style="color:${numberColor};">(${headerCount})</span>`;
 
-// Toggle on click
+
             toggle.addEventListener("click", () => {
                 open = !open;
                 headersContainer.style.display = open ? "block" : "none";
 
-                // Only update the icon, keep number and color
+
                 toggle.innerHTML = `<i style="font-size:0.7rem;margin-right:2px;" class="bi ${open ? "bi-chevron-down" : "bi-chevron-right"}"></i> Headers <span style="color:${numberColor};">(${headerCount})</span>`;
             });
 

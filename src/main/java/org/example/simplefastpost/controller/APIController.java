@@ -17,7 +17,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -246,6 +248,12 @@ public class APIController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Unexpected error: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/currentDir")
+    public Map<String, String> getCurrentDirectory() {
+        String currentDir = System.getProperty("user.dir");
+        return Collections.singletonMap("currentDirectory", currentDir);
     }
 
 }
