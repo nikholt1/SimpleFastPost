@@ -46,15 +46,31 @@ async function getDirectoryPath() {
     return data.currentDirectory;
 }
 
+function extractInitials(rootName) {
+    let initials = rootName[0];  // Always take the first letter
+    for (let i = 1; i < rootName.length; i++) {
+        if (rootName[i] === rootName[i].toUpperCase() && rootName[i] !== rootName[i - 1].toUpperCase()) {
+            initials += rootName[i];  // Add this uppercase letter if it's a new one
+            break;  // Once we have two letters, we can stop
+        }
+    }
+    return initials;
+}
+
 async function renderProjectInfo() {
     const directoryPath = document.getElementById("directoryPath");
     const pathRootName = document.getElementById("pathRootName");
 
     const directory = await getDirectoryPath();  // <-- MUST await
     directoryPath.textContent = directory;
+    directoryPath.style.fontSize = "13px";
+    directoryPath.style.color = "#bdbdbd";
 
     const rootName = directory.split(/[\\/]/).pop(); // get last folder
-    pathRootName.textContent = rootName;
+    const initials = extractInitials(rootName);
+
+    // Wrap initials in a span with class
+    pathRootName.innerHTML = `<div class="projectName"><span class="initial-box">${initials}</span>${rootName}</div>`;
 }
 
 // Run after page loads

@@ -481,3 +481,20 @@ table.table tbody tr:hover {
 *::-webkit-scrollbar-button {
     display: none;
 }
+.projectName {
+    background: radial-gradient(circle at 0% 50%, rgba(190, 78, 158, 0.41) 0%, rgba(255, 255, 0, 0) 100%);
+    padding: 4px;
+}
+.initial-box {
+    display: inline-flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    width: 25px;
+    height: 25px;
+    background-color: #bc4ea3; /* Change color as needed */
+    color: white;
+    font-size: 15px;
+    border-radius: 6px;
+    margin-right: 8px;
+}
