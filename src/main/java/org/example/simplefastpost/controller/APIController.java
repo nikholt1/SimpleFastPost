@@ -231,7 +231,9 @@ public class APIController {
                     String.class
             );
 
-            return ResponseEntity.status(response.getStatusCode())
+            return ResponseEntity
+                    .status(response.getStatusCode())
+                    .headers(response.getHeaders())
                     .body(response.getBody());
 
         } catch (HttpClientErrorException | HttpServerErrorException e) {

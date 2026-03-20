@@ -436,10 +436,13 @@ async function updateCommandFolder(commandId, folderId) {
 async function runAllCommandsInFolder(folder) {
 
     console.log("Running all commands in folder:", folder.name);
+
     const loadingBar2 = document.getElementById("loading-dots");
-    loadingBar2.style.display="flex";
+    loadingBar2.style.display = "flex";
+
     const loadingbarState = document.getElementById("loadingbarState");
-    loadingbarState.innerHTML="running all"
+    loadingbarState.innerHTML = "running all";
+
     const main = document.getElementById("main");
 
     main.innerHTML = `
@@ -449,12 +452,10 @@ async function runAllCommandsInFolder(folder) {
     `;
 
     const statusList = document.getElementById("commandStatusList");
+    const statusMap = {};
 
-    const statusMap = {}; // commandId -> icon element
-
-    // ---------- Create status indicators first ----------
+    // ---------- Status indicators ----------
     for (const child of folder.children) {
-
         if (child.type === "command") {
 
             const row = document.createElement("div");
@@ -463,8 +464,6 @@ async function runAllCommandsInFolder(folder) {
             row.style.marginBottom = "4px";
 
             const icon = document.createElement("span");
-
-            // Initial state = not run yet
             icon.textContent = "✖";
             icon.style.color = "#da3633";
             icon.style.marginRight = "8px";
@@ -477,7 +476,6 @@ async function runAllCommandsInFolder(folder) {
             row.appendChild(name);
 
             statusList.appendChild(row);
-
             statusMap[child.id] = icon;
         }
     }
@@ -487,26 +485,18 @@ async function runAllCommandsInFolder(folder) {
 
         if (child.type === "command") {
 
-            console.log("Run command:", child.name);
-
             const result = await executeCommand(child);
 
             const icon = statusMap[child.id];
 
-            // Determine success
             const success =
                 typeof result.status === "number" &&
                 result.status >= 200 &&
                 result.status < 300;
 
             if (icon) {
-                if (success) {
-                    icon.textContent = "✔";
-                    icon.style.color = "#44bd4f"; // green
-                } else {
-                    icon.textContent = "✖";
-                    icon.style.color = "#da3633"; // red
-                }
+                icon.textContent = success ? "✔" : "✖";
+                icon.style.color = success ? "#44bd4f" : "#da3633";
             }
 
             const responseColor =
@@ -518,41 +508,117 @@ async function runAllCommandsInFolder(folder) {
 
             const commandBlock = document.createElement("div");
 
-            // ---------- Pretty-print JSON if possible ----------
+            // ---------- Pretty-print JSON ----------
             let displayBody = result.body;
             try {
-                const parsed = typeof result.body === "string" ? JSON.parse(result.body) : result.body;
-                displayBody = JSON.stringify(parsed, null, 2); // 2-space indentation
-            } catch {
-                // Not JSON, keep as-is
+                const parsed = typeof result.body === "string"
+                    ? JSON.parse(result.body)
+                    : result.body;
+                displayBody = JSON.stringify(parsed, null, 2);
+            } catch {}
+
+            const headerEntries = result.headers ? Object.entries(result.headers) : [];
+            const headerCount = headerEntries.length;
+
+            // ---------- Base HTML ----------
+            commandBlock.innerHTML = `
+                <div style="margin-top:10px; padding: 10px;">
+                    <p style="font-weight:bold">${child.name}</p>
+
+                    <div style="margin-bottom:10px;display:flex;align-items:center">
+                        <p class="dark-text" style="margin:0">Response</p>
+                        <span 
+                            style="
+                                background-color:${responseColor};
+                                color:white;
+                                border-radius:4px;
+                                padding:2px 6px;
+                                margin-left:6px;
+                                font-size:12px;
+                                font-weight:bold
+                            ">
+                            ${result.status}
+                        </span>
+                    </div>
+
+                    <!-- DROPDOWN HEADER -->
+                    <div class="headers-toggle" style="cursor:pointer; user-select:none; margin-bottom:6px;">
+                        ▶ Headers (${headerCount})
+                    </div>
+
+                    <!-- COLLAPSIBLE -->
+                    <div class="headers-container" style="display:none; margin-bottom:10px;"></div>
+
+                    <p class="dark-text">Body</p>
+                    <textarea 
+                        class="dark-body"
+                        readonly
+                        rows="6"
+                        style="width:100%; white-space: pre;"
+                    >${displayBody}</textarea>
+                </div>
+            `;
+
+            const toggle = commandBlock.querySelector(".headers-toggle");
+            const headersContainer = commandBlock.querySelector(".headers-container");
+
+            // ---------- Populate headers ----------
+            if (headerCount > 0) {
+
+                headerEntries.forEach(([key, value]) => {
+
+                    const row = document.createElement("div");
+                    row.style.display = "flex";
+                    row.style.gap = "6px";
+                    row.style.marginBottom = "4px";
+
+                    const keyInput = document.createElement("input");
+                    keyInput.value = key;
+                    keyInput.readOnly = true;
+                    keyInput.className = "dark-pre";
+                    keyInput.style.flex = "1";
+                    keyInput.style.color = "white";
+                    const valueInput = document.createElement("input");
+                    valueInput.value = value;
+                    valueInput.readOnly = true;
+                    valueInput.className = "dark-pre";
+                    valueInput.style.flex = "2";
+                    valueInput.style.color = "white";
+                    valueInput.addEventListener("click", () => valueInput.select());
+
+                    row.appendChild(keyInput);
+                    row.appendChild(valueInput);
+
+                    headersContainer.appendChild(row);
+                });
+
+            } else {
+                const empty = document.createElement("div");
+                empty.textContent = "No headers";
+                empty.style.color = "#6e7681";
+                headersContainer.appendChild(empty);
             }
 
-            commandBlock.innerHTML = `
-            <div style="margin-top:10px; padding: 10px;">
-                <p style="font-weight:bold">${child.name}</p>
-                <div style="margin-bottom:10px;display:flex;align-items:center">
-                    <p class="dark-text" style="margin:0">Response</p>
-                    <span 
-                        style="
-                            background-color:${responseColor};
-                            color:white;
-                            border-radius:4px;
-                            padding:2px 4px;
-                            margin-left:6px;
-                            font-size:12px;
-                            font-weight:bold
-                        ">
-                        ${result.status}
-                    </span>
-                </div>
-                <textarea 
-                    class="dark-body"
-                    readonly
-                    rows="6"
-                    style="width:100%; white-space: pre;"
-                >${displayBody}</textarea>
-            </div>
-        `;
+            // ---------- Toggle behavior ----------
+// ---------- Toggle behavior ----------
+// ---------- Toggle behavior ----------
+// ---------- Toggle behavior ----------
+            let open = false;
+
+// Determine number color once
+            const numberColor = headerCount > 0 ? "#36ca53" : "white";
+
+// Set initial toggle HTML with green number if needed
+            toggle.innerHTML = `<i style="font-size:0.7rem;margin-right:2px;" class="bi bi-chevron-right"></i> Headers <span style="color:${numberColor};">(${headerCount})</span>`;
+
+// Toggle on click
+            toggle.addEventListener("click", () => {
+                open = !open;
+                headersContainer.style.display = open ? "block" : "none";
+
+                // Only update the icon, keep number and color
+                toggle.innerHTML = `<i style="font-size:0.7rem;margin-right:2px;" class="bi ${open ? "bi-chevron-down" : "bi-chevron-right"}"></i> Headers <span style="color:${numberColor};">(${headerCount})</span>`;
+            });
 
             main.appendChild(commandBlock);
         }
@@ -560,8 +626,9 @@ async function runAllCommandsInFolder(folder) {
         if (child.type === "folder") {
             await runAllCommandsInFolder(child);
         }
-        loadingBar2.style.display = "none";
     }
+
+    loadingBar2.style.display = "none";
 }
 async function executeCommand(command) {
     const loadingBar2 = document.getElementById("loading-dots");
@@ -570,7 +637,6 @@ async function executeCommand(command) {
     const { method, url } = parseCommand(command.command);
     if (!url) return { status: "ERR", body: "Invalid command: Missing URL (-u)" };
 
-    // Fetch headers from backend
     const headersRes = await fetch(`${BASE_URL}/headers/byCommand/${command.id}`);
     const headersData = await headersRes.json();
     const headers = {};
@@ -579,11 +645,16 @@ async function executeCommand(command) {
     let body = command.body?.trim() || undefined;
 
     try {
-        // Call backend proxy endpoint
         const res = await fetch(`${BASE_URL}/executeCommand`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ method, url, headers, body })
+        });
+
+        // 🔥 EXTRACT HEADERS HERE
+        const responseHeaders = {};
+        res.headers.forEach((value, key) => {
+            responseHeaders[key] = value;
         });
 
         let responseBody;
@@ -591,16 +662,18 @@ async function executeCommand(command) {
 
         if (contentType.includes("application/json")) {
             const json = await res.json();
-            responseBody = JSON.stringify(json, null, 2); // pretty-print JSON
+            responseBody = JSON.stringify(json, null, 2);
         } else {
             responseBody = await res.text();
         }
 
         loadingBar2.style.display = "none";
+
         return {
             status: res.status,
             ok: res.ok,
-            body: responseBody
+            body: responseBody,
+            headers: responseHeaders   // ✅ NOW INCLUDED
         };
 
     } catch (err) {
@@ -608,7 +681,8 @@ async function executeCommand(command) {
         return {
             status: "ERR",
             ok: false,
-            body: err.message
+            body: err.message,
+            headers: {}
         };
     }
 }
@@ -848,7 +922,8 @@ async function renderCommand(command) {
     main.innerHTML = `
         <div class="dark-main-content">
             <div style="display: flex;align-items: center">
-            <h4 class="dark-text" id="commandTitle" style="font-size: 20px; height: 15px; padding 2px;">${command.name}</h4><button id="sendBtn" class="sendBtn">Send</button>
+                <h4 class="dark-text" id="commandTitle" style="font-size: 20px; height: 15px; padding: 2px;">${command.name}</h4>
+                <button id="sendBtn" class="sendBtn">Send</button>
             </div>
             <hr style="border-color: #3a3a3a;">
             <p class="dark-text">Command</p>
@@ -859,48 +934,67 @@ async function renderCommand(command) {
             <button id="addHeaderBtn" class="addHeaderBtn">+</button>
 
             <p class="dark-text">Body</p>
-            <textarea id="commandBody" class="dark-body">${command.body ?? ""}</textarea>
+            <textarea id="commandBody" class="dark-body" style="min-height:120px;">${command.body ?? ""}</textarea>
+
             <div style="margin-top: 10px; margin-bottom: 10px; display: flex; align-items: center">
-            <p class="dark-text" style="padding-bottom: 0px; margin-bottom: 0;">Response</p><span id="responseNumber" style="background-color: #885ebb; color:white; border-radius: 4px;padding: 2px 4px; margin-left: 6px; font-size: 12px; font-weight: bold;">ready</span>
+                <p class="dark-text" style="padding-bottom: 0px; margin-bottom: 0;">Response</p>
+                <span id="responseNumber" style="background-color: #885ebb; color:white; border-radius: 4px;padding: 2px 4px; margin-left: 6px; font-size: 12px; font-weight: bold;">ready</span>
             </div>
-            
-            <textarea class="dark-body" readonly rows="4" cols="50" style="background-image: url('image/logoStyledImg.jpg'); background-repeat: no-repeat;background-position: center;background-size: 100px 100px; height: 400px"></textarea>
-        
+
+            <div class="headers-toggle" style="cursor:pointer;"></div>
+            <div class="headers-container" style="display:none; padding: 10px;"></div>
+
+            <textarea id="responseBody" class="dark-body" readonly style="width:100%; min-height:200px; margin-top:10px;"></textarea>
         </div>
     `;
 
     const headersContainer = document.getElementById("headersContainer");
     const addHeaderBtn = document.getElementById("addHeaderBtn");
-    const title = document.getElementById("commandTitle");
     const cmdInput = document.getElementById("commandCmd");
     const bodyInput = document.getElementById("commandBody");
-
     const sendBtn = document.getElementById("sendBtn");
-    const responseTextarea = document.querySelector("textarea[readonly]");
+    const responseBody = document.getElementById("responseBody");
+    const headersToggle = document.querySelector(".headers-toggle");
+    const headersDiv = document.querySelector(".headers-container");
     const responseNumber = document.getElementById("responseNumber");
-    // ----------------- Fetch and render existing headers -----------------
-    const response = await fetch(`${BASE_URL}/headers/byCommand/${command.id}`);
-    const existingHeaders = await response.json();
 
+    let responseHeaders = []; // stores the latest response headers
+    let open = false; // headers dropdown state
+
+    function updateHeadersToggle() {
+        const count = responseHeaders.length;
+        const color = count > 0 ? "#36ca53" : "white";
+        const arrow = open ? "bi-chevron-down" : "bi-chevron-right";
+        headersToggle.innerHTML = `<i class="bi ${arrow}"></i> Headers <span style="color:${color};">(${count})</span>`;
+    }
+
+    headersToggle.addEventListener("click", () => {
+        open = !open;
+        headersDiv.style.display = open ? "block" : "none";
+        updateHeadersToggle();
+    });
+
+    // ----------------- Add new header manually -----------------
     function renderHeaderRow(header) {
         const row = document.createElement("div");
         row.className = "headerRow";
+        row.style.display = "flex";
+        row.style.gap = "6px";
+        row.style.marginBottom = "4px";
 
         row.innerHTML = `
-            <input class="headersStyle headerKey" type="text" placeholder="Key" value="${header.key ?? ''}">
-            <input class="headersStyle headerValue" type="text" placeholder="Value" value="${header.value ?? ''}">
+            <input style="height: 30px" class="headersStyle headerKey" type="text" placeholder="Key" value="${header.key ?? ''}">
+            <input style="height: 30px" class="headersStyle headerValue" type="text" placeholder="Value" value="${header.value ?? ''}">
             <button type="button" class="removeHeaderBtn">-</button>
         `;
-
         headersContainer.appendChild(row);
 
         const keyInput = row.querySelector(".headerKey");
         const valueInput = row.querySelector(".headerValue");
         const removeBtn = row.querySelector(".removeHeaderBtn");
 
-        // Save on blur (only for existing headers)
         keyInput.addEventListener("blur", async () => {
-            if (!header.id) return; // skip unsaved headers
+            if (!header.id) return;
             await fetch(`${BASE_URL}/headers/${header.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
@@ -919,33 +1013,25 @@ async function renderCommand(command) {
             header.value = valueInput.value;
         });
 
-        // Remove specific header
         removeBtn.addEventListener("click", async () => {
-            if (header.id) {
-                await fetch(`${BASE_URL}/headers/${header.id}`, { method: "DELETE" });
-            }
+            if (header.id) await fetch(`${BASE_URL}/headers/${header.id}`, { method: "DELETE" });
             row.remove();
         });
     }
 
-    existingHeaders.forEach(renderHeaderRow);
-
-    // ----------------- Add new header -----------------
     addHeaderBtn.addEventListener("click", (e) => {
         e.preventDefault();
-
-        const tempHeader = {}; // empty temporary header
-
         const row = document.createElement("div");
         row.className = "headerRow";
+        row.style.display = "flex";
+        row.style.gap = "6px";
+        row.style.marginBottom = "4px";
 
         row.innerHTML = `
-            <input class="headersStyle headerKey" type="text" placeholder="Key">
-            <input class="headersStyle headerValue" type="text" placeholder="Value">
+            <input style="height: 30px" class="headersStyle headerKey" type="text" placeholder="Key">
+            <input style="height: 30px" class="headersStyle headerValue" type="text" placeholder="Value">
             <button type="button" class="removeHeaderBtn">-</button>
-            
         `;
-
         headersContainer.appendChild(row);
 
         const keyInput = row.querySelector(".headerKey");
@@ -956,38 +1042,32 @@ async function renderCommand(command) {
             const key = keyInput.value.trim();
             const value = valueInput.value.trim();
             if (key && value) {
-                // Create header in backend
                 const res = await fetch(`${BASE_URL}/headers`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ commandId: command.id, key, value })
                 });
                 const createdHeader = await res.json();
-
-                // Replace temporary row with proper saved row
                 row.remove();
                 renderHeaderRow(createdHeader);
             }
         };
 
-        // Save when both fields blurred
         keyInput.addEventListener("blur", trySaveHeader);
         valueInput.addEventListener("blur", trySaveHeader);
-
-        // Remove unsaved header
         removeBtn.addEventListener("click", () => row.remove());
     });
-    sendBtn.addEventListener("click", async () => {
-        const { method, url } = parseCommand(cmdInput.value);
 
+    // ----------------- Send command -----------------
+    sendBtn.addEventListener("click", async () => {
+        const { url } = parseCommand(cmdInput.value);
         if (!url) {
-            responseTextarea.textContent = "Invalid command: Missing URL (-u)";
             responseNumber.textContent = "ERR";
             responseNumber.style.backgroundColor = "#da3633";
+            responseBody.value = "Invalid command: Missing URL (-u)";
             return;
         }
 
-        // Collect headers
         const headers = {};
         document.querySelectorAll(".headerRow").forEach(row => {
             const key = row.querySelector(".headerKey").value.trim();
@@ -995,91 +1075,78 @@ async function renderCommand(command) {
             if (key) headers[key] = value;
         });
 
-        // Get body
-        let body = bodyInput.value.trim() || undefined;
+        const body = bodyInput.value.trim() || "";
 
         try {
-            // Call backend proxy function
-            const result = await executeCommand({
-                command: cmdInput.value,
-                body,
-                id: command.id
-            });
+            const result = await executeCommand({ command: cmdInput.value, body, id: command.id });
 
-            // ---------- Pretty-print JSON if possible ----------
-            let displayBody = result.body;
+            // Pretty-print body
             try {
                 const parsed = typeof result.body === "string" ? JSON.parse(result.body) : result.body;
-                displayBody = JSON.stringify(parsed, null, 2); // 2-space indentation
+                responseBody.value = JSON.stringify(parsed, null, 2);
             } catch {
-                // Not JSON, keep as-is
+                responseBody.value = result.body;
             }
 
-            // Update response textarea
-            responseTextarea.textContent = displayBody;
-
-            // Update status number
+            // Update response number color
             responseNumber.textContent = result.status;
-
-            // Set color based on status
             const bgColor =
-                result.status >= 200 && result.status < 300 ? "#238636" : // green
-                    result.status >= 400 && result.status < 500 ? "#d29922" : // orange
-                        result.status >= 500 ? "#da3633" : // red
-                            result.status === "ERR" ? "#da3633" : "#6e7681"; // gray
-
+                result.status >= 200 && result.status < 300 ? "#238636" :
+                    result.status >= 400 && result.status < 500 ? "#d29922" :
+                        result.status >= 500 ? "#da3633" :
+                            result.status === "ERR" ? "#da3633" : "#6e7681";
             responseNumber.style.backgroundColor = bgColor;
 
+            // Populate headers from response
+            headersDiv.innerHTML = "";
+            responseHeaders = result.headers ? Object.entries(result.headers) : [];
+            if (responseHeaders.length > 0) {
+                responseHeaders.forEach(([key, value]) => {
+                    const row = document.createElement("div");
+                    row.style.display = "flex";
+                    row.style.gap = "6px";
+                    row.style.marginBottom = "4px";
+
+                    const keyInput = document.createElement("input");
+                    keyInput.value = key;
+                    keyInput.readOnly = true;
+                    keyInput.className = "dark-pre";
+                    keyInput.style.flex = "1";
+                    keyInput.style.color = "white";
+
+                    const valueInput = document.createElement("input");
+                    valueInput.value = value;
+                    valueInput.readOnly = true;
+                    valueInput.className = "dark-pre";
+                    valueInput.style.flex = "2";
+                    valueInput.style.color = "white";
+
+                    row.appendChild(keyInput);
+                    row.appendChild(valueInput);
+                    headersDiv.appendChild(row);
+                });
+            } else {
+                const empty = document.createElement("div");
+                empty.textContent = "No headers";
+                empty.style.color = "#6e7681";
+                headersDiv.appendChild(empty);
+            }
+
+            updateHeadersToggle();
+
         } catch (err) {
-            responseTextarea.textContent = err.message;
+            responseBody.value = err.message;
             responseNumber.textContent = "ERR";
             responseNumber.style.backgroundColor = "#da3633";
-        }
-    });
-    // ----------------- Command title rename -----------------
-    title.addEventListener("dblclick", () => {
-        const input = document.createElement("input");
-        input.type = "text";
-        input.value = command.name;
-        input.classList.add("dark-input");
-
-        title.replaceWith(input);
-        input.focus();
-
-        input.addEventListener("keydown", async (e) => {
-            if (e.key === "Enter") {
-                const newName = input.value.trim();
-                if (!newName) return;
-                await updateCommandField(command, { name: newName });
-                command.name = newName;
-                renderCommand(command);
-            }
-        });
-    });
-
-    // ----------------- Update command -----------------
-    cmdInput.addEventListener("keydown", async (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            const newCommand = cmdInput.value.trim();
-            await updateCommandField(command, { command: newCommand });
-            command.command = newCommand;
+            responseHeaders = [];
+            updateHeadersToggle();
         }
     });
 
-    // ----------------- Update body -----------------
-    bodyInput.addEventListener("keydown", async (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            const newBody = bodyInput.value.trim() || null;
-            await updateCommandField(command, { body: newBody });
-            command.body = newBody;
-        }
-    });
+    // Initialize toggle
+    responseHeaders = [];
+    updateHeadersToggle();
 }
-
-
-
 function parseCommand(cmd) {
     const methodMatch = cmd.match(/-m\s+(\w+)/i);
     const urlMatch = cmd.match(/-u\s+([^\s]+)/i);
