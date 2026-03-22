@@ -953,7 +953,15 @@ async function requestAddCommand({ name, command, body, folderId = null }) {
         alert("Error creating command: " + err.message);
     }
 }
+async function getHeadersForCommand(command) {
+    const res = await fetch(`${BASE_URL}/headers/byCommand/${command.id}`);
+    if (!res.ok) return [];
 
+    const data = await res.json(); // ✅ parse first
+    console.log("HEADERS DATA:", data); // ✅ log actual content
+
+    return data;
+}
 async function renderCommand(command) {
     const main = document.getElementById("main");
     if (!main) return;
@@ -1000,6 +1008,22 @@ async function renderCommand(command) {
     let responseHeaders = []; // stores the latest response headers
     let open = false; // headers dropdown state
 
+
+    addHeaderBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        renderHeaderRow();
+    });
+
+// ✅ LOAD EXISTING HEADERS HERE
+    const headersOnCommand = await getHeadersForCommand(command);
+
+    headersOnCommand.forEach(header => {
+        renderHeaderRow({
+            key: header.key,
+            value: header.value,
+            id: header.id
+        });
+    });
     function updateHeadersToggle() {
         const count = responseHeaders.length;
         const color = count > 0 ? "#36ca53" : "white";
@@ -1064,7 +1088,6 @@ async function renderCommand(command) {
         row.className = "headerRow";
         row.style.display = "flex";
         row.style.gap = "6px";
-        row.style.marginBottom = "4px";
 
         row.innerHTML = `
             <input style="height: 30px" class="headersStyle headerKey" type="text" placeholder="Key">
@@ -1072,6 +1095,7 @@ async function renderCommand(command) {
             <button type="button" class="removeHeaderBtn">-</button>
         `;
         headersContainer.appendChild(row);
+
 
         const keyInput = row.querySelector(".headerKey");
         const valueInput = row.querySelector(".headerValue");

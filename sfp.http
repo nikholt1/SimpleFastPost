@@ -73,6 +73,8 @@ key: value
 ### command name new;
 GET google.com
 key: value
+fe: fe
+test: test
 
 ### place root;
 ### command name getCommand;
