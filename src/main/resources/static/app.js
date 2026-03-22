@@ -69,13 +69,45 @@ async function renderProjectInfo() {
     const rootName = directory.split(/[\\/]/).pop(); // get last folder
     const initials = extractInitials(rootName);
 
-    // Wrap initials in a span with class
-    pathRootName.innerHTML = `<div class="projectName"><span class="initial-box">${initials}</span>${rootName}</div>`;
+    const methodColors = {
+        "GET": "#4aa35a",
+        "POST": "#387bb5",
+        "PUT": "#dc7e1f",
+        "DELETE": "#dc4c59",
+        "PATCH": "#4cb6ca",
+        "OPTIONS": "#6c757d"
+    };
+
+// insert HTML
+    pathRootName.innerHTML = `
+    <div class="projectName" id="projectName">
+        <span id="initial-box" class="initial-box">${initials}</span>${rootName}
+    </div>
+`;
+
+    const projectDiv = document.getElementById("projectName");
+    const initialBox = document.getElementById("initial-box");
+
+// --- pick one random color ---
+    const colors = Object.values(methodColors);
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+// --- SOLID COLOR for initialBox ---
+    initialBox.style.backgroundColor = randomColor;
+    initialBox.style.color = "#fff"; // text stands out
+
+// --- RADIAL GRADIENT for projectName ---
+    function hexToRgba(hex, alpha = 0.41) {
+        const bigint = parseInt(hex.slice(1), 16);
+        const r = (bigint >> 16) & 255;
+        const g = (bigint >> 8) & 255;
+        const b = bigint & 255;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    const rgbaColor = hexToRgba(randomColor, 0.41);
+    projectDiv.style.background = `radial-gradient(circle at 0% 50%, ${rgbaColor} 0%, rgba(255, 255, 0, 0) 100%)`;
 }
-
-// Run after page loads
-window.addEventListener("DOMContentLoaded", renderProjectInfo);
-
 async function pushSync() {
     // const loadingBar = document.getElementById("loadingBar");
     const loadingBar2 = document.getElementById("loading-dots");
