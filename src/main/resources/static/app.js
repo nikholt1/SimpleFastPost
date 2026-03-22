@@ -8,8 +8,8 @@ document.addEventListener("DOMContentLoaded", initApp);
 
 
 async function initApp() {
-    initSidebarResize();
-
+    // initSidebarResize();
+    initMultiResize();
     await Promise.all([
         getFolders(),
         getCommands()
@@ -1416,5 +1416,71 @@ function initSidebarResize() {
 
     toggleBtn.addEventListener("click", () => {
         sidebar.classList.toggle("hidden");
+    });
+}
+
+function initMultiResize() {
+    const resizers = document.querySelectorAll(".resizer");
+    const MIN_WIDTH = 50; // Minimum width for any panel
+
+    resizers.forEach(resizer => {
+        let prevPane, nextPane, startX, prevWidth, nextWidth;
+
+        resizer.addEventListener("mousedown", e => {
+            const children = Array.from(resizer.parentElement.children);
+            const index = children.indexOf(resizer);
+
+            prevPane = children[index - 1];
+            nextPane = children[index + 1];
+
+            // skip if we somehow have no panels adjacent
+            if (!prevPane || !nextPane) return;
+
+            startX = e.clientX;
+            prevWidth = prevPane.getBoundingClientRect().width;
+            nextWidth = nextPane.getBoundingClientRect().width;
+
+            const containerWidth = resizer.parentElement.getBoundingClientRect().width;
+
+            document.body.style.cursor = "col-resize";
+
+            function resize(e) {
+                let dx = e.clientX - startX;
+
+                // calculate new widths
+                let newPrevWidth = prevWidth + dx;
+                let newNextWidth = nextWidth - dx;
+
+                // enforce minimum width
+                if (newPrevWidth < MIN_WIDTH) {
+                    newPrevWidth = MIN_WIDTH;
+                    newNextWidth = prevWidth + nextWidth - MIN_WIDTH;
+                }
+                if (newNextWidth < MIN_WIDTH) {
+                    newNextWidth = MIN_WIDTH;
+                    newPrevWidth = prevWidth + nextWidth - MIN_WIDTH;
+                }
+
+                // enforce total width <= container
+                if (newPrevWidth + newNextWidth > containerWidth) {
+                    const total = prevWidth + nextWidth;
+                    const ratio = newPrevWidth / (newPrevWidth + newNextWidth);
+                    newPrevWidth = total * ratio;
+                    newNextWidth = total - newPrevWidth;
+                }
+
+                prevPane.style.width = `${newPrevWidth}px`;
+                nextPane.style.width = `${newNextWidth}px`;
+            }
+
+            function stopResize() {
+                document.body.style.cursor = "default";
+                document.removeEventListener("mousemove", resize);
+                document.removeEventListener("mouseup", stopResize);
+            }
+
+            document.addEventListener("mousemove", resize);
+            document.addEventListener("mouseup", stopResize);
+        });
     });
 }

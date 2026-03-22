@@ -47,6 +47,7 @@ DELETE https://jsonplaceholder.typicode.com/posts/1
 ### place folder newFolder;
 ### command name thisIsFromThePush;
 PUT https://jsonplaceholder.typicode.com/posts/1
+key: value
 
 {
   "id" : 1,
@@ -59,17 +60,5 @@ PUT https://jsonplaceholder.typicode.com/posts/1
 ### place root;
 ### command name getCommand;
 GET https://jsonplaceholder.typicode.com/posts/1
-
-### place folder localhostTest;
-### command name testGetAllCommands;
-GET localhost:8080/api/commands
-key: value
-
-### place folder localhostTest;
-### command name getOneCommandTest;
-GET localhost:8080/api/commands/1
-
-### place folder localhostTest;
-### command name wrongInputbutRightUrl;
-POST localhost:8080/api/commands/1
+test: value
 

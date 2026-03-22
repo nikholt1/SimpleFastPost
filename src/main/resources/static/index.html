@@ -13,36 +13,30 @@
 </head>
 
 <body>
-
 <div id="layout">
 
     <div id="sidebar">
-
-
+        <!-- Sidebar content unchanged -->
         <div class="sidebar-top">
             <strong title="Start Page" id="homePress">
                 <img src="image/SFPLogoNoBackground.jpg" class="logo">
                 SimpleFastPost
             </strong>
-
             <div class="icons-group">
-        <span id="syncBtn" class="icon-btn" title="Sync">
-            <img src="image/syncNoBG.png" class="icon">
-        </span>
+                <span id="syncBtn" class="icon-btn" title="Sync">
+                    <img src="image/syncNoBG.png" class="icon">
+                </span>
                 <span id="pushBtn" class="icon-btn" title="Push">
-            <img src="image/pushIcon.png" class="icon">
-        </span>
+                    <img src="image/pushIcon.png" class="icon">
+                </span>
                 <span id="helpBtn" class="help-icon" title="Help">?</span>
             </div>
         </div>
         <div id="sideBarInfo">
-            <div id="pathRootName">
-
-            </div>
+            <div id="pathRootName"></div>
             <p id="directoryPath"></p>
         </div>
         <div class="sidebar-header">
-
             <strong>Projects</strong>
             <div class="button-row">
                 <button id="addFolder" class="bi bi-folder" title="Create a new folder in root" style="background-color: transparent; border-color: transparent;"> +</button>
@@ -50,17 +44,11 @@
             </div>
             <button id="toggleSidebar" class="btn btn-sm btn-secondary" style="display: none">☰</button>
         </div>
-
         <div class="sidebar-content">
             <table class="table table-sm mb-0">
-                <thead>
-                <tr>
-
-                </tr>
-                </thead>
+                <thead><tr></tr></thead>
                 <tbody id="tableBody"></tbody>
             </table>
-
         </div>
         <div class="loadingBarSpacer" style="height: 50px">
             <div id="loading-dots" class="loading-dots">
@@ -70,18 +58,12 @@
                 <p style="margin-top: 15px" id="loadingbarState">state</p>
             </div>
         </div>
-
         <img id="loadingBar" class="hidden" style="width: 40px; margin-left: 10px" src="image/loading.gif">
-
-
     </div>
 
-    <div id="resizer"></div>
-
+    <div class="resizer"></div>
 
     <div id="main">
-
-
         <div id="startPage" style="justify-content: center; align-items: center">
             <div>
                 <img src="image/SFPLogoNoBackground.jpg" style="width: 200px">
@@ -89,41 +71,34 @@
             <div class="startPageContent">
                 <h1 style="color: white;">Welcome to SFP</h1>
                 <p style="color: #bababa;">With SimpleFastPost you can simply run specified folders of commands and single commands from the terminal</p>
-
                 <p>Checkout the repository</p>
                 <a href="https://github.com/nikholt1/SimpleFastPost" target="_blank">
                     <button class="addFolderButton" style="width: 200px;">Github repo</button>
                 </a>
             </div>
         </div>
-
     </div>
 
-    <div id="contextMenu" class="context-menu">
-        <div id="ctxAddCommand">Add New Command</div>
-        <div id="ctxAddFolder">Add New Folder</div>
+    <div class="resizer"></div>
+
+    <div id="window1">
+        <div class="mainRight">
+            right panel
+        </div>
+    </div>
+    <div class="resizer"></div>
+
+    <div id="window2">Window 2</div>
+    <div class="resizer"></div>
+
+    <div id="window3">
+        <div class="historyPanel">
+            History
+        </div>
     </div>
 
+    <div class="resizer"></div>
 
-
-    <form class="hidden" id="folderForm">
-        <h5>Add Folder</h5>
-        <input type="text" placeholder="Folder Name" required>
-        <button class="btn btn-primary">Add Folder</button>
-    </form>
-    <ul id="context-menu" style="
-    position: absolute;
-    display: none;
-    list-style: none;
-    padding: 4px 0;
-    margin: 0;
-    background: #333;
-    color: #fff;
-    border-radius: 4px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-    z-index: 1000;
-">
-    </ul>
 </div>
 
 <script type="module" src="app.js"></script>

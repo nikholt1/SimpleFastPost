@@ -7,18 +7,32 @@ html, body {
     font-family: sans-serif;
 }
 
-
 #layout {
     display: flex;
+    width: 100%;
     height: 100vh;
+    overflow: hidden;
 }
 
-#resizer {
-    width: 2px;
-    cursor: col-resize;
-    background: #2b2d30;
+/* Panels */
+#layout > div {
+    min-width: 1px;        /* cannot collapse */
+    height: 100%;
+    overflow: auto;
+    flex: 0 0 auto;         /* prevent flex auto resizing */
 }
 
+/* Resizer styling */
+.resizer {
+    width: 1px;
+    background: black;
+    cursor: ew-resize;
+    flex: 0 0 auto;
+}
+
+.resizer:hover {
+    background: #555;
+}
 
 #sidebar {
     width: 260px;
@@ -182,8 +196,11 @@ tbody tr:hover {
     overflow-y: auto;
     background: #2b2d30;
     color: lightgrey;
-    width: 100%;
-    height: 100vh; /* always full screen height */
+
+    flex: 0 0 auto;   /* don't flex-grow, don't flex-shrink */
+    min-width: 50px;  /* matches JS minimum */
+    width: 70%;     /* optional initial width */
+    height: 100vh;
 }
 
 form {
@@ -498,4 +515,13 @@ table.table tbody tr:hover {
     font-size: 15px;
     border-radius: 6px;
     margin-right: 8px;
+}
+
+.mainRight {
+    height: 100%;
+
+}
+.historyPanel {
+    background-color: #1e1f22;
+    height: 100%;
 }
