@@ -1029,7 +1029,13 @@ async function renderCommand(command) {
     main.innerHTML = `
     <div class="dark-main-content">
         <div style="display: flex;align-items: center">
-            <h4 class="dark-text" id="commandTitle" style="font-size: 20px; height: 15px; padding: 2px;">${command.name}</h4>
+            <h4
+                class="dark-text"
+                id="commandTitle"
+                style="font-size: 20px; height: 15px; padding: 2px;"
+                contenteditable="true"
+                spellcheck="false"
+            >${command.name}</h4>
             <button id="sendBtn" class="sendBtn">Send</button>
         </div>
         <hr style="border-color: #3a3a3a;">
@@ -1051,7 +1057,6 @@ async function renderCommand(command) {
         <div class="headers-toggle" style="cursor:pointer;"></div>
         <div class="headers-container" style="display:none; padding: 10px;"></div>
 
-        <!-- Replaced textarea with scrollable, resizable pre for JSON highlighting -->
         <div style="width:100%; max-height:400px; overflow:auto; border-radius:4px; border:1px solid #3a3a3a; margin-top:10px;">
             <pre
                 id="responseBody"
@@ -1085,26 +1090,109 @@ async function renderCommand(command) {
     const headersToggle = document.querySelector(".headers-toggle");
     const headersDiv = document.querySelector(".headers-container");
     const responseNumber = document.getElementById("responseNumber");
+    const commandTitle = document.getElementById("commandTitle");
 
-    let responseHeaders = []; // stores the latest response headers
-    let open = false; // headers dropdown state
+    let responseHeaders = [];
+    let open = false;
 
+    // ----------------- SAVE COMMAND NAME / COMMAND / BODY -----------------
+    const saveCommand = async (updatedFields) => {
+        try {
+            const res = await fetch(`${BASE_URL}/commands/${command.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...command, ...updatedFields })
+            });
+            if (res.ok) Object.assign(command, updatedFields);
+        } catch (err) {
+            console.error("Failed to save command:", err);
+        }
+    };
+
+    commandTitle.addEventListener("blur", () => {
+        const newName = commandTitle.textContent.trim();
+        if (newName && newName !== command.name) saveCommand({ name: newName });
+    });
+    commandTitle.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            commandTitle.blur();
+        }
+    });
+
+    cmdInput.addEventListener("blur", () => {
+        const newCmd = cmdInput.value.trim();
+        if (newCmd !== command.command) saveCommand({ command: newCmd });
+    });
+
+    bodyInput.addEventListener("blur", () => {
+        const newBody = bodyInput.value.trim();
+        if (newBody !== command.body) saveCommand({ body: newBody });
+    });
+
+    // ----------------- HEADER MANAGEMENT -----------------
+    const renderHeaderRow = (header) => {
+        const row = document.createElement("div");
+        row.className = "headerRow";
+        row.style.display = "flex";
+        row.style.gap = "6px";
+        row.style.marginBottom = "4px";
+
+        row.innerHTML = `
+            <input style="height: 30px" class="headersStyle headerKey" type="text" placeholder="Key" value="${header?.key ?? ''}">
+            <input style="height: 30px" class="headersStyle headerValue" type="text" placeholder="Value" value="${header?.value ?? ''}">
+            <button type="button" class="removeHeaderBtn">-</button>
+        `;
+        headersContainer.appendChild(row);
+
+        const keyInput = row.querySelector(".headerKey");
+        const valueInput = row.querySelector(".headerValue");
+        const removeBtn = row.querySelector(".removeHeaderBtn");
+
+        const saveHeader = async () => {
+            const key = keyInput.value.trim();
+            const value = valueInput.value.trim();
+            if (key && value) {
+                if (header?.id) {
+                    // Update existing
+                    await fetch(`${BASE_URL}/headers/${header.id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ ...header, key, value })
+                    });
+                    header.key = key;
+                    header.value = value;
+                } else {
+                    // Create new
+                    const res = await fetch(`${BASE_URL}/headers`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ commandId: command.id, key, value })
+                    });
+                    const createdHeader = await res.json();
+                    row.remove();
+                    renderHeaderRow(createdHeader);
+                }
+            }
+        };
+
+        keyInput.addEventListener("blur", saveHeader);
+        valueInput.addEventListener("blur", saveHeader);
+        removeBtn.addEventListener("click", async () => {
+            if (header?.id) await fetch(`${BASE_URL}/headers/${header.id}`, { method: "DELETE" });
+            row.remove();
+        });
+    };
+
+    // Load existing headers
+    const headersOnCommand = await getHeadersForCommand(command);
+    headersOnCommand.forEach(renderHeaderRow);
 
     addHeaderBtn.addEventListener("click", (e) => {
         e.preventDefault();
         renderHeaderRow();
     });
 
-// ✅ LOAD EXISTING HEADERS HERE
-    const headersOnCommand = await getHeadersForCommand(command);
-
-    headersOnCommand.forEach(header => {
-        renderHeaderRow({
-            key: header.key,
-            value: header.value,
-            id: header.id
-        });
-    });
     function updateHeadersToggle() {
         const count = responseHeaders.length;
         const color = count > 0 ? "#36ca53" : "white";
@@ -1118,91 +1206,7 @@ async function renderCommand(command) {
         updateHeadersToggle();
     });
 
-    // ----------------- Add new header manually -----------------
-    function renderHeaderRow(header) {
-        const row = document.createElement("div");
-        row.className = "headerRow";
-        row.style.display = "flex";
-        row.style.gap = "6px";
-        row.style.marginBottom = "4px";
-
-        row.innerHTML = `
-            <input style="height: 30px" class="headersStyle headerKey" type="text" placeholder="Key" value="${header.key ?? ''}">
-            <input style="height: 30px" class="headersStyle headerValue" type="text" placeholder="Value" value="${header.value ?? ''}">
-            <button type="button" class="removeHeaderBtn">-</button>
-        `;
-        headersContainer.appendChild(row);
-
-        const keyInput = row.querySelector(".headerKey");
-        const valueInput = row.querySelector(".headerValue");
-        const removeBtn = row.querySelector(".removeHeaderBtn");
-
-        keyInput.addEventListener("blur", async () => {
-            if (!header.id) return;
-            await fetch(`${BASE_URL}/headers/${header.id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...header, key: keyInput.value })
-            });
-            header.key = keyInput.value;
-        });
-
-        valueInput.addEventListener("blur", async () => {
-            if (!header.id) return;
-            await fetch(`${BASE_URL}/headers/${header.id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...header, value: valueInput.value })
-            });
-            header.value = valueInput.value;
-        });
-
-        removeBtn.addEventListener("click", async () => {
-            if (header.id) await fetch(`${BASE_URL}/headers/${header.id}`, { method: "DELETE" });
-            row.remove();
-        });
-    }
-
-    addHeaderBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        const row = document.createElement("div");
-        row.className = "headerRow";
-        row.style.display = "flex";
-        row.style.gap = "6px";
-
-        row.innerHTML = `
-            <input style="height: 30px" class="headersStyle headerKey" type="text" placeholder="Key">
-            <input style="height: 30px" class="headersStyle headerValue" type="text" placeholder="Value">
-            <button type="button" class="removeHeaderBtn">-</button>
-        `;
-        headersContainer.appendChild(row);
-
-
-        const keyInput = row.querySelector(".headerKey");
-        const valueInput = row.querySelector(".headerValue");
-        const removeBtn = row.querySelector(".removeHeaderBtn");
-
-        const trySaveHeader = async () => {
-            const key = keyInput.value.trim();
-            const value = valueInput.value.trim();
-            if (key && value) {
-                const res = await fetch(`${BASE_URL}/headers`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ commandId: command.id, key, value })
-                });
-                const createdHeader = await res.json();
-                row.remove();
-                renderHeaderRow(createdHeader);
-            }
-        };
-
-        keyInput.addEventListener("blur", trySaveHeader);
-        valueInput.addEventListener("blur", trySaveHeader);
-        removeBtn.addEventListener("click", () => row.remove());
-    });
-
-    // ----------------- Send command -----------------
+    // ----------------- SEND COMMAND -----------------
     sendBtn.addEventListener("click", async () => {
         const { url } = parseCommand(cmdInput.value);
         if (!url) {
@@ -1224,7 +1228,6 @@ async function renderCommand(command) {
         try {
             const result = await executeCommand({ command: cmdInput.value, body, id: command.id });
 
-            // Pretty-print body and highlight
             let displayBody;
             try {
                 const parsed = typeof result.body === "string" ? JSON.parse(result.body) : result.body;
@@ -1233,10 +1236,8 @@ async function renderCommand(command) {
                 displayBody = result.body;
             }
 
-            // Use highlightJson for the <pre>
             responseBody.innerHTML = highlightJson(displayBody);
 
-            // Update response number color
             responseNumber.textContent = result.status;
             const bgColor =
                 result.status >= 200 && result.status < 300 ? "#238636" :
@@ -1245,7 +1246,6 @@ async function renderCommand(command) {
                             result.status === "ERR" ? "#da3633" : "#6e7681";
             responseNumber.style.backgroundColor = bgColor;
 
-            // Populate headers from response
             headersDiv.innerHTML = "";
             responseHeaders = result.headers ? Object.entries(result.headers) : [];
             if (responseHeaders.length > 0) {
@@ -1291,7 +1291,6 @@ async function renderCommand(command) {
         }
     });
 
-    // Initialize toggle
     responseHeaders = [];
     updateHeadersToggle();
 }
