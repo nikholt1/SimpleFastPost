@@ -507,6 +507,17 @@ async function updateCommandFolder(commandId, folderId) {
     window.location.reload();
 
 }
+// --- JSON syntax highlighting helper ---
+function highlightJson(json) {
+    const str = typeof json === "string" ? json : JSON.stringify(json, null, 2);
+    return str
+        .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?)/g, match => {
+            if (match.endsWith(":")) return `<span style="color:#d19a66;">${match}</span>`; // key
+            return `<span style="color:#98c379;">${match}</span>`; // string value
+        })
+        .replace(/\b(true|false|null)\b/g, `<span style="color:#56b6c2;">$1</span>`) // boolean / null
+        .replace(/\b-?\d+(\.\d+)?\b/g, `<span style="color:#61afef;">$&</span>`); // numbers
+}
 async function runAllCommandsInFolder(folder) {
 
     console.log("Running all commands in folder:", folder.name);
@@ -596,41 +607,58 @@ async function runAllCommandsInFolder(folder) {
 
             // ---------- Base HTML ----------
             commandBlock.innerHTML = `
-                <div style="margin-top:10px; padding: 10px;">
-                    <p style="font-weight:bold">${child.name}</p>
-
-                    <div style="margin-bottom:10px;display:flex;align-items:center">
-                        <p class="dark-text" style="margin:0">Response</p>
-                        <span 
-                            style="
-                                background-color:${responseColor};
-                                color:white;
-                                border-radius:4px;
-                                padding:2px 6px;
-                                margin-left:6px;
-                                font-size:12px;
-                                font-weight:bold
-                            ">
-                            ${result.status}
-                        </span>
-                    </div>
-
-                    <!-- DROPDOWN HEADER -->
-                    <div class="headers-toggle" style="cursor:pointer; user-select:none; margin-bottom:6px;">
-                        ▶ Headers (${headerCount})
-                    </div>
-
-                    <!-- COLLAPSIBLE -->
-                    <div class="headers-container" style="display:none; margin-bottom:10px;"></div>
-
-                    <p class="dark-text">Body</p>
-                    <textarea 
-                        class="dark-body"
-                        readonly
-                        rows="6"
-                        style="width:100%; white-space: pre;"
-                    >${displayBody}</textarea>
+            <div style="margin-top:10px; padding: 10px;">
+                <p style="font-weight:bold">${child.name}</p>
+            
+                <div style="margin-bottom:10px;display:flex;align-items:center">
+                    <p class="dark-text" style="margin:0">Response</p>
+                    <span 
+                        style="
+                            background-color:${responseColor};
+                            color:white;
+                            border-radius:4px;
+                            padding:2px 6px;
+                            margin-left:6px;
+                            font-size:12px;
+                            font-weight:bold;
+                            
+                        ">
+                        ${result.status}
+                    </span>
                 </div>
+            
+                <!-- DROPDOWN HEADER -->
+                <div class="headers-toggle" style="cursor:pointer; user-select:none; margin-bottom:6px;">
+                    ▶ Headers (${headerCount})
+                </div>
+            
+                <!-- COLLAPSIBLE -->
+                <div class="headers-container" style="display:none; margin-bottom:10px;"></div>
+            
+                <p class="dark-text">Body</p>
+            
+                <!-- Scrollable & resizable container -->
+                <div style="width:100%; max-height:400px; overflow:auto; border-radius:4px; border:1px solid #3a3a3a;">
+                    <pre 
+                        class="dark-body"
+                        contenteditable
+                        style="
+                            width:100%;
+                            min-height:200px;
+                            margin:0;
+                            white-space: pre-wrap;
+                            word-break: break-word;
+                            background:#1e1e1e;
+                            color:#abb2bf;
+                            padding:10px;
+                            resize: vertical;  /* draggable resize */
+                            overflow:auto;
+                            border-radius:4px;
+                            box-sizing:border-box;
+                        "
+                    >${highlightJson(displayBody)}</pre>
+                </div>
+            </div>
             `;
 
             const toggle = commandBlock.querySelector(".headers-toggle");
@@ -840,7 +868,7 @@ function renderNewCommand(folderId = null) {
 
             <textarea id="commandBody"
                 placeholder="Command Body (optional)"
-                style="border-radius:4px;background-color:rgb(30,31,34);color:white;width:100%;height:200px;padding:6px;font-size:14px;box-sizing:border-box;">
+                style="border-radius:4px;background-color:rgb(30,31,34);color: #8ab23d;width:100%;height:200px;padding:6px;font-size:14px;box-sizing:border-box;">
             </textarea>
 
             <button type="submit" class="btn btn-primary"
@@ -999,33 +1027,54 @@ async function renderCommand(command) {
     if (!main) return;
 
     main.innerHTML = `
-        <div class="dark-main-content">
-            <div style="display: flex;align-items: center">
-                <h4 class="dark-text" id="commandTitle" style="font-size: 20px; height: 15px; padding: 2px;">${command.name}</h4>
-                <button id="sendBtn" class="sendBtn">Send</button>
-            </div>
-            <hr style="border-color: #3a3a3a;">
-            <p class="dark-text">Command</p>
-            <textarea id="commandCmd" class="dark-pre">${command.command}</textarea>
-
-            <p class="dark-text" style="margin-bottom: 0px; margin-top: 10px">Headers</p>
-            <div id="headersContainer" style="margin-top: 5px"></div>
-            <button id="addHeaderBtn" class="addHeaderBtn">+</button>
-
-            <p class="dark-text">Body</p>
-            <textarea id="commandBody" class="dark-body" style="min-height:120px;">${command.body ?? ""}</textarea>
-
-            <div style="margin-top: 10px; margin-bottom: 10px; display: flex; align-items: center">
-                <p class="dark-text" style="padding-bottom: 0px; margin-bottom: 0;">Response</p>
-                <span id="responseNumber" style="background-color: #885ebb; color:white; border-radius: 4px;padding: 2px 4px; margin-left: 6px; font-size: 12px; font-weight: bold;">ready</span>
-            </div>
-
-            <div class="headers-toggle" style="cursor:pointer;"></div>
-            <div class="headers-container" style="display:none; padding: 10px;"></div>
-
-            <textarea id="responseBody" class="dark-body" readonly style="width:100%; min-height:200px; margin-top:10px;"></textarea>
+    <div class="dark-main-content">
+        <div style="display: flex;align-items: center">
+            <h4 class="dark-text" id="commandTitle" style="font-size: 20px; height: 15px; padding: 2px;">${command.name}</h4>
+            <button id="sendBtn" class="sendBtn">Send</button>
         </div>
-    `;
+        <hr style="border-color: #3a3a3a;">
+        <p class="dark-text">Command</p>
+        <textarea id="commandCmd" class="dark-pre">${command.command}</textarea>
+
+        <p class="dark-text" style="margin-bottom: 0px; margin-top: 10px">Headers</p>
+        <div id="headersContainer" style="margin-top: 5px"></div>
+        <button id="addHeaderBtn" class="addHeaderBtn">+</button>
+
+        <p class="dark-text">Body</p>
+        <textarea id="commandBody" class="dark-body" style="min-height:120px;">${command.body ?? ""}</textarea>
+
+        <div style="margin-top: 10px; margin-bottom: 10px; display: flex; align-items: center">
+            <p class="dark-text" style="padding-bottom: 0px; margin-bottom: 0;">Response</p>
+            <span id="responseNumber" style="background-color: #885ebb; color:white; border-radius: 4px;padding: 2px 4px; margin-left: 6px; font-size: 12px; font-weight: bold;">ready</span>
+        </div>
+
+        <div class="headers-toggle" style="cursor:pointer;"></div>
+        <div class="headers-container" style="display:none; padding: 10px;"></div>
+
+        <!-- Replaced textarea with scrollable, resizable pre for JSON highlighting -->
+        <div style="width:100%; max-height:400px; overflow:auto; border-radius:4px; border:1px solid #3a3a3a; margin-top:10px;">
+            <pre
+                id="responseBody"
+                class="dark-body"
+                contenteditable
+                style="
+                    width:100%;
+                    min-height:200px;
+                    margin:0;
+                    padding:10px;
+                    background:#1e1e1e;
+                    color:#abb2bf;
+                    white-space: pre-wrap;
+                    word-break: break-word;
+                    resize: vertical;
+                    overflow:auto;
+                    border-radius:4px;
+                    box-sizing:border-box;
+                "
+            >${highlightJson(command.response ?? '')}</pre>
+        </div>
+    </div>
+`;
 
     const headersContainer = document.getElementById("headersContainer");
     const addHeaderBtn = document.getElementById("addHeaderBtn");
@@ -1159,7 +1208,7 @@ async function renderCommand(command) {
         if (!url) {
             responseNumber.textContent = "ERR";
             responseNumber.style.backgroundColor = "#da3633";
-            responseBody.value = "Invalid command: Missing URL (-u)";
+            responseBody.innerHTML = highlightJson("Invalid command: Missing URL (-u)");
             return;
         }
 
@@ -1175,13 +1224,17 @@ async function renderCommand(command) {
         try {
             const result = await executeCommand({ command: cmdInput.value, body, id: command.id });
 
-            // Pretty-print body
+            // Pretty-print body and highlight
+            let displayBody;
             try {
                 const parsed = typeof result.body === "string" ? JSON.parse(result.body) : result.body;
-                responseBody.value = JSON.stringify(parsed, null, 2);
+                displayBody = JSON.stringify(parsed, null, 2);
             } catch {
-                responseBody.value = result.body;
+                displayBody = result.body;
             }
+
+            // Use highlightJson for the <pre>
+            responseBody.innerHTML = highlightJson(displayBody);
 
             // Update response number color
             responseNumber.textContent = result.status;
@@ -1230,7 +1283,7 @@ async function renderCommand(command) {
             updateHeadersToggle();
 
         } catch (err) {
-            responseBody.value = err.message;
+            responseBody.innerHTML = highlightJson(err.message);
             responseNumber.textContent = "ERR";
             responseNumber.style.backgroundColor = "#da3633";
             responseHeaders = [];

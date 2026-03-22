@@ -56,26 +56,6 @@ PUT https://jsonplaceholder.typicode.com/posts/1
 }
 
  
-### place folder newFolder;
-### command name newCommand;
-GET google.com
-key: value
-
-{
-  "id" : 1,
-  "title" : "Updated Title",
-  "body" : "Updated body",
-  "userId" : 1
-}
-
- 
-### place root;
-### command name new;
-GET google.com
-key: value
-fe: fe
-test: test
-
 ### place root;
 ### command name getCommand;
 GET https://jsonplaceholder.typicode.com/posts/1

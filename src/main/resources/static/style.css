@@ -371,12 +371,14 @@ table.table tbody tr:hover {
 }
 
 .dark-body {
+
     background-color: #1e1f22;
-    color: #ea9b6d;
+    color: #8ab23d;
     border: 1px solid #3a3a3a;
     padding: 8px;
     border-radius: 4px;
     overflow-x: auto;
+    overflow-y: auto;
     width: 100%;
     min-height: 200px;
 }
