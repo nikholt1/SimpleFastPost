@@ -499,3 +499,27 @@ table.table tbody tr:hover {
     border-radius: 6px;
     margin-right: 8px;
 }
+
+
+.container {
+    display: flex;
+    height: 100%;
+}
+
+.main-window-right {
+    width: 400px;
+    background-color: rgba(30,31,34,0.5);
+    border-right: 1px solid #202023;
+    border-left: 1px solid #202023;
+}
+
+.resizer-left {
+    width: 5px;
+    cursor: ew-resize;
+    background: transparent;
+}
+
+/* 👇 nice UX: highlight on hover */
+.resizer-left:hover {
+    background: #2b2d30;
+}
