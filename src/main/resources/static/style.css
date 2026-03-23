@@ -16,12 +16,18 @@ html, body {
 
 /* Panels */
 #layout > div {
-    min-width: 1px;        /* cannot collapse */
+    min-width: 0;    /* allows panels to shrink */
     height: 100%;
     overflow: auto;
-    flex: 0 0 auto;         /* prevent flex auto resizing */
 }
 
+
+#sidebar   { flex: 0 0 260px; min-width: 250px; }
+#main      { flex: 1 1 auto; min-width: 200px; }
+#window1   { flex: 0 0 250px; min-width: 200px; }
+#window2   { flex: 0 0 200px; min-width: 150px; }
+#window3   { flex: 0 0 300px; min-width: 300px; max-width: 300px; } /* fixed */
+.resizer   { width: 5px; cursor: ew-resize; flex: 0 0 auto; height: 100%; }
 /* Resizer styling */
 .resizer {
     width: 1px;
@@ -33,7 +39,7 @@ html, body {
 .resizer:hover {
     background: #555;
 }
-
+/*
 #sidebar {
     width: 260px;
     min-width: 250px;
@@ -45,7 +51,7 @@ html, body {
     flex-direction: column;
     overflow: hidden;
 }
-
+*/
 #sidebar.hidden {
     width: 0;
     min-width: 0;
@@ -192,15 +198,11 @@ tbody tr:hover {
 }
 
 #main {
-    padding: 0;
+    flex: 1 1 auto;  /* flexible, grows and shrinks */
+    min-width: 200px; /* prevents collapsing too small */
+    height: 100%;
     overflow-y: auto;
     background: #2b2d30;
-    color: lightgrey;
-
-    flex: 0 0 auto;   /* don't flex-grow, don't flex-shrink */
-    min-width: 50px;  /* matches JS minimum */
-    width: 70%;     /* optional initial width */
-    height: 100vh;
 }
 
 form {
@@ -281,25 +283,17 @@ html, body {
 
 #startPage {
     background-image: url("image/SFPbackground.PNG");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed; /* <-- makes it stay in place when scrolling */
-
+    min-height: 100%;  /* fills #main */
+    padding: 50px 0;
+    overflow: auto;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* use flex-start so content scrolls from top */
-
-    width: 100%;
-    min-height: 100vh;       /* ensures it fills screen initially */
-    padding: 50px 0;         /* optional top/bottom spacing */
-    box-sizing: border-box;  /* prevents padding from breaking layout */
-    overflow: auto;          /* allows scrolling if content is long */
+    align-items: flex-start;     /* allows scrolling if content is long */
 }
 
 .startPageContent {
-    width: 500px;
-    text-align: left;
+    max-width: 500px;
+    width: 100%;
 }
 .addFolderButton {
     padding: 5px;

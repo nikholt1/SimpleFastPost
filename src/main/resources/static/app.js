@@ -8,36 +8,32 @@ document.addEventListener("DOMContentLoaded", initApp);
 
 
 async function initApp() {
-    // initSidebarResize();
-    initMultiResize();
-    await Promise.all([
-        getFolders(),
-        getCommands()
-    ]);
+    // await data
+    await Promise.all([getFolders(), getCommands()]);
 
     await renderProjectInfo();
 
     sidebarTree = buildSidebarTree(listOfFolders, listOfCommands);
     renderSidebar(sidebarTree);
 
+    // ✅ Initialize resizers AFTER DOM elements exist
+    initMultiResize();
+
+    // add event listeners
     let homeButton = document.getElementById("homePress");
     let addFolder = document.getElementById("addFolder");
     let addCommand = document.getElementById("addCommand");
     let helpButton = document.getElementById("helpBtn");
     let syncBtn = document.getElementById("syncBtn");
     let pushBtn = document.getElementById("pushBtn");
-    homeButton.addEventListener("click", () => renderHome());
 
+    homeButton.addEventListener("click", () => renderHome());
     addFolder.addEventListener("click", () => renderNewFolder());
     addCommand.addEventListener("click", () => renderNewCommand());
     helpButton.addEventListener("click", () => renderHelp());
-
     syncBtn.addEventListener("click", () => sync());
     pushBtn.addEventListener("click", () => pushSync());
-
-
 }
-
 
 
 async function getDirectoryPath() {
@@ -169,6 +165,8 @@ function renderHome() {
         </div>
     </div>
     `;
+
+
 }
 function renderHelp() {
     const main = document.getElementById("main");
@@ -1420,67 +1418,55 @@ function initSidebarResize() {
 }
 
 function initMultiResize() {
-    const resizers = document.querySelectorAll(".resizer");
-    const MIN_WIDTH = 50; // Minimum width for any panel
+    const MIN_WIDTH = 50; // minimum width for any panel
+    let prevPane, nextPane, startX, prevWidth, nextWidth;
 
-    resizers.forEach(resizer => {
-        let prevPane, nextPane, startX, prevWidth, nextWidth;
+    // single delegated listener
+    document.body.addEventListener("mousedown", (e) => {
+        const resizer = e.target.closest(".resizer");
+        if (!resizer) return; // ignore clicks not on a resizer
 
-        resizer.addEventListener("mousedown", e => {
-            const children = Array.from(resizer.parentElement.children);
-            const index = children.indexOf(resizer);
+        e.preventDefault();
 
-            prevPane = children[index - 1];
-            nextPane = children[index + 1];
+        const children = Array.from(resizer.parentElement.children);
+        const index = children.indexOf(resizer);
 
-            // skip if we somehow have no panels adjacent
-            if (!prevPane || !nextPane) return;
+        prevPane = children[index - 1];
+        nextPane = children[index + 1];
 
-            startX = e.clientX;
-            prevWidth = prevPane.getBoundingClientRect().width;
-            nextWidth = nextPane.getBoundingClientRect().width;
+        if (!prevPane || !nextPane) return;
 
-            const containerWidth = resizer.parentElement.getBoundingClientRect().width;
+        startX = e.clientX;
+        prevWidth = prevPane.getBoundingClientRect().width;
+        nextWidth = nextPane.getBoundingClientRect().width;
 
-            document.body.style.cursor = "col-resize";
+        document.body.style.cursor = "col-resize";
 
-            function resize(e) {
-                let dx = e.clientX - startX;
+        function resize(e) {
+            const dx = e.clientX - startX;
+            let newPrevWidth = prevWidth + dx;
+            let newNextWidth = nextWidth - dx;
 
-                // calculate new widths
-                let newPrevWidth = prevWidth + dx;
-                let newNextWidth = nextWidth - dx;
-
-                // enforce minimum width
-                if (newPrevWidth < MIN_WIDTH) {
-                    newPrevWidth = MIN_WIDTH;
-                    newNextWidth = prevWidth + nextWidth - MIN_WIDTH;
-                }
-                if (newNextWidth < MIN_WIDTH) {
-                    newNextWidth = MIN_WIDTH;
-                    newPrevWidth = prevWidth + nextWidth - MIN_WIDTH;
-                }
-
-                // enforce total width <= container
-                if (newPrevWidth + newNextWidth > containerWidth) {
-                    const total = prevWidth + nextWidth;
-                    const ratio = newPrevWidth / (newPrevWidth + newNextWidth);
-                    newPrevWidth = total * ratio;
-                    newNextWidth = total - newPrevWidth;
-                }
-
-                prevPane.style.width = `${newPrevWidth}px`;
-                nextPane.style.width = `${newNextWidth}px`;
+            if (newPrevWidth < MIN_WIDTH) {
+                newPrevWidth = MIN_WIDTH;
+                newNextWidth = prevWidth + nextWidth - MIN_WIDTH;
+            }
+            if (newNextWidth < MIN_WIDTH) {
+                newNextWidth = MIN_WIDTH;
+                newPrevWidth = prevWidth + nextWidth - MIN_WIDTH;
             }
 
-            function stopResize() {
-                document.body.style.cursor = "default";
-                document.removeEventListener("mousemove", resize);
-                document.removeEventListener("mouseup", stopResize);
-            }
+            prevPane.style.flex = `0 0 ${newPrevWidth}px`;
+            nextPane.style.flex = `0 0 ${newNextWidth}px`;
+        }
 
-            document.addEventListener("mousemove", resize);
-            document.addEventListener("mouseup", stopResize);
-        });
+        function stopResize() {
+            document.body.style.cursor = "default";
+            document.removeEventListener("mousemove", resize);
+            document.removeEventListener("mouseup", stopResize);
+        }
+
+        document.addEventListener("mousemove", resize);
+        document.addEventListener("mouseup", stopResize);
     });
 }
