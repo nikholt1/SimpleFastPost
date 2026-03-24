@@ -229,7 +229,38 @@ public class CLIExecutor {
 
                     }
                     return;
+                case "api":
+                    if (rawArgs.length < 2) {
+                        System.out.println("Usage: api [ls|kill <pid>]");
+                        return; // exit method after showing usage
+                    }
 
+                    String subCommand = rawArgs[1];
+
+                    if (subCommand.equals("ls")) {
+                        // List all running API instances from the database
+                        apiService.listAllInstances();
+                        return; // done, exit method
+                    } else if (subCommand.equals("kill")) {
+                        if (rawArgs.length < 3) {
+                            System.out.println("Usage: api kill <pid>");
+                            return;
+                        }
+
+                        try {
+                            Long pid = Long.parseLong(rawArgs[2]);
+                            apiService.stopApiDaemon(pid);
+                            System.out.println("Stopped API instance with PID: " + pid);
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid PID: " + rawArgs[2]);
+                        } catch (Exception e) {
+                            System.err.println("Failed to stop API: " + e.getMessage());
+                        }
+                        return; // exit after handling kill
+                    } else {
+                        System.out.println("Unknown api subcommand: " + subCommand);
+                        return; // exit after unknown subcommand
+                    }
                 case "push":
                     String findRoot = System.getProperty("user.dir");
                     Path fileToFind = Path.of(findRoot, "sfp.http");
@@ -548,7 +579,6 @@ public class CLIExecutor {
 
                     handleUpdate(id, folderId, updateTarget, updateField, updateValue);
                     return;
-
 
                 case "purge":
                     cliFolderService.deleteAllFolders();

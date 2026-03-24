@@ -16,7 +16,7 @@ public class CLIconfig {
         Path db = dataDir.resolve("SimpleFastPostDB.db");
         String dbUrl = "jdbc:sqlite:" + db.toAbsolutePath();
 
-
+        System.out.println(dbUrl);
         return dbUrl;
     }
 
