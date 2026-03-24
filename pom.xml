@@ -84,8 +84,12 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>4.0.2</version>
+                <configuration>
+                    <!-- Point to the main class that handles both CLI and API -->
+                    <mainClass>org.example.simplefastpost.AppMain</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>
-
 </project>

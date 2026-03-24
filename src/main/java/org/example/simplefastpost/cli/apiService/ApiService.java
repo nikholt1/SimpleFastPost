@@ -28,13 +28,15 @@ public class ApiService {
 
     /// TODO: getPath to the current running program
     public Path getCurrentProgram() throws Exception {
-        return Paths.get(
-                AppMain.class
-                        .getProtectionDomain()
-                        .getCodeSource()
-                        .getLocation()
-                        .toURI()
-        );
+        Path currentDir = Paths.get(".").toAbsolutePath().normalize();
+        Path jarPath = currentDir.resolve("SimpleFastPost.jar");
+
+        if (!Files.exists(jarPath) || !Files.isRegularFile(jarPath)) {
+            throw new RuntimeException(
+                    "Detached mode requires SimpleFastPost.jar in current folder. Checked: " + jarPath
+            );
+        }
+        return jarPath;
     }
 
     public Path getDataDir() throws Exception {
@@ -46,23 +48,33 @@ public class ApiService {
 
 
     public void startApiDaemon() throws Exception {
-        Path program = getCurrentProgram();
+        Path jarPath = getCurrentProgram();
+        Path dataDir = getDataDir();  // ensure data dir exists
+        Path logFile = dataDir.resolve("api-detached.log");
 
-        Process process = new ProcessBuilder(
-                program.toString(),
+        // Make sure log file exists
+        if (!Files.exists(logFile)) {
+            Files.createFile(logFile);
+        }
+
+        ProcessBuilder pb = new ProcessBuilder(
+                "java",
+                "-jar",
+                jarPath.toString(),
                 "--api"
         )
-                .redirectOutput(ProcessBuilder.Redirect.DISCARD)
-                .redirectError(ProcessBuilder.Redirect.DISCARD)
-                .start();
+                .redirectOutput(logFile.toFile())  // write stdout to log file
+                .redirectError(logFile.toFile());  // write stderr to same log file
+
+        Process process = pb.start();
 
         Long pid = process.pid();
         LocalDateTime startedAt = LocalDateTime.now();
 
-        // apiRepository.saveApiRun();
         APIEntity apiEntity = new APIEntity(pid, startedAt);
         apiRepository.createNewInstance(apiEntity);
 
+        System.out.println("Detached API started with PID " + pid + ". Logs are at: " + logFile.toAbsolutePath());
     }
 
 
@@ -78,10 +90,20 @@ public class ApiService {
 
     /// TODO: stop instance by id
     public void stopApiDaemon(Long pid) throws Exception {
-//        APIEntity apiEntity = apiRepository.getInstanceByPid(pid);
+        OSService.OSType os = OSService.getOperatingSystemType();
 
-        ProcessHandle.of(pid).ifPresent(ProcessHandle::destroy);
+        if (os == OSService.OSType.WINDOWS) {
+            // Windows: use taskkill
+            new ProcessBuilder("taskkill", "/PID", pid.toString(), "/F")
+                    .inheritIO() // optional, to see output/errors
+                    .start()
+                    .waitFor();
+        } else {
+            // Linux/macOS: use ProcessHandle
+            ProcessHandle.of(pid).ifPresent(ProcessHandle::destroy);
+        }
 
+        // Remove from database in all cases
         apiRepository.deleteByPid(pid);
     }
 
