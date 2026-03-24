@@ -8,9 +8,52 @@ html, body {
 }
 
 
+#main {
+    flex: 1; /* take remaining space between left sidebar and right panel */
+
+    overflow: auto;
+}
+
+/* Right resizable panel */
+#rightPanel {
+
+    min-width: 150px;
+    background: #2b2d30;
+    border-left: 1px solid #1e1f22;
+    height: 100vh;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Right resizer */
+#rightResizer {
+    width: 2px;
+    cursor: col-resize;
+    background: #2b2d30;
+    height: 100vh;
+}
+
+/* Fixed right panel */
+#fixedRightPanel {
+    width: 50px;
+    background: #2b2d30;
+    color: white;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    right: 0;
+    border-left: 1px solid #444;
+    padding: 10px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+/* Adjust main + rightPanel width considering fixed panel */
 #layout {
     display: flex;
     height: 100vh;
+    /*padding-right: 150px; /* width of fixed panel */
 }
 
 #resizer {
@@ -177,14 +220,7 @@ tbody tr:hover {
     font-weight: bold;
 }
 
-#main {
-    padding: 0;
-    overflow-y: auto;
-    background: #2b2d30;
-    color: lightgrey;
-    width: 100%;
-    height: 100vh; /* always full screen height */
-}
+
 
 form {
     height: 100%;
@@ -498,4 +534,39 @@ table.table tbody tr:hover {
     font-size: 15px;
     border-radius: 6px;
     margin-right: 8px;
+}
+
+
+#fixedRightPanel {
+    display: flex;              /* keep it a flex container */
+    flex-direction: column;     /* stack top/bottom vertically */
+    justify-content: space-between; /* top group at top, bottom group at bottom */
+    align-items: center;              /* full viewport height to allow spacing */
+
+    position: fixed;            /* stays fixed on screen */
+    right: 0;                   /* attach to right edge */
+    top: 0;                     /* start from top */
+}
+
+.rightSideItemsTop,
+.rightSideItemsBottom {
+    display: flex;
+    flex-direction: column;     /* stack items inside each section vertically */
+    gap: 10px;                  /* optional spacing between items */
+}
+
+.historyPanel {
+    width: 350px;
+    background-color: #2b2d30;
+}
+.historyPanelContent {
+
+
+}
+
+
+.historyContent {
+    background-color: #1e1e1e;
+    height: 100vh;
+    margin: 0;
 }

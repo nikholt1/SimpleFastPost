@@ -98,6 +98,39 @@
         </div>
 
     </div>
+    <div class="hidden" id="rightResizer"></div>
+    <div style="display: none;" class="hidden" id="rightPanel">
+        <div style="padding: 10px; display: flex;align-items: center; gap: 5px">
+            <img style="cursor: pointer;width: 24px; height: 24px;" src="image/crawlerIcon.png">
+            <strong>Crawler</strong>
+        </div>
+    </div>
+
+    <div class="resizer" id="historyResizer"></div>
+    <div class="historyPanel hidden" id="historyPanel">
+        <div class="historyPanelContent">
+            <div style="padding: 10px; display: flex;align-items: center; gap: 5px">
+                <img style="cursor: pointer;width: 22px; height: 22px; margin-bottom: 3px" src="image/historyIcon.png">
+                <strong>History</strong>
+            </div>
+            <div class="historyContent">
+                <div style="padding: 10px;">
+                    item
+                </div>
+
+            </div>
+        </div>
+    </div>    <!-- Fixed far right panel -->
+    <div id="fixedRightPanel">
+        <div class="rightSideItemsTop">
+            <img id="historyPanelActivate" style="cursor: pointer;width: 22px; height: 22px;" src="image/historyIcon.png">
+            <img id="rightPanelActivate" style="cursor: pointer;width: 24px; height: 24px;" src="image/crawlerIcon.png">
+        </div>
+        <div class="rightSideItemsBottom">
+
+        </div>
+    </div>
+
 
     <div id="contextMenu" class="context-menu">
         <div id="ctxAddCommand">Add New Command</div>

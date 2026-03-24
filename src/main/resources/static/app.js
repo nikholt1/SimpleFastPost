@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", initApp);
 
 async function initApp() {
     initSidebarResize();
-
+    initRightPanelResize();
     await Promise.all([
         getFolders(),
         getCommands()
@@ -26,6 +26,8 @@ async function initApp() {
     let helpButton = document.getElementById("helpBtn");
     let syncBtn = document.getElementById("syncBtn");
     let pushBtn = document.getElementById("pushBtn");
+    //let historyButton = document.getElementById("historyPanelActivate");
+
     homeButton.addEventListener("click", () => renderHome());
 
     addFolder.addEventListener("click", () => renderNewFolder());
@@ -34,10 +36,8 @@ async function initApp() {
 
     syncBtn.addEventListener("click", () => sync());
     pushBtn.addEventListener("click", () => pushSync());
-
-
-}
-
+    document.getElementById("historyPanelActivate").addEventListener("click", renderHistoryPanel);
+    document.getElementById("rightPanelActivate").addEventListener("click", () => renderRightCrawlerPanel());}
 
 
 async function getDirectoryPath() {
@@ -45,7 +45,24 @@ async function getDirectoryPath() {
     const data = await res.json();
     return data.currentDirectory;
 }
+function renderRightCrawlerPanel() {
+    const rightPanel = document.getElementById("rightPanel");
+    const rightResizer = document.getElementById("rightResizer");
 
+    // toggle display between 'flex' and 'none'
+    if (rightPanel.style.display === "flex") {
+        rightPanel.style.display = "none";
+        rightResizer.style.display = "none";
+    } else {
+        rightPanel.style.display = "flex";
+        rightResizer.style.display = "block"; // or 'flex' if you want
+    }
+}
+function renderHistoryPanel() {
+    const historyPanel = document.getElementById("historyPanel");
+    historyPanel.classList.toggle("hidden"); // just toggle visibility
+    console.log("in history function render")
+}
 function extractInitials(rootName) {
     let initials = rootName[0];  // Always take the first letter
     for (let i = 1; i < rootName.length; i++) {
@@ -1416,5 +1433,32 @@ function initSidebarResize() {
 
     toggleBtn.addEventListener("click", () => {
         sidebar.classList.toggle("hidden");
+    });
+}
+function initRightPanelResize() {
+    const rightPanel = document.getElementById("rightPanel");
+    const rightResizer = document.getElementById("rightResizer");
+
+    if (!rightPanel || !rightResizer) return;
+
+    let resizing = false;
+
+    rightResizer.addEventListener("mousedown", () => {
+        resizing = true;
+        document.body.style.cursor = "col-resize";
+    });
+
+    document.addEventListener("mousemove", (e) => {
+        if (!resizing) return;
+        // window.innerWidth - e.clientX gives distance from right edge
+        const newWidth = window.innerWidth - e.clientX - 150; // 150px is fixed panel
+        if (newWidth >= 150 && newWidth <= 1500) {
+            rightPanel.style.width = newWidth + "px";
+        }
+    });
+
+    document.addEventListener("mouseup", () => {
+        resizing = false;
+        document.body.style.cursor = "default";
     });
 }
