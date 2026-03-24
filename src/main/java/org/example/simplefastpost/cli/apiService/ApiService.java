@@ -46,23 +46,24 @@ public class ApiService {
 
 
     public void startApiDaemon() throws Exception {
-        Path program = getCurrentProgram();
+        Path jarPath = getCurrentProgram();
 
-        Process process = new ProcessBuilder(
-                program.toString(),
+        ProcessBuilder pb = new ProcessBuilder(
+                "java",
+                "-jar",
+                jarPath.toString(),
                 "--api"
         )
                 .redirectOutput(ProcessBuilder.Redirect.DISCARD)
-                .redirectError(ProcessBuilder.Redirect.DISCARD)
-                .start();
+                .redirectError(ProcessBuilder.Redirect.DISCARD);
+
+        Process process = pb.start();
 
         Long pid = process.pid();
         LocalDateTime startedAt = LocalDateTime.now();
 
-        // apiRepository.saveApiRun();
         APIEntity apiEntity = new APIEntity(pid, startedAt);
         apiRepository.createNewInstance(apiEntity);
-
     }
 
 

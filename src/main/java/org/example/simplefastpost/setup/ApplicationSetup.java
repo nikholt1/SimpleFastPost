@@ -1,5 +1,7 @@
 package org.example.simplefastpost.setup;
 
+import org.springframework.stereotype.Component;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -7,7 +9,7 @@ import java.sql.Statement;
 
 import java.io.File;
 
-
+@Component
 public class ApplicationSetup {
 
     public ApplicationSetup() {}
