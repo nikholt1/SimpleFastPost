@@ -20,6 +20,7 @@ html, body {
     min-width: 150px;
     background: #2b2d30;
     border-left: 1px solid #1e1f22;
+    border-right: 1px solid #1e1f22;
     height: 100vh;
     overflow: auto;
     display: flex;
@@ -43,7 +44,7 @@ html, body {
     position: fixed;
     top: 0;
     right: 0;
-    border-left: 1px solid #444;
+    border-left: 1px solid #1e1e1e;
     padding: 10px;
     box-sizing: border-box;
     overflow-y: auto;
@@ -558,6 +559,7 @@ table.table tbody tr:hover {
 .historyPanel {
     width: 350px;
     background-color: #2b2d30;
+    border-left: 1px solid #1e1f22;
 }
 .historyPanelContent {
 
@@ -567,6 +569,19 @@ table.table tbody tr:hover {
 
 .historyContent {
     background-color: #1e1e1e;
-    height: 100vh;
+    height: 95vh;           /* fill most of viewport height */
+    max-height: 95vh;       /* never exceed viewport */
     margin: 0;
+    padding: 10px;          /* optional inner padding */
+    overflow: auto;         /* scroll if content is taller */
+    box-sizing: border-box;
+}
+
+.historyItems {
+    font-size: 10px;
+}
+.historyBanner {
+    margin: 4px;
+    border-radius: 10px;
+    width: 83.5%;
 }
