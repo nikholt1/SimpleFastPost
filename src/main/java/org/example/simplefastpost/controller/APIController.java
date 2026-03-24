@@ -3,6 +3,7 @@ package org.example.simplefastpost.controller;
 import org.example.simplefastpost.dto.*;
 import org.example.simplefastpost.model.Folder;
 import org.example.simplefastpost.model.Headers;
+import org.example.simplefastpost.model.History;
 import org.example.simplefastpost.service.*;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
@@ -33,12 +34,14 @@ public class APIController {
     private final PushService pushService;
     private final HeaderService headerService;
     private final RestTemplate restTemplate = new RestTemplate();
-    public APIController(CommandService commandService, FolderService folderService, HttpSyncService httpSyncService, PushService pushService, HeaderService headerService) {
+    private final HistoryService historyService;
+    public APIController(CommandService commandService, FolderService folderService, HttpSyncService httpSyncService, PushService pushService, HeaderService headerService, HistoryService historyService) {
         this.commandService = commandService;
         this.folderService = folderService;
         this.httpSyncService = httpSyncService;
         this.pushService = pushService;
         this.headerService = headerService;
+        this.historyService = historyService;
     }
 
     @GetMapping("/folders")
@@ -256,4 +259,35 @@ public class APIController {
         return Collections.singletonMap("currentDirectory", currentDir);
     }
 
+
+    @PostMapping("/history")
+    public History createNewHistoryEntity(@RequestBody History history) {
+        return historyService.createNewHistoryEntity(history);
+    }
+
+    @GetMapping("/history/{id}")
+    public History getHistoryById(@PathVariable Long id) {
+        return historyService.getHistoryById(id);
+    }
+
+    @GetMapping("/history")
+    public List<History> getAllHistory() {
+        return historyService.getAllHistoryEntities();
+    }
+
+    @GetMapping("/history/comamnd/{commandId}")
+    public List<History> getHistoryByCommandId(@PathVariable Long commandId) {
+        return historyService.getHistoryByCommandId(commandId);
+    }
+
+    @DeleteMapping("/history/{id}")
+    public ResponseEntity<String> deleteHistoryById(@PathVariable Long id) {
+        historyService.deleteHistoryEntityById(id);
+        return ResponseEntity.noContent().build();
+    }
+    @DeleteMapping("/history")
+    public ResponseEntity<String> deleteHistoryById() {
+        historyService.deleteAllHistory();
+        return ResponseEntity.noContent().build();
+    }
 }

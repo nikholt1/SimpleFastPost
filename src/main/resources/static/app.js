@@ -58,10 +58,110 @@ function renderRightCrawlerPanel() {
         rightResizer.style.display = "block"; // or 'flex' if you want
     }
 }
-function renderHistoryPanel() {
+async function renderHistoryPanel() {
     const historyPanel = document.getElementById("historyPanel");
-    historyPanel.classList.toggle("hidden"); // just toggle visibility
-    console.log("in history function render")
+    const historyItems = document.getElementById("historyItems");
+
+    historyPanel.classList.toggle("hidden");
+    console.log("in history function render");
+
+    publicateHistoryPanel();
+}
+async function publicateHistoryPanel() {
+    const historyPanel = document.getElementById("historyPanel");
+    const historyItems = document.getElementById("historyItems");
+
+    const history = await getAllHistory();
+
+    // Clear previous content
+    historyItems.innerHTML = "";
+
+    history.forEach(item => {
+        const div = document.createElement("div");
+
+        const responseId = `response-${item.id}`;
+        const arrowId = `arrow-${item.id}`;
+        const circleColor = (item.status >= 200 && item.status < 300) ? "lightGreen" : "red";
+
+        // Decide what content to show
+        let contentHTML = "";
+
+        if (item.action && item.action.trim() !== "") {
+            // If action exists, show it instead
+            contentHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div style="overflow-x: auto; white-space: nowrap; flex: 1; min-width: 0;">
+                        ${item.action}
+                    </div>
+                    <div><strong>Date:</strong> ${item.created}</div>
+                    <!-- Delete button always visible -->
+                    <span id="delete-${item.id}" style="cursor: pointer; font-weight: bold; flex-shrink: 0;">×</span>
+                </div>
+                <hr>
+            `;
+        } else {
+            // Normal history item
+            contentHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
+                        <span id="${arrowId}" style="cursor: pointer; user-select: none;">▶</span>
+
+                        <div id="history-circle-${item.id}" 
+                             style="width: 10px; height: 10px; background-color: ${circleColor}; border-radius: 50%;">
+                        </div>
+
+                        <!-- URL container scrollable horizontally -->
+                        <div style="overflow-x: auto; white-space: nowrap; flex: 1; min-width: 0;">
+                            ${item.url}
+                        </div>
+                    </div>
+
+                    <!-- Delete button always visible -->
+                    <span id="delete-${item.id}" style="cursor: pointer; font-weight: bold; flex-shrink: 0;">×</span>
+                </div>
+
+                <!-- Foldable response -->
+                <div id="${responseId}" style="display: none; margin-left: 20px; margin-top: 5px;">
+                    <div><strong>Response:</strong></div>
+                    <div style="max-height: 200px; overflow: auto; padding: 5px; margin-bottom: 5px;">
+                        <pre style="white-space: pre; display: block; min-width: max-content; margin: 0;">${item.response}</pre>
+                    </div>
+                    <div><strong>Status: ${item.status}</strong></div>
+                    <div><strong>Date:</strong> ${item.created}</div>
+                </div>
+                <hr>
+            `;
+        }
+
+        div.innerHTML = contentHTML;
+        historyItems.appendChild(div);
+
+        // Attach event listeners AFTER element is in the DOM
+        if (!item.action || item.action.trim() === "") {
+            // Only attach toggle for normal history items
+            const arrowEl = document.getElementById(arrowId);
+            arrowEl.addEventListener("click", async () => {
+                await toggleResponse(responseId, arrowId);
+            });
+        }
+
+        // Delete button always exists
+        const deleteEl = document.getElementById(`delete-${item.id}`);
+        deleteEl.addEventListener("click", async () => {
+            await deleteHistoryItem(item.id, deleteEl);
+        });
+    });
+}
+function toggleResponse(responseId, arrowId) {
+    const el = document.getElementById(responseId);
+    const arrow = document.getElementById(arrowId);
+
+    if (!el || !arrow) return;
+
+    const isHidden = el.style.display === "none";
+
+    el.style.display = isHidden ? "block" : "none";
+    arrow.textContent = isHidden ? "▼" : "▶";
 }
 function extractInitials(rootName) {
     let initials = rootName[0];  // Always take the first letter
@@ -141,6 +241,14 @@ async function pushSync() {
     loadingBar2.style.display="none";
     // loadingBar.classList.add("hidden");
     // window.location.reload();
+    await createNewHistoryEntity({
+        commandId: null,
+        response: null,
+        url: null,
+        status: null,
+        action: "-> push",
+        created: new Date().toISOString()
+    });
 }
 
 
@@ -162,6 +270,14 @@ async function sync() {
 
     await new Promise(resolve => setTimeout(resolve, 500));
 
+    await createNewHistoryEntity({
+        commandId: null,
+        response: null,
+        url: null,
+        status: null,
+        action: "<- sync",
+        created: new Date().toISOString()
+    });
 
     window.location.reload();
 }
@@ -396,7 +512,7 @@ function renderItem(item, tbody, level) {
                 <i class="bi bi-folder" style="color:lightgrey;margin-right:4px;"></i>
                 ${item.name}
                 <img class="runAllInFolder" 
-                     style="margin-left:15px;width:17px;height:17px;cursor:pointer" 
+                     style="margin-left:15px;width:15px;height:15px;cursor:pointer" 
                      src="image/runAll.png">
             </div>
         `;
@@ -549,7 +665,7 @@ async function runAllCommandsInFolder(folder) {
 
     main.innerHTML = `
         <div style="padding: 10px;">
-        <h3>${folder.name}</h3>
+        <h5 style="color: white;">${folder.name}</h5>
         <div id="commandStatusList" style="margin-bottom:20px"></div>
     `;
 
@@ -767,7 +883,6 @@ async function executeCommand(command) {
             body: JSON.stringify({ method, url, headers, body })
         });
 
-        // 🔥 EXTRACT HEADERS HERE
         const responseHeaders = {};
         res.headers.forEach((value, key) => {
             responseHeaders[key] = value;
@@ -785,21 +900,46 @@ async function executeCommand(command) {
 
         loadingBar2.style.display = "none";
 
-        return {
+        const result = {
             status: res.status,
             ok: res.ok,
             body: responseBody,
-            headers: responseHeaders   // ✅ NOW INCLUDED
+            headers: responseHeaders
         };
+
+
+        await createNewHistoryEntity({
+            commandId: command.id,
+            response: responseBody,
+            url: url,
+            status: res.status,
+            action: null,
+            created: new Date().toISOString() // optional
+        });
+
+        return result;
 
     } catch (err) {
         loadingBar2.style.display = "none";
-        return {
+
+        const errorResult = {
             status: "ERR",
             ok: false,
             body: err.message,
             headers: {}
         };
+
+        // ✅ ALSO SAVE ERRORS (optional but recommended)
+        await createNewHistoryEntity({
+            commandId: command.id,
+            response: err.message,
+            url: url,
+            status: "ERR",
+            action: null,
+            created: new Date().toISOString()
+        });
+
+        return errorResult;
     }
 }
 async function deleteCommand(id) {
@@ -1461,4 +1601,59 @@ function initRightPanelResize() {
         resizing = false;
         document.body.style.cursor = "default";
     });
+}
+
+
+
+async function createNewHistoryEntity(data) {
+    try {
+        const response = await fetch('/api/history', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        await publicateHistoryPanel();
+        const result = await response.json(); // ✅ renamed
+        return result;
+
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+async function getAllHistory() {
+    const res = await fetch(`${BASE_URL}/history`);
+    const historyList = await res.json();
+    return historyList;
+}
+
+async function deleteHistoryItem(id, element) {
+    try {
+        const res = await fetch(`/api/history/${id}`, {
+            method: "DELETE"
+        });
+
+        if (!res.ok) throw new Error("Failed to delete history item");
+
+        // Remove the item from the DOM
+        const parentDiv = element.closest("div");
+        if (parentDiv) {
+            // Remove the response div and hr that follow the main div
+            const responseDiv = parentDiv.nextElementSibling;
+            const hrDiv = responseDiv?.nextElementSibling;
+
+            if (responseDiv) responseDiv.remove();
+            if (hrDiv) hrDiv.remove();
+            parentDiv.remove();
+        }
+
+    } catch (err) {
+        console.error(err);
+    }
 }
