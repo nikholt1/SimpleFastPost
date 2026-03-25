@@ -176,7 +176,12 @@ html, body {
     cursor: pointer;
     display: block;
 }
-
+textarea {
+    font-size: 15px;
+}
+p{
+    font-size: 15px;
+}
 /* Optional: hover effect for help icon */
 .sidebar-top .help-icon {
     margin-top: 2px;
@@ -399,7 +404,7 @@ table.table tbody tr:hover {
     min-height: 32px;
     height: 32px;
     background-color: #1e1f22;
-    color: #abd9f4;
+    color: #ffffff;
     border: 1px solid #3a3a3a;
     padding: 2px;
     border-radius: 4px;
@@ -426,7 +431,7 @@ table.table tbody tr:hover {
     padding: 2px;
     border-radius: 4px;
     min-height: 15px;
-    font-size: 15px;
+
 }
 .hidden {
     display: none;
@@ -568,6 +573,7 @@ table.table tbody tr:hover {
 
 
 .historyContent {
+    border-left: 1px solid #5a5a5a;
     background-color: #1e1e1e;
     height: 95vh;           /* fill most of viewport height */
     max-height: 95vh;       /* never exceed viewport */
@@ -579,6 +585,10 @@ table.table tbody tr:hover {
 
 .historyItems {
     font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+
 }
 .historyBanner {
     margin: 4px;

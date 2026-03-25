@@ -73,6 +73,8 @@ async function publicateHistoryPanel() {
 
     const history = await getAllHistory();
 
+// Sort: newest first
+    history.sort((a, b) => new Date(b.created) - new Date(a.created));
     // Clear previous content
     historyItems.innerHTML = "";
 
@@ -89,6 +91,7 @@ async function publicateHistoryPanel() {
         if (item.action && item.action.trim() !== "") {
             // If action exists, show it instead
             contentHTML = `
+                <hr>
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                     <div style="overflow-x: auto; white-space: nowrap; flex: 1; min-width: 0;">
                         ${item.action}
@@ -102,7 +105,7 @@ async function publicateHistoryPanel() {
         } else {
             // Normal history item
             contentHTML = `
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;margin-bottom: 5px;">
                     <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
                         <span id="${arrowId}" style="cursor: pointer; user-select: none;">▶</span>
 
@@ -129,7 +132,7 @@ async function publicateHistoryPanel() {
                     <div><strong>Status: ${item.status}</strong></div>
                     <div><strong>Date:</strong> ${item.created}</div>
                 </div>
-                <hr>
+                
             `;
         }
 
@@ -246,7 +249,7 @@ async function pushSync() {
         response: null,
         url: null,
         status: null,
-        action: "-> push",
+        action: "---> push",
         created: new Date().toISOString()
     });
 }
@@ -275,7 +278,7 @@ async function sync() {
         response: null,
         url: null,
         status: null,
-        action: "<- sync",
+        action: "<--- sync",
         created: new Date().toISOString()
     });
 
@@ -1652,6 +1655,7 @@ async function deleteHistoryItem(id, element) {
             if (hrDiv) hrDiv.remove();
             parentDiv.remove();
         }
+        await publicateHistoryPanel();
 
     } catch (err) {
         console.error(err);
