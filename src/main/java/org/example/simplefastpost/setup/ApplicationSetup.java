@@ -60,12 +60,15 @@ public class ApplicationSetup {
 
             stmt.execute("""
         CREATE TABLE IF NOT EXISTS history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            command_id INTEGER,
-            created TEXT DEFAULT (datetime('now','localtime')),
-            response TEXT,
-            url TEXT
-        )
+                id INTEGER,
+                action VARCHAR(255),
+                command_id BIGINT,
+                created TIMESTAMP,
+                response VARCHAR(255),
+                status VARCHAR(255),
+                url VARCHAR(255),
+                PRIMARY KEY (id)
+            );
         """);
 
 

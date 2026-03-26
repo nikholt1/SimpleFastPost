@@ -11,19 +11,20 @@ import org.example.simplefastpost.cli.commandService.HeaderService;
 import org.example.simplefastpost.cli.config.CLIconfig;
 import org.example.simplefastpost.cli.folderRepo.CLIFolderRepository;
 import org.example.simplefastpost.cli.folderService.CLIFolderService;
+import org.example.simplefastpost.cli.historyRepository.HistoryRepository;
+import org.example.simplefastpost.cli.historyService.HistoryService;
 import org.example.simplefastpost.cli.syncService.HttpSyncService;
 import org.example.simplefastpost.cli.syncService.PushService;
 import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
 import org.example.simplefastpost.model.Headers;
+import org.example.simplefastpost.model.History;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
+import java.time.LocalDateTime;
+import java.util.*;
 
 
 public class CLIExecutor {
@@ -39,10 +40,12 @@ public class CLIExecutor {
     private final HttpSyncService syncService;
     private final PushService pushService;
     private boolean replayMode = false;
-    private final RequestController requestController = new RequestController();
+    private final RequestController requestController;
     private final CLIconfig clIconfig = new CLIconfig();
     private final HeaderService headerService;
     private final HeaderRepository headerRepository;
+    private final HistoryService historyService;
+    private final HistoryRepository historyRepository;
 
     public CLIExecutor() throws Exception {
 
@@ -61,6 +64,10 @@ public class CLIExecutor {
         this.headerService = new HeaderService(headerRepository);
         this.pushService = new PushService(cliFolderService, cliCommandService, headerService);
         this.syncService = new HttpSyncService(cliCommandService, cliFolderService, headerService);
+        this.historyRepository = new HistoryRepository(DB_URL);
+        this.historyService = new HistoryService(historyRepository);
+        this.requestController = new RequestController(historyService);
+
     }
 
     public void execute(String[] rawArgs) throws Exception {
@@ -153,6 +160,8 @@ public class CLIExecutor {
                     System.out.println("No API subcommand provided. Use 'ls' or 'delete <pid>'.");
                 }
             }
+
+
         }
 
         if (helpMode) {
@@ -261,6 +270,42 @@ public class CLIExecutor {
                         System.out.println("Unknown api subcommand: " + subCommand);
                         return; // exit after unknown subcommand
                     }
+
+                case "history":
+                    List<History> historyList = historyService.getAllHistory();
+
+                    // Check if a sub-command was provided
+                    String subHistoryCommand = rawArgs.length > 1 ? rawArgs[1] : "";
+
+                    if ("purge".equalsIgnoreCase(subHistoryCommand)) {
+                        // Delete all history entries
+                        historyService.deleteAllHistory();
+                        System.out.println("All history purged.");
+                        return;
+                    }
+
+                    // Sort by created timestamp
+                    if ("reverse".equalsIgnoreCase(subHistoryCommand)) {
+                        // Oldest first (ascending)
+                        historyList.sort((h1, h2) -> h1.getCreated().compareTo(h2.getCreated()));
+                    } else {
+                        // Latest first (descending)
+                        historyList.sort((h1, h2) -> h2.getCreated().compareTo(h1.getCreated()));
+                    }
+
+                    // Print all history entries
+                    for (History historyItem : historyList) {
+                        if (historyItem.getUrl() == null) {
+                            System.out.println("___________________________________________");
+                            System.out.println(historyItem.getAction() + " " + historyItem.getCreated());
+                            System.out.println("___________________________________________");
+                        } else {
+                            System.out.println(historyItem.getUrl() + " " + historyItem.getCreated());
+                            System.out.println(historyItem.getResponse());
+                        }
+                        System.out.println();
+                    }
+                    return;
                 case "push":
                     String findRoot = System.getProperty("user.dir");
                     Path fileToFind = Path.of(findRoot, "sfp.http");
@@ -270,6 +315,11 @@ public class CLIExecutor {
                     }
                     int runner = pushService.pushFile(fileToFind);
                     System.out.println("Found " + runner + " commands to build in root .http file");
+                    History historyPush = new History();
+                    historyPush.setCreated(LocalDateTime.now());
+                    historyPush.setAction("---> push");
+
+                    historyService.createHistoryEntity(historyPush);
 
                     return;
                 case "sync":
@@ -282,6 +332,12 @@ public class CLIExecutor {
 
                     int run = syncService.syncFile(file);
                     System.out.println("Found " + run + " commands to build from .http file to root");
+                    History historySync = new History();
+                    historySync.setCreated(LocalDateTime.now());
+                    historySync.setAction("<--- sync");
+
+                    historyService.createHistoryEntity(historySync);
+
                     return;
                 case "mkdir":
                     if (folderName == null) {
@@ -584,6 +640,7 @@ public class CLIExecutor {
                     cliFolderService.deleteAllFolders();
                     cliCommandService.deleteAllCommands();
                     headerService.deleteAllHeadersInDB();
+                    historyService.deleteAllHistory();
                     return;
 
 
@@ -629,7 +686,7 @@ public class CLIExecutor {
                 headerService.createHeader(header);
             }
 
-            requestController.sendRequest(method, url, body, headersToAdd);
+            requestController.sendRequest(method, url, body, headersToAdd, savedCommand.getId());
             return;
         }
 
@@ -667,7 +724,7 @@ public class CLIExecutor {
             header.setCommandId(savedCommand.getId());
             headerService.createHeader(header);
         }
-        requestController.sendRequest(method, url, body, headersToAdd);
+        requestController.sendRequest(method, url, body, headersToAdd, 0L);
     }
 
     private Command resolveCommand(String name, String folder) throws SQLException {
@@ -738,8 +795,8 @@ START SFP BROWSER
   --api                                 start api
 
   -d                                    detached mode
-MANAGE SFP BROWSER
 
+MANAGE SFP BROWSER
   api ls                                List all current instances
   
   api stop <pid>                        Stop instance with <pid>
@@ -795,6 +852,13 @@ EXAMPLES:
   run -scmd createUser
 
   update command createUser --set command:-m POST -u https://api.com/users
+  
+HISTORY
+  history                               Prints the full history (latest at the top)
+  
+  history reverse                       Prints the full history (latest at the bottom)
+  
+  history purge                         Deletes the full history trace  
                 """);
     }
 

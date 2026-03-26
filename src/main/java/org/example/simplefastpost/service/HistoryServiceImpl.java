@@ -41,7 +41,7 @@ public class HistoryServiceImpl implements HistoryService {
     @Override
     public List<History> getAllHistoryEntities() {
         try {
-            return   historyRepository.findAll();
+            return historyRepository.findAll();
         }  catch (Exception e) {
             e.printStackTrace();
         }
