@@ -57,7 +57,32 @@ function renderRightCrawlerPanel() {
         rightPanel.style.display = "flex";
         rightResizer.style.display = "block"; // or 'flex' if you want
     }
+
+    const crawlerContent = document.getElementById("crawlerContent");
+    crawlerContent.innerHTML = `
+<svg width="50vw" height="90vh" style="display: block; margin: auto;">
+  <!-- Vertical line connecting the two main dots -->
+  <line x1="90" y1="40" x2="90" y2="120" stroke="white" stroke-width="4" />
+
+  <!-- Two big vertical dots -->
+  <circle cx="90" cy="40" r="12" fill="#ccff66" />
+  <circle cx="90" cy="120" r="12" fill="#ccff66" />
+
+  <!-- Branching dots -->
+  <circle cx="50" cy="200" r="10" fill="green" />
+  <circle cx="90" cy="200" r="10" fill="orange" />
+  <circle cx="130" cy="200" r="10" fill="red" />
+
+  <!-- Lines connecting bottom main dot to branch dots -->
+  <line x1="90" y1="120" x2="50" y2="200" stroke="white" stroke-width="2" />
+  <line x1="90" y1="120" x2="90" y2="200" stroke="white" stroke-width="2" />
+  <line x1="90" y1="120" x2="130" y2="200" stroke="white" stroke-width="2" />
+</svg>
+`;
 }
+
+
+
 async function renderHistoryPanel() {
     const historyPanel = document.getElementById("historyPanel");
     const historyItems = document.getElementById("historyItems");
