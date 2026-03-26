@@ -68,7 +68,6 @@ public class HttpSyncService {
                     target = "unknown";
                 }
 
-                System.out.println("Place detected: " + target);
 
                 // Command name
                 i++;

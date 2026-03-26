@@ -75,6 +75,8 @@ public class AppMain {
                 cli.execute(args);
             } catch (Exception e) {
                 System.err.println("CLI execution failed: " + e.getMessage());
+                System.out.println("No URL to connect to");
+
             }
         }
     }

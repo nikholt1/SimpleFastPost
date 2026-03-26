@@ -23,7 +23,7 @@ public class CLICommandService {
             return cliCommandRepository.createCommand(name, command, body, folderId);
 
         } catch (Exception e) {
-            System.err.println("✖ Failed to create command: " + e.getMessage());
+            System.err.println("Failed to create command: " + e.getMessage());
         }
         return null;
     }

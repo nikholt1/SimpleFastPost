@@ -59,17 +59,15 @@ public class ApplicationSetup {
         """);
 
             stmt.execute("""
-            CREATE TABLE IF NOT EXISTS history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                command_id INTEGER,
-                created TEXT DEFAULT (datetime('now','localtime'))
-                response TEXT,
-                url TEXT
-            )
-
+        CREATE TABLE IF NOT EXISTS history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            command_id INTEGER,
+            created TEXT DEFAULT (datetime('now','localtime')),
+            response TEXT,
+            url TEXT
+        )
         """);
 
-            System.out.println("Database initialized: " + dbFile.getAbsolutePath());
 
         } catch (SQLException e) {
             throw new RuntimeException("Failed to initialize database", e);

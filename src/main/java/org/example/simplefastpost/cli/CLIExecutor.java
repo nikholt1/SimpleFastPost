@@ -269,7 +269,7 @@ public class CLIExecutor {
                         System.out.println("File not found in root directory");
                     }
                     int runner = pushService.pushFile(fileToFind);
-                    System.out.println("Successfully found " + runner + " commands to build in root .http file");
+                    System.out.println("Found " + runner + " commands to build in root .http file");
 
                     return;
                 case "sync":
@@ -281,7 +281,7 @@ public class CLIExecutor {
                     }
 
                     int run = syncService.syncFile(file);
-                    System.out.println("Successfully found " + run + " commands to build in root .http file");
+                    System.out.println("Found " + run + " commands to build from .http file to root");
                     return;
                 case "mkdir":
                     if (folderName == null) {
