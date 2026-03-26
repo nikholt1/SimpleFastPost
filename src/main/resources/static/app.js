@@ -83,8 +83,16 @@ async function publicateHistoryPanel() {
 
         const responseId = `response-${item.id}`;
         const arrowId = `arrow-${item.id}`;
-        const circleColor = (item.status >= 200 && item.status < 300) ? "lightGreen" : "red";
 
+        const getStatusColor = (status) =>
+            status >= 200 && status < 300 ? "#238636" :
+                status >= 400 && status < 500 ? "#d29922" :
+                    status >= 500 ? "#da3633" :
+                        status === "ERR" ? "#da3633" :
+                            "#6e7681";
+
+// use it here
+        const circleColor = getStatusColor(item.status);
         // Decide what content to show
         let contentHTML = "";
 
@@ -282,7 +290,17 @@ async function sync() {
         created: new Date().toISOString()
     });
 
-    window.location.reload();
+    await Promise.all([
+        getFolders(),
+        getCommands()
+    ]);
+
+    // await renderProjectInfo();
+
+    sidebarTree = buildSidebarTree(listOfFolders, listOfCommands);
+    renderSidebar(sidebarTree);
+    // window.location.reload();
+    loadingBar2.style.display="none";
 }
 function renderHome() {
 
