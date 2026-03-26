@@ -13,7 +13,7 @@ public class HistoryRepository {
     private final String DB_URL;
 
     public HistoryRepository(String DB_URL) throws SQLException {
-
+        System.out.println(DB_URL);
         this.DB_URL = DB_URL;
     }
 
@@ -24,8 +24,20 @@ public class HistoryRepository {
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            stmt.setLong(1, history.getCommandId());
-            stmt.setObject(2, history.getCreated());  // LocalDateTime directly
+            // Handle nullable commandId
+            if (history.getCommandId() != null) {
+                stmt.setObject(1, history.getCommandId(), java.sql.Types.BIGINT);
+            } else {
+                stmt.setNull(1, java.sql.Types.BIGINT);
+            }
+
+            // Convert LocalDateTime to java.sql.Timestamp
+            if (history.getCreated() != null) {
+                stmt.setTimestamp(2, Timestamp.valueOf(history.getCreated()));
+            } else {
+                stmt.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+            }
+
             stmt.setString(3, history.getResponse());
             stmt.setString(4, history.getUrl());
             stmt.setString(5, history.getStatus());
@@ -42,7 +54,6 @@ public class HistoryRepository {
 
         return history;
     }
-
     /* READ ONE */
     public History getHistoryById(Long id) throws SQLException {
         String sql = "SELECT * FROM history WHERE id = ?";

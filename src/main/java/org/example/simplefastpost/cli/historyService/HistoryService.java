@@ -18,6 +18,7 @@ public class HistoryService {
         try {
             return historyRepository.createNewHistoryEntity(history);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("Error creating history", e);
         }
     }

@@ -59,15 +59,15 @@ public class ApplicationSetup {
         """);
 
             stmt.execute("""
-            CREATE TABLE IF NOT EXISTS history (
-                id integer,
-                action varchar(255),
-                command_id bigint,
-                created timestamp,
-                response varchar(255),
-                status varchar(255),
-                url varchar(255),
-                primary key (id)
+        CREATE TABLE IF NOT EXISTS history (
+                id INTEGER,
+                action VARCHAR(255),
+                command_id BIGINT,
+                created TIMESTAMP,
+                response VARCHAR(255),
+                status VARCHAR(255),
+                url VARCHAR(255),
+                PRIMARY KEY (id)
             );
         """);
 

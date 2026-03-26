@@ -40,7 +40,7 @@ public class CLIExecutor {
     private final HttpSyncService syncService;
     private final PushService pushService;
     private boolean replayMode = false;
-    private final RequestController requestController = new RequestController();
+    private final RequestController requestController;
     private final CLIconfig clIconfig = new CLIconfig();
     private final HeaderService headerService;
     private final HeaderRepository headerRepository;
@@ -66,6 +66,7 @@ public class CLIExecutor {
         this.syncService = new HttpSyncService(cliCommandService, cliFolderService, headerService);
         this.historyRepository = new HistoryRepository(DB_URL);
         this.historyService = new HistoryService(historyRepository);
+        this.requestController = new RequestController(historyService);
 
     }
 
@@ -160,10 +161,7 @@ public class CLIExecutor {
                 }
             }
 
-//            History historyCommand = new History();
-//            historyCommand.setCommandId(cliCommandService.getCommandByName(commandName).getId());
-//            historyCommand.setUrl(url);
-//            // currently not fetching the response
+
         }
 
         if (helpMode) {
@@ -275,8 +273,6 @@ public class CLIExecutor {
 
                 case "history":
                     List<History> historyList = historyService.getAllHistory();
-                    // Sort by created timestamp descending
-                    historyList.sort((h1, h2) -> h2.getCreated().compareTo(h1.getCreated()));
 
                     // Check if a sub-command was provided
                     String subHistoryCommand = rawArgs.length > 1 ? rawArgs[1] : "";
@@ -286,6 +282,15 @@ public class CLIExecutor {
                         historyService.deleteAllHistory();
                         System.out.println("All history purged.");
                         return;
+                    }
+
+                    // Sort by created timestamp
+                    if ("reverse".equalsIgnoreCase(subHistoryCommand)) {
+                        // Oldest first (ascending)
+                        historyList.sort((h1, h2) -> h1.getCreated().compareTo(h2.getCreated()));
+                    } else {
+                        // Latest first (descending)
+                        historyList.sort((h1, h2) -> h2.getCreated().compareTo(h1.getCreated()));
                     }
 
                     // Print all history entries
@@ -681,7 +686,7 @@ public class CLIExecutor {
                 headerService.createHeader(header);
             }
 
-            requestController.sendRequest(method, url, body, headersToAdd);
+            requestController.sendRequest(method, url, body, headersToAdd, savedCommand.getId());
             return;
         }
 
@@ -719,7 +724,7 @@ public class CLIExecutor {
             header.setCommandId(savedCommand.getId());
             headerService.createHeader(header);
         }
-        requestController.sendRequest(method, url, body, headersToAdd);
+        requestController.sendRequest(method, url, body, headersToAdd, 0L);
     }
 
     private Command resolveCommand(String name, String folder) throws SQLException {
@@ -790,8 +795,8 @@ START SFP BROWSER
   --api                                 start api
 
   -d                                    detached mode
-MANAGE SFP BROWSER
 
+MANAGE SFP BROWSER
   api ls                                List all current instances
   
   api stop <pid>                        Stop instance with <pid>
@@ -847,6 +852,13 @@ EXAMPLES:
   run -scmd createUser
 
   update command createUser --set command:-m POST -u https://api.com/users
+  
+HISTORY
+  history                               Prints the full history (latest at the top)
+  
+  history reverse                       Prints the full history (latest at the bottom)
+  
+  history purge                         Deletes the full history trace  
                 """);
     }
 
