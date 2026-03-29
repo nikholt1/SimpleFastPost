@@ -49,36 +49,94 @@ function renderRightCrawlerPanel() {
     const rightPanel = document.getElementById("rightPanel");
     const rightResizer = document.getElementById("rightResizer");
 
-    // toggle display between 'flex' and 'none'
     if (rightPanel.style.display === "flex") {
         rightPanel.style.display = "none";
         rightResizer.style.display = "none";
     } else {
         rightPanel.style.display = "flex";
-        rightResizer.style.display = "block"; // or 'flex' if you want
+        rightResizer.style.display = "block";
     }
 
     const crawlerContent = document.getElementById("crawlerContent");
+
     crawlerContent.innerHTML = `
-<svg width="50vw" height="90vh" style="display: block; margin: auto;">
-  <!-- Vertical line connecting the two main dots -->
-  <line x1="90" y1="40" x2="90" y2="120" stroke="white" stroke-width="4" />
+<div id="svgWrapper" style="
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    cursor: grab;
+    position: relative;
+">
+  <div id="svgInner" style="transform-origin: 0 0;">
+    <svg width="50vw" height="90vh" style="display: block; margin: auto;">
+      
+      <!-- ALL LINES FIRST -->
+      <line x1="90" y1="40" x2="90" y2="120" stroke="white" stroke-width="1" />
+      <line x1="90" y1="120" x2="50" y2="200" stroke="white" stroke-width="1" />
+      <line x1="90" y1="120" x2="90" y2="200" stroke="white" stroke-width="1" />
+      <line x1="90" y1="120" x2="130" y2="200" stroke="white" stroke-width="1" />
 
-  <!-- Two big vertical dots -->
-  <circle cx="90" cy="40" r="12" fill="#ccff66" />
-  <circle cx="90" cy="120" r="12" fill="#ccff66" />
+      <!-- THEN ALL CIRCLES -->
+      <circle cx="90" cy="40" r="25" fill="#8db038" />
+      <circle cx="90" cy="120" r="25" fill="#8db038" />
 
-  <!-- Branching dots -->
-  <circle cx="50" cy="200" r="10" fill="green" />
-  <circle cx="90" cy="200" r="10" fill="orange" />
-  <circle cx="130" cy="200" r="10" fill="red" />
+      <circle cx="50" cy="200" r="10" fill="#6eb050" />
+      <circle cx="90" cy="200" r="10" fill="#e2b76d" />
+      <circle cx="130" cy="200" r="10" fill="#c75656" />
 
-  <!-- Lines connecting bottom main dot to branch dots -->
-  <line x1="90" y1="120" x2="50" y2="200" stroke="white" stroke-width="2" />
-  <line x1="90" y1="120" x2="90" y2="200" stroke="white" stroke-width="2" />
-  <line x1="90" y1="120" x2="130" y2="200" stroke="white" stroke-width="2" />
-</svg>
+    </svg>
+  </div>
+</div>
 `;
+    const wrapper = document.getElementById("svgWrapper");
+    const inner = document.getElementById("svgInner");
+
+    let scale = 1;
+    let originX = 0;
+    let originY = 0;
+
+    let isDragging = false;
+    let startX, startY;
+
+    function updateTransform() {
+        inner.style.transform = `translate(${originX}px, ${originY}px) scale(${scale})`;
+    }
+
+    // 🖱 Dragging
+    wrapper.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        startX = e.clientX - originX;
+        startY = e.clientY - originY;
+        wrapper.style.cursor = "grabbing";
+    });
+
+    window.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        originX = e.clientX - startX;
+        originY = e.clientY - startY;
+        updateTransform();
+    });
+
+    window.addEventListener("mouseup", () => {
+        isDragging = false;
+        wrapper.style.cursor = "grab";
+    });
+
+    // 🔍 Zooming
+    wrapper.addEventListener("wheel", (e) => {
+        e.preventDefault();
+
+        const zoomIntensity = 0.1;
+        const delta = e.deltaY > 0 ? -1 : 1;
+
+        const newScale = scale + delta * zoomIntensity;
+
+        // limit zoom
+        if (newScale < 0.2 || newScale > 5) return;
+
+        scale = newScale;
+        updateTransform();
+    });
 }
 
 
