@@ -15,6 +15,7 @@ import org.example.simplefastpost.cli.historyRepository.HistoryRepository;
 import org.example.simplefastpost.cli.historyService.HistoryService;
 import org.example.simplefastpost.cli.syncService.HttpSyncService;
 import org.example.simplefastpost.cli.syncService.PushService;
+import org.example.simplefastpost.crawler.CLICrawler;
 import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
 import org.example.simplefastpost.model.Headers;
@@ -46,6 +47,7 @@ public class CLIExecutor {
     private final HeaderRepository headerRepository;
     private final HistoryService historyService;
     private final HistoryRepository historyRepository;
+    private final CLICrawler crawler;
 
     public CLIExecutor() throws Exception {
 
@@ -67,7 +69,7 @@ public class CLIExecutor {
         this.historyRepository = new HistoryRepository(DB_URL);
         this.historyService = new HistoryService(historyRepository);
         this.requestController = new RequestController(historyService);
-
+        this.crawler = new CLICrawler();
     }
 
     public void execute(String[] rawArgs) throws Exception {
@@ -238,6 +240,18 @@ public class CLIExecutor {
 
                     }
                     return;
+                case "crawl":
+                    String baseUrl = rawArgs[1];
+
+                    if (rawArgs[1] == null) {
+                        System.out.println("Usage: crawl <url>");
+                    }
+                    crawler.run(baseUrl);
+                    History crawlHistoryEntry = new History();
+                    crawlHistoryEntry.setUrl(baseUrl);
+                    crawlHistoryEntry.setAction("crawl -> " + baseUrl);
+                    historyService.createHistoryEntity(crawlHistoryEntry);
+
                 case "api":
                     if (rawArgs.length < 2) {
                         System.out.println("Usage: api [ls|kill <pid>]");
@@ -295,7 +309,7 @@ public class CLIExecutor {
 
                     // Print all history entries
                     for (History historyItem : historyList) {
-                        if (historyItem.getUrl() == null) {
+                        if (historyItem.getResponse() == null) {
                             System.out.println("___________________________________________");
                             System.out.println(historyItem.getAction() + " " + historyItem.getCreated());
                             System.out.println("___________________________________________");

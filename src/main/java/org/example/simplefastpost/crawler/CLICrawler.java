@@ -42,13 +42,14 @@ public class CLICrawler {
     private static final Map<String, Set<String>> pageToEndpoints = new LinkedHashMap<>();
     private static final Pattern fetchPattern = Pattern.compile("fetch\\((\"|')([^\"']+)(\"|')");
 
-    public static void main(String[] args) {
-        String baseUrl = "http://localhost:8080/"; // change to your site
-        crawl(baseUrl, 0);
 
-        // After crawling, print the hierarchical web graph
+
+    public void run(String baseUrl) {
+        crawl(baseUrl, 1);
+
         printAsciiWebGraph();
     }
+
 
     public static void crawl(String url, int depth) {
         if (visited.contains(url) || depth > 3) return; // depth limit

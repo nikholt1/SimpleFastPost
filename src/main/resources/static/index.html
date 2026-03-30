@@ -100,13 +100,19 @@
     </div>
     <div class="hidden" id="rightResizer"></div>
     <div style="display: none;" class="hidden" id="rightPanel">
-        <div style="padding: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; border-radius: 8px; width: 200px;">
-            <div style="display: flex; align-items: center; gap: 5px;">
+        <div style="display: flex; flex-direction: column; align-items: flex-start; border-radius: 8px; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 5px; padding: 10px;">
                 <img style="cursor: pointer; width: 24px; height: 24px;" src="image/crawlerIcon.png">
                 <strong style="color: white;">Crawler</strong>
             </div>
-            <div id="crawlerContent" style="padding: 10px; border-radius: 6px;">
+            <div id="crawlerContent" style="border-radius: 6px;">
                 <!-- Diagram will be injected here -->
+            </div>
+            <div id="crawlerStackTracePanel" class="crawlerStackTracePane">
+                <p >Run</p>
+            </div>
+            <div id="crawlerStackTrace" class="crawlerStackTrace">
+                here goes the stacktrace
             </div>
         </div>
     </div>

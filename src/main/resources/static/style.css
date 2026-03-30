@@ -5,6 +5,7 @@ html, body {
     background: #2b2d30;
     color: lightgrey;
     font-family: sans-serif;
+    font-size: 15px;
 }
 
 
@@ -26,7 +27,26 @@ html, body {
     display: flex;
     flex-direction: column;
 }
+/* your inner container */
+#rightPanel > div {
 
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;      /* important so children can expand */
+}
+.crawlerStackTracePane {
+
+}
+.crawlerStackTrace {
+    width: 100%;        /* fill parent width */
+    flex: 1;            /* fill remaining vertical space in flex column */
+    background-color: #1e1f22;
+    overflow: auto;
+    padding: 10px;/* scroll if content overflows */
+    color: #b9bcc1;
+    font-size: 15px/* text color */
+}
 /* Right resizer */
 #rightResizer {
     width: 2px;
@@ -590,6 +610,8 @@ table.table tbody tr:hover {
     justify-content: flex-start;
 
 }
+
+
 .historyBanner {
     margin: 4px;
     border-radius: 10px;

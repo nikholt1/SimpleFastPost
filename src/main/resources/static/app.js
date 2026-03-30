@@ -66,9 +66,10 @@ function renderRightCrawlerPanel() {
     overflow: hidden;
     cursor: grab;
     position: relative;
+    box-sizing: border-box;  /* include padding in width calculation */
 ">
   <div id="svgInner" style="transform-origin: 0 0;">
-    <svg width="50vw" height="90vh" style="display: block; margin: auto;">
+    <svg width="50vw" height="70vh" style="display: block; margin: auto;">
       
       <!-- ALL LINES FIRST -->
       <line x1="90" y1="40" x2="90" y2="120" stroke="white" stroke-width="1" />
@@ -168,7 +169,7 @@ async function publicateHistoryPanel() {
         const arrowId = `arrow-${item.id}`;
 
         const getStatusColor = (status) =>
-            status >= 200 && status < 300 ? "#238636" :
+            status >= 200 && status < 300 ? "#44bc4e" :
                 status >= 400 && status < 500 ? "#d29922" :
                     status >= 500 ? "#da3633" :
                         status === "ERR" ? "#da3633" :
@@ -341,7 +342,6 @@ async function pushSync() {
         url: null,
         status: null,
         action: "---> push",
-        created: new Date().toISOString()
     });
 }
 
@@ -370,7 +370,6 @@ async function sync() {
         url: null,
         status: null,
         action: "<--- sync",
-        created: new Date().toISOString()
     });
 
     await Promise.all([
@@ -607,7 +606,7 @@ function renderItem(item, tbody, level) {
         const isExpanded = expandedFolders.has(item.id);
         const hasChildren = item.children.length > 0;
         const arrowIcon = hasChildren
-            ? `<i class="bi ${isExpanded ? "bi-chevron-down" : "bi-chevron-right"}" style="font-size:0.7rem;margin-right:2px;"></i>`
+            ? `<i class="bi ${isExpanded ? "bi-chevron-down" : "bi-chevron-right"}" style="font-size:15px;margin-right:2px;"></i>`
             : "";
 
         label.innerHTML = `
@@ -945,7 +944,7 @@ async function runAllCommandsInFolder(folder) {
             const numberColor = headerCount > 0 ? "#36ca53" : "white";
 
 
-            toggle.innerHTML = `<i style="font-size:0.7rem;margin-right:2px;" class="bi bi-chevron-right"></i> Headers <span style="color:${numberColor};">(${headerCount})</span>`;
+            toggle.innerHTML = `<i style="font-size:15px;margin-right:2px;" class="bi bi-chevron-right"></i> Headers <span style="color:${numberColor};">(${headerCount})</span>`;
 
 
             toggle.addEventListener("click", () => {
@@ -953,7 +952,7 @@ async function runAllCommandsInFolder(folder) {
                 headersContainer.style.display = open ? "block" : "none";
 
 
-                toggle.innerHTML = `<i style="font-size:0.7rem;margin-right:2px;" class="bi ${open ? "bi-chevron-down" : "bi-chevron-right"}"></i> Headers <span style="color:${numberColor};">(${headerCount})</span>`;
+                toggle.innerHTML = `<i style="font-size:15px;margin-right:2px;" class="bi ${open ? "bi-chevron-down" : "bi-chevron-right"}"></i> Headers <span style="color:${numberColor};">(${headerCount})</span>`;
             });
 
             main.appendChild(commandBlock);
@@ -1018,7 +1017,6 @@ async function executeCommand(command) {
             url: url,
             status: res.status,
             action: null,
-            created: new Date().toISOString() // optional
         });
 
         return result;
@@ -1040,7 +1038,6 @@ async function executeCommand(command) {
             url: url,
             status: "ERR",
             action: null,
-            created: new Date().toISOString()
         });
 
         return errorResult;
@@ -1129,7 +1126,7 @@ function renderNewCommand(folderId = null) {
 
             <textarea id="commandBody"
                 placeholder="Command Body (optional)"
-                style="border-radius:4px;background-color:rgb(30,31,34);color: #8ab23d;width:100%;height:200px;padding:6px;font-size:14px;box-sizing:border-box;">
+                style="border-radius:4px;background-color:rgb(30,31,34);color: #8ab23d;width:100%;height:200px;padding:6px;font-size:15px;box-sizing:border-box;">
             </textarea>
 
             <button type="submit" class="btn btn-primary"
