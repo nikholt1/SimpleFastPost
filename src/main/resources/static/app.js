@@ -37,7 +37,8 @@ async function initApp() {
     syncBtn.addEventListener("click", () => sync());
     pushBtn.addEventListener("click", () => pushSync());
     document.getElementById("historyPanelActivate").addEventListener("click", renderHistoryPanel);
-    document.getElementById("rightPanelActivate").addEventListener("click", () => renderRightCrawlerPanel());}
+    document.getElementById("rightPanelActivate").addEventListener("click", () => renderRightCrawlerPanel());
+}
 
 
 async function getDirectoryPath() {
@@ -61,12 +62,10 @@ function renderRightCrawlerPanel() {
 
     crawlerContent.innerHTML = `
 <div id="svgWrapper" style="
+    flex: 1;
     width: 100%;
-    height: 100%;
     overflow: hidden;
-    cursor: grab;
-    position: relative;
-    box-sizing: border-box;  /* include padding in width calculation */
+    height: 100%; 
 ">
   <div id="svgInner" style="transform-origin: 0 0;">
     <svg width="50vw" height="70vh" style="display: block; margin: auto;">
@@ -98,6 +97,7 @@ function renderRightCrawlerPanel() {
 
     let isDragging = false;
     let startX, startY;
+    enableCrawlerResize();
 
     function updateTransform() {
         inner.style.transform = `translate(${originX}px, ${originY}px) scale(${scale})`;
@@ -106,6 +106,7 @@ function renderRightCrawlerPanel() {
     // 🖱 Dragging
     wrapper.addEventListener("mousedown", (e) => {
         isDragging = true;
+        document.body.classList.add("resizing");
         startX = e.clientX - originX;
         startY = e.clientY - originY;
         wrapper.style.cursor = "grabbing";
@@ -121,6 +122,7 @@ function renderRightCrawlerPanel() {
     window.addEventListener("mouseup", () => {
         isDragging = false;
         wrapper.style.cursor = "grab";
+        document.body.classList.remove("resizing");
     });
 
     // 🔍 Zooming
@@ -1659,7 +1661,9 @@ function initSidebarResize() {
 
     resizer.addEventListener("mousedown", () => {
         resizing = true;
-        document.body.style.cursor = "col-resize";
+        document.body.style.cursor = "ns-resize";
+        document.body.classList.add("resizing");
+
     });
 
     document.addEventListener("mousemove", e => {
@@ -1670,6 +1674,8 @@ function initSidebarResize() {
     document.addEventListener("mouseup", () => {
         resizing = false;
         document.body.style.cursor = "default";
+        document.body.classList.remove("resizing");
+
     });
 
     toggleBtn.addEventListener("click", () => {
@@ -1686,7 +1692,9 @@ function initRightPanelResize() {
 
     rightResizer.addEventListener("mousedown", () => {
         resizing = true;
-        document.body.style.cursor = "col-resize";
+        document.body.style.cursor = "ns-resize";
+        document.body.classList.add("resizing");
+
     });
 
     document.addEventListener("mousemove", (e) => {
@@ -1701,6 +1709,8 @@ function initRightPanelResize() {
     document.addEventListener("mouseup", () => {
         resizing = false;
         document.body.style.cursor = "default";
+        document.body.classList.remove("resizing");
+
     });
 }
 
@@ -1758,4 +1768,38 @@ async function deleteHistoryItem(id, element) {
     } catch (err) {
         console.error(err);
     }
+}
+
+
+function enableCrawlerResize() {
+    const pane = document.getElementById("crawlerStackTracePanel");
+    const handle = pane.querySelector(".crawlerHeaders");
+
+    if (!pane || !handle) return;
+
+    let isResizing = false;
+    let startY = 0;
+    let startHeight = 0;
+
+    handle.addEventListener("mousedown", (e) => {
+        isResizing = true;
+        startY = e.clientY;
+        startHeight = pane.offsetHeight;
+        document.body.style.cursor = "ns-resize";
+        e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", (e) => {
+        if (!isResizing) return;
+
+        const delta = startY - e.clientY; // invert so dragging up increases height
+        const newHeight = Math.max(40, startHeight + delta);
+        pane.style.height = newHeight + "px";
+    });
+
+    document.addEventListener("mouseup", () => {
+        if (!isResizing) return;
+        isResizing = false;
+        document.body.style.cursor = "default";
+    });
 }
