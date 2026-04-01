@@ -69,41 +69,76 @@ function renderRightCrawlerPanel() {
 ">
   <div id="svgInner" style="transform-origin: 0 0;">
     <svg width="50vw" height="70vh" style="display: block; margin: auto;">
-      
-      <!-- ALL LINES FIRST -->
-      <line x1="90" y1="40" x2="90" y2="120" stroke="white" stroke-width="1" />
-      <line x1="90" y1="120" x2="50" y2="200" stroke="white" stroke-width="1" />
-      <line x1="90" y1="120" x2="90" y2="200" stroke="white" stroke-width="1" />
-      <line x1="90" y1="120" x2="130" y2="200" stroke="white" stroke-width="1" />
 
-      <!-- THEN ALL CIRCLES -->
-      <circle cx="90" cy="40" r="25" fill="#8db038" />
-      <circle cx="90" cy="120" r="25" fill="#8db038" />
+<div class="crawlEntity" id="entity1" style="top:50px; left:50px;">
+    <div class="connection-point connection-right"></div>
+    <div class="crawlEntityBanner" style="background-color: #8c52ff">http://localhost:8080/index.html</div>
+    <div class="crawlEntityContent">
+        <p>http://localhost:8080/admin.html</p>
+        <p>http://localhost:8080/api/Folders</p>
+        <p>Date: 2026-31-03 13:16:2301</p>
+        <p>Process time: 230ms</p>
+    </div>
+</div>
 
-      <circle cx="50" cy="200" r="10" fill="#6eb050" />
-      <circle cx="90" cy="200" r="10" fill="#e2b76d" />
-      <circle cx="130" cy="200" r="10" fill="#c75656" />
+<div class="crawlEntity" id="entity2" style="top:50px; left:400px;">
+    <div class="connection-point connection-left"></div>
+    <div class="connection-point connection-right"></div>
+    <div class="crawlEntityBanner" style="background-color: #8ab23d">http://localhost:8080/admin.html</div>
+    <div class="crawlEntityContent">
+        <p>http://localhost:8080/admin.html</p>
+        <p>http://localhost:8080/api/Folders</p>
+        <p>Date: 2026-31-03 13:16:2301</p>
+        <p>Process time: 230ms</p>
+    </div>
+</div>
+
+<div class="crawlEntity" id="entity3" style="top:250px; left:400px;">
+    <div class="connection-point connection-left"></div>
+    <div class="crawlEntityBanner" style="background-color: #8ab23d">http://localhost:8080/api/Folders</div>
+    <div class="crawlEntityContent">
+        <p>http://localhost:8080/admin.html</p>
+        <p>http://localhost:8080/api/Folders</p>
+        <p>Date: 2026-31-03 13:16:2301</p>
+        <p>Process time: 230ms</p>
+    </div>
+</div>
+
+<div class="crawlEntity" id="entity4" style="top:250px; left:50px;">
+    <div class="connection-point connection-right"></div>
+    <div class="crawlEntityBanner" style="background-color: #2da589">http://localhost:8080/api/Folders</div>
+    <div class="crawlEntityContent">
+        <p>GET: 200</p>
+        <pre>{
+  "id": 4,
+  "name": "commandName"
+}</pre>
+    </div>
+</div>
 
     </svg>
   </div>
 </div>
 `;
+
     const wrapper = document.getElementById("svgWrapper");
     const inner = document.getElementById("svgInner");
+    const svg = inner.querySelector("svg");
+    const entities = document.querySelectorAll(".crawlEntity");
 
     let scale = 1;
     let originX = 0;
     let originY = 0;
-
     let isDragging = false;
     let startX, startY;
+
     enableCrawlerResize();
 
     function updateTransform() {
         inner.style.transform = `translate(${originX}px, ${originY}px) scale(${scale})`;
     }
 
-    // 🖱 Dragging
+    // Wrapper pan
     wrapper.addEventListener("mousedown", (e) => {
         isDragging = true;
         document.body.classList.add("resizing");
@@ -117,6 +152,7 @@ function renderRightCrawlerPanel() {
         originX = e.clientX - startX;
         originY = e.clientY - startY;
         updateTransform();
+        drawConnections();
     });
 
     window.addEventListener("mouseup", () => {
@@ -125,25 +161,114 @@ function renderRightCrawlerPanel() {
         document.body.classList.remove("resizing");
     });
 
-    // 🔍 Zooming
+    // Zoom
     wrapper.addEventListener("wheel", (e) => {
         e.preventDefault();
-
         const zoomIntensity = 0.1;
         const delta = e.deltaY > 0 ? -1 : 1;
-
         const newScale = scale + delta * zoomIntensity;
-
-        // limit zoom
         if (newScale < 0.2 || newScale > 5) return;
-
         scale = newScale;
         updateTransform();
+        drawConnections();
     });
+
+    // Parent → child connections map
+    const connections = {
+        entity1: ["entity2", "entity4"],
+        entity2: ["entity3"],
+        entity3: [],
+        entity4: []
+    };
+
+    // Get connection point position relative to SVG
+    function getConnectionPointPos(entity, pointClass) {
+        const point = entity.querySelector(`.${pointClass}`);
+        const rect = point.getBoundingClientRect();
+        const wrapperRect = wrapper.getBoundingClientRect();
+
+        // Position relative to wrapper, accounting for current pan & zoom
+        const x = (rect.left + rect.width / 2 - wrapperRect.left - originX) / scale;
+        const y = (rect.top + rect.height / 2 - wrapperRect.top - originY) / scale;
+
+        return { x, y };
+    }
+
+    // Draw Beziers
+    function drawConnections() {
+        svg.querySelectorAll(".connection-path").forEach(p => p.remove());
+
+        entities.forEach(source => {
+            const sourceId = source.id;
+            const children = connections[sourceId] || [];
+
+            children.forEach(childId => {
+                const target = document.getElementById(childId);
+                if (!target) return;
+
+                // Draw one connection for right → left or left → right
+                const sourcePoint = source.querySelector(".connection-right") || source.querySelector(".connection-left");
+                const targetPoint = target.querySelector(".connection-left") || target.querySelector(".connection-right");
+
+                if (!sourcePoint || !targetPoint) return;
+
+                const start = getConnectionPointPos(source, sourcePoint.classList[1]);
+                const end = getConnectionPointPos(target, targetPoint.classList[1]);
+
+                const dx = Math.abs(end.x - start.x) * 0.5;
+                const c1 = { x: start.x + dx, y: start.y };
+                const c2 = { x: end.x - dx, y: end.y };
+
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", `M${start.x},${start.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${end.x},${end.y}`);
+                path.setAttribute("stroke", "#888");
+                path.setAttribute("stroke-width", "2");
+                path.setAttribute("fill", "none");
+                path.classList.add("connection-path");
+                svg.appendChild(path);
+            });
+        });
+    }
+
+    // Entity drag
+    entities.forEach(entity => {
+        let isEntityDragging = false;
+        let offsetX, offsetY;
+
+        entity.addEventListener("mousedown", e => {
+            e.stopPropagation();
+            isEntityDragging = true;
+
+            const rect = entity.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+            offsetX = e.clientX - wrapperRect.left - parseFloat(entity.style.left) * scale - originX;
+            offsetY = e.clientY - wrapperRect.top - parseFloat(entity.style.top) * scale - originY;
+
+            entity.style.cursor = "grabbing";
+        });
+
+        window.addEventListener("mousemove", e => {
+            if (!isEntityDragging) return;
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const left = (e.clientX - wrapperRect.left - offsetX - originX) / scale;
+            const top = (e.clientY - wrapperRect.top - offsetY - originY) / scale;
+            entity.style.left = left + "px";
+            entity.style.top = top + "px";
+            drawConnections();
+        });
+
+        window.addEventListener("mouseup", () => {
+            if (isEntityDragging) {
+                isEntityDragging = false;
+                entity.style.cursor = "grab";
+                drawConnections();
+            }
+        });
+    });
+
+    // Initial draw
+    drawConnections();
 }
-
-
-
 async function renderHistoryPanel() {
     const historyPanel = document.getElementById("historyPanel");
     const historyItems = document.getElementById("historyItems");

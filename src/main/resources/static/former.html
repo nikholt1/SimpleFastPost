@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Connected Entities with Bezier Curves</title>
+    <style>
+        body {
+            background: #2b2b2b;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            user-select: none;
+        }
+
+        canvas#wiresCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .crawlEntity {
+            color: #ddd;
+            background-color: #3a3a3a;
+            width: 260px;
+            border-radius: 2px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            position: absolute;
+            cursor: grab;
+            z-index: 1;
+            padding-bottom: 10px;
+        }
+
+        .crawlEntity.selected {
+            box-shadow: 0 4px 12px #2b2b2b;
+        }
+
+        .crawlEntityBanner {
+            padding: 6px 10px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .crawlEntityContent {
+            padding: 10px;
+            font-size: 12px;
+            color: #ddd;
+        }
+
+        pre {
+            background: #2b2b2b;
+            padding: 8px;
+            border-radius: 4px;
+            overflow-x: auto;
+            color: #9cdcfe;
+            user-select: text;
+        }
+
+        /* Connection points */
+        .connection-point {
+            width: 10px;
+            height: 10px;
+            background: #8ab23d;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 2;
+        }
+        .connection-left {
+            left: -5px;
+        }
+        .connection-right {
+            right: -5px;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="wiresCanvas"></canvas>
+
+<div class="crawlEntity" id="entity1" style="top:50px; left:50px;">
+    <div class="connection-point connection-right"></div>
+    <div class="crawlEntityBanner" style="background-color: #8c52ff">http://localhost:8080/index.html</div>
+    <div class="crawlEntityContent">
+        <p>http://localhost:8080/admin.html</p>
+        <p>http://localhost:8080/api/Folders</p>
+        <p>Date: 2026-31-03 13:16:2301</p>
+        <p>Process time: 230ms</p>
+    </div>
+</div>
+
+<div class="crawlEntity" id="entity2" style="top:50px; left:400px;">
+    <div class="connection-point connection-left"></div>
+    <div class="connection-point connection-right"></div>
+    <div class="crawlEntityBanner" style="background-color: #8ab23d">http://localhost:8080/admin.html</div>
+    <div class="crawlEntityContent">
+        <p>http://localhost:8080/admin.html</p>
+        <p>http://localhost:8080/api/Folders</p>
+        <p>Date: 2026-31-03 13:16:2301</p>
+        <p>Process time: 230ms</p>
+    </div>
+</div>
+
+<div class="crawlEntity" id="entity3" style="top:250px; left:400px;">
+    <div class="connection-point connection-left"></div>
+    <div class="crawlEntityBanner" style="background-color: #8ab23d" id="entityId=1">http://localhost:8080/api/Folders</div>
+    <div class="crawlEntityContent">
+        <p>http://localhost:8080/admin.html</p>
+        <p>http://localhost:8080/api/Folders</p>
+        <p>Date: 2026-31-03 13:16:2301</p>
+        <p>Process time: 230ms</p>
+    </div>
+</div>
+
+<div class="crawlEntity" id="entity4" style="top:250px; left:50px;">
+    <div class="connection-point connection-right"></div>
+    <div class="crawlEntityBanner" style="background-color: #2da589">http://localhost:8080/api/Folders</div>
+    <div class="crawlEntityContent">
+        <p>GET: 200</p>
+        <pre>{
+  "id": 4,
+  "name": "commandName"
+}</pre>
+    </div>
+</div>
+
+<script>
+    /** ---------- Canvas & Entities Setup ---------- **/
+    const canvas = document.getElementById('wiresCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const entities = [
+        document.getElementById('entity1'),
+        document.getElementById('entity2'),
+        document.getElementById('entity3'),
+        document.getElementById('entity4')
+    ];
+
+    // Define connections: [from entity, from point class, to entity, to point class]
+    const wires = [
+        [entities[0], 'connection-right', entities[1], 'connection-left'],
+        [entities[1], 'connection-right', entities[2], 'connection-left'],
+        [entities[0], 'connection-right', entities[3], 'connection-right']
+    ];
+
+    /** ---------- Drawing Functions ---------- **/
+    function drawBezierWire(fromEnt, fromClass, toEnt, toClass) {
+        const fromCircle = fromEnt.querySelector(`.${fromClass}`).getBoundingClientRect();
+        const toCircle = toEnt.querySelector(`.${toClass}`).getBoundingClientRect();
+
+        // Determine the side of the connection (left or right)
+        const fromX = fromClass.includes('right') ? fromCircle.right : fromCircle.left;
+        const fromY = fromCircle.top + fromCircle.height / 2;
+        const toX = toClass.includes('right') ? toCircle.right : toCircle.left;
+        const toY = toCircle.top + toCircle.height / 2;
+
+        // Control points for smooth Bezier curves
+        const cpOffset = Math.abs(toX - fromX) / 4;
+        const cp1X = fromClass.includes('right') ? fromX + cpOffset : fromX - cpOffset;
+        const cp1Y = fromY;
+        const cp2X = toClass.includes('right') ? toX + cpOffset : toX - cpOffset;
+        const cp2Y = toY;
+
+        ctx.beginPath();
+        ctx.moveTo(fromX, fromY);
+        ctx.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, toX, toY);
+        ctx.stroke();
+    }
+
+    function drawAllWires() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#c3c3c3';
+        ctx.lineWidth = 2;
+        wires.forEach(([fromEnt, fromClass, toEnt, toClass]) => {
+            drawBezierWire(fromEnt, fromClass, toEnt, toClass);
+        });
+    }
+
+    /** ---------- Drag & Drop Functions ---------- **/
+    let selected = new Set();
+    let isDragging = false;
+    let dragOffset = { x: 0, y: 0 };
+    let initialPositions = new Map();
+
+    function startDrag(ent, e) {
+        if (!ent.classList.contains('selected')) {
+            selected.forEach(en => en.classList.remove('selected'));
+            selected.clear();
+            selected.add(ent);
+            ent.classList.add('selected');
+        }
+
+        isDragging = true;
+        dragOffset.x = e.clientX;
+        dragOffset.y = e.clientY;
+
+        initialPositions.clear();
+        selected.forEach(selEnt => {
+            initialPositions.set(selEnt, { left: selEnt.offsetLeft, top: selEnt.offsetTop });
+        });
+
+        e.preventDefault();
+    }
+
+    function dragEntities(e) {
+        if (!isDragging) return;
+        const dx = e.clientX - dragOffset.x;
+        const dy = e.clientY - dragOffset.y;
+
+        selected.forEach(ent => {
+            const startPos = initialPositions.get(ent);
+            ent.style.left = startPos.left + dx + 'px';
+            ent.style.top = startPos.top + dy + 'px';
+        });
+
+        drawAllWires();
+    }
+
+    function stopDrag() {
+        isDragging = false;
+        drawAllWires();
+    }
+
+    /** ---------- Event Listeners ---------- **/
+    function initEntityDrag() {
+        entities.forEach(ent => {
+            ent.addEventListener('mousedown', e => startDrag(ent, e));
+        });
+
+        document.addEventListener('mousemove', dragEntities);
+        document.addEventListener('mouseup', stopDrag);
+
+        document.addEventListener('mousedown', e => {
+            const isEntity = e.target.closest('.crawlEntity');
+            const isConnection = e.target.classList.contains('connection-point');
+            if (!isEntity && !isConnection) {
+                selected.forEach(ent => ent.classList.remove('selected'));
+                selected.clear();
+            }
+        });
+    }
+
+    /** ---------- Canvas Resize ---------- **/
+    function initCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            drawAllWires();
+        });
+    }
+
+    /** ---------- Initialize Everything ---------- **/
+    function init() {
+        initCanvas();
+        initEntityDrag();
+        drawAllWires();
+    }
+
+    // Start the app
+    init();
+</script>
+
+</body>
+</html>
