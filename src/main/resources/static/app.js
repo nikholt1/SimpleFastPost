@@ -65,12 +65,16 @@ function renderRightCrawlerPanel() {
     flex: 1;
     width: 100%;
     overflow: hidden;
-    height: 100%; 
+    height: 100%;
+    position: relative;
 ">
-  <div id="svgInner" style="transform-origin: 0 0;">
-    <svg width="50vw" height="70vh" style="display: block; margin: auto;">
+  <div id="svgInner" style="transform-origin: 0 0; position: relative; width: 100%; height: 100%;">
+    
+    <svg width="50vw" height="70vh" style="display: block; margin: auto; position: absolute; top: 0; left: 0;">
+      <foreignObject width="100%" height="100%">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="position:relative; width:100%; height:100%;">
 
-<div class="crawlEntity" id="entity1" style="top:50px; left:50px;">
+<div class="crawlEntity" id="entity1" style="top:50px; left:50px; position:absolute;">
     <div class="connection-point connection-right"></div>
     <div class="crawlEntityBanner" style="background-color: #8c52ff">http://localhost:8080/index.html</div>
     <div class="crawlEntityContent">
@@ -81,7 +85,7 @@ function renderRightCrawlerPanel() {
     </div>
 </div>
 
-<div class="crawlEntity" id="entity2" style="top:50px; left:400px;">
+<div class="crawlEntity" id="entity2" style="top:50px; left:400px; position:absolute;">
     <div class="connection-point connection-left"></div>
     <div class="connection-point connection-right"></div>
     <div class="crawlEntityBanner" style="background-color: #8ab23d">http://localhost:8080/admin.html</div>
@@ -93,7 +97,7 @@ function renderRightCrawlerPanel() {
     </div>
 </div>
 
-<div class="crawlEntity" id="entity3" style="top:250px; left:400px;">
+<div class="crawlEntity" id="entity3" style="top:250px; left:400px; position:absolute;">
     <div class="connection-point connection-left"></div>
     <div class="crawlEntityBanner" style="background-color: #8ab23d">http://localhost:8080/api/Folders</div>
     <div class="crawlEntityContent">
@@ -104,7 +108,7 @@ function renderRightCrawlerPanel() {
     </div>
 </div>
 
-<div class="crawlEntity" id="entity4" style="top:250px; left:50px;">
+<div class="crawlEntity" id="entity4" style="top:250px; left:50px; position:absolute;">
     <div class="connection-point connection-right"></div>
     <div class="crawlEntityBanner" style="background-color: #2da589">http://localhost:8080/api/Folders</div>
     <div class="crawlEntityContent">
@@ -116,7 +120,10 @@ function renderRightCrawlerPanel() {
     </div>
 </div>
 
+        </div>
+      </foreignObject>
     </svg>
+
   </div>
 </div>
 `;
@@ -138,7 +145,6 @@ function renderRightCrawlerPanel() {
         inner.style.transform = `translate(${originX}px, ${originY}px) scale(${scale})`;
     }
 
-    // Wrapper pan
     wrapper.addEventListener("mousedown", (e) => {
         isDragging = true;
         document.body.classList.add("resizing");
@@ -161,7 +167,6 @@ function renderRightCrawlerPanel() {
         document.body.classList.remove("resizing");
     });
 
-    // Zoom
     wrapper.addEventListener("wheel", (e) => {
         e.preventDefault();
         const zoomIntensity = 0.1;
@@ -173,7 +178,6 @@ function renderRightCrawlerPanel() {
         drawConnections();
     });
 
-    // Parent → child connections map
     const connections = {
         entity1: ["entity2", "entity4"],
         entity2: ["entity3"],
@@ -181,20 +185,17 @@ function renderRightCrawlerPanel() {
         entity4: []
     };
 
-    // Get connection point position relative to SVG
     function getConnectionPointPos(entity, pointClass) {
         const point = entity.querySelector(`.${pointClass}`);
         const rect = point.getBoundingClientRect();
         const wrapperRect = wrapper.getBoundingClientRect();
 
-        // Position relative to wrapper, accounting for current pan & zoom
         const x = (rect.left + rect.width / 2 - wrapperRect.left - originX) / scale;
         const y = (rect.top + rect.height / 2 - wrapperRect.top - originY) / scale;
 
         return { x, y };
     }
 
-    // Draw Beziers
     function drawConnections() {
         svg.querySelectorAll(".connection-path").forEach(p => p.remove());
 
@@ -206,7 +207,6 @@ function renderRightCrawlerPanel() {
                 const target = document.getElementById(childId);
                 if (!target) return;
 
-                // Draw one connection for right → left or left → right
                 const sourcePoint = source.querySelector(".connection-right") || source.querySelector(".connection-left");
                 const targetPoint = target.querySelector(".connection-left") || target.querySelector(".connection-right");
 
@@ -230,7 +230,6 @@ function renderRightCrawlerPanel() {
         });
     }
 
-    // Entity drag
     entities.forEach(entity => {
         let isEntityDragging = false;
         let offsetX, offsetY;
@@ -266,9 +265,9 @@ function renderRightCrawlerPanel() {
         });
     });
 
-    // Initial draw
     drawConnections();
 }
+
 async function renderHistoryPanel() {
     const historyPanel = document.getElementById("historyPanel");
     const historyItems = document.getElementById("historyItems");
@@ -302,13 +301,10 @@ async function publicateHistoryPanel() {
                         status === "ERR" ? "#da3633" :
                             "#6e7681";
 
-// use it here
         const circleColor = getStatusColor(item.status);
-        // Decide what content to show
         let contentHTML = "";
 
         if (item.action && item.action.trim() !== "") {
-            // If action exists, show it instead
             contentHTML = `
                 <hr>
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">

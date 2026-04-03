@@ -8,7 +8,7 @@ import jakarta.persistence.Id;
 
 import java.util.List;
 
-@Entity
+//@Entity
 public class CrawlerEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,79 +1,60 @@
-#mkdir folder name thisIsfolderName;
+#mkdir folder name testFolder;
 
  
-#mkdir folder name newFolder;
+#mkdir folder name newFolder2;
 
  
-#mkdir folder name localhostTest;
+#mkdir folder name newFOlder3;
 
  
-### place folder thisIsfolderName;
-### command name commandNameAfterPush;
+### place folder testFolder;
+### command name test;
+GET http://localhost:8080/api/commands
+
+### place folder testFolder;
+### command name local;
+GET http://localhost:8080/api/commands/1
+
+### place folder testFolder;
+### command name PostToLocal;
+POST http://localhost:8080/api/commands
+
+{
+  "name" : "newFromFrontend",
+  "command" : "-m GET -u http://localhost:8080/api/commands",
+  "body" : null,
+  "folderId" : null
+}
+
+ 
+### place folder newFolder2;
+### command name jsonPlaceHolder;
+GET https://jsonplaceholder.typicode.com/posts
+
+### place folder newFolder2;
+### command name getOnePlaceHolder;
 GET https://jsonplaceholder.typicode.com/posts/1
 
-### place folder thisIsfolderName;
-### command name commandName1;
+### place folder newFolder2;
+### command name postNew;
 POST https://jsonplaceholder.typicode.com/posts
+Oauth 1.0: testa2131f2pmpMP121
 
 {
-  "title" : "Hello World",
-  "body" : "This is a test",
-  "userId" : 1
-}
-
- 
-### place folder thisIsfolderName;
-### command name commandWithHeader;
-POST https://jsonplaceholder.typicode.com/posts
-
-{
-  "title" : "Hello World",
-  "body" : "This is a test",
-  "userId" : 1
-}
-
- 
-### place folder thisIsfolderName;
-### command name commandName;
-DELETE https://jsonplaceholder.typicode.com/posts/1
-
-{
-  "title" : "Hello World",
-  "body" : "This is a test",
-  "userId" : 1
-}
-
- 
-### place folder newFolder;
-### command name thisIsFromThePush;
-PUT https://jsonplaceholder.typicode.com/posts/1
-
-{
-  "id" : 1,
-  "title" : "Updated Title",
-  "body" : "Updated body",
-  "userId" : 1
+  "name" : "name"
 }
 
  
 ### place root;
-### command name getCommand;
-GET https://jsonplaceholder.typicode.com/posts/1
+### command name cookiesTest;
+GET https://ek.itslearning.com/DashboardMenu.aspx?LocationType=Personal&DashboardType=MyPage
+OnlineInfo: uoce=0&ugce=0&ue=0&ui=0&un=9&ee=0&ocee=0&gcee=0&ec=0000-00-00 00:00:00&ocec=0000-00-00 00:00:00&gcec=0000-00-00 00:00:00&nc=2026-03-27 11:34:13&su=2026-03-27 11:34:13&h=df78f0f1064f352257a72e60ca2cd708&lo=2026-03-27 11:44:07&ice=0&ic=0000-00-00 00:00:00&teai=0&ii=False
 
-### place folder localhostTest;
-### command name testGetAllCommands;
-GET localhost:8080/api/commands
-key: value
+### place folder newFOlder3;
+### command name localCall;
+GET http://localhost:8080/api/commands
 
-### place folder localhostTest;
-### command name getOneCommandTest;
-GET localhost:8080/api/commands/1
-
-### place folder localhostTest;
-### command name wrongInputbutRightUrl;
-POST localhost:8080/api/commands/1
-
-### place folder localhostTest;
-### command name fail;
-GET localhost:8090/api/commands
+### place folder newFOlder3;
+### command name localcallSingle;
+GET http://localhost:8080/api/commands/1
 

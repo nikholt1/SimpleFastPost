@@ -130,6 +130,8 @@
 </div>
 
 <script>
+    const res = await fetch(`${BASE_URL}/commands`);
+    listOfCommands = await res.json();
     /** ---------- Canvas & Entities Setup ---------- **/
     const canvas = document.getElementById('wiresCanvas');
     const ctx = canvas.getContext('2d');
