@@ -1,49 +1,49 @@
 package org.example.simplefastpost.model;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
-//@Entity
+@Entity
 public class CrawlerEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String title;
 
+    @ManyToOne
+    @JoinColumn(name = "session_id", nullable = false)
+    private CrawlerSession session;
 
-    // if null == baseParent otherwise its a child, that can have a child
-    private Long parentId;
-    // ("endpoint" if endpoint and "website" if html page)
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
+    private CrawlerEntity parent;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    private List<CrawlerEntity> children = new ArrayList<>();
+
     private String type;
+    private String url;
 
-    private String URL;
-    private List<String> connections;
+    @ElementCollection
+    private List<String> connections = new ArrayList<>();
 
-
-    // if endpoint
     private String method;
+
+    @Column(columnDefinition = "TEXT")
     private String response;
 
     private int processTime;
 
-
     public CrawlerEntity() {}
 
-    public CrawlerEntity(String title, Long parentId, String type, String URL, List<String> connections, String method, String response, int processTime) {
-        this.title = title;
-        this.parentId = parentId;
-        this.type = type;
-        this.URL = URL;
-        this.connections = connections;
-        this.method = method;
-        this.response = response;
-        this.processTime = processTime;
+    // ✅ helper
+    public Long getParentId() {
+        return parent != null ? parent.getId() : null;
     }
 
     public Long getId() {
@@ -62,12 +62,28 @@ public class CrawlerEntity {
         this.title = title;
     }
 
-    public Long getParentId() {
-        return parentId;
+    public CrawlerSession getSession() {
+        return session;
     }
 
-    public void setParentId(Long parentId) {
-        this.parentId = parentId;
+    public void setSession(CrawlerSession session) {
+        this.session = session;
+    }
+
+    public CrawlerEntity getParent() {
+        return parent;
+    }
+
+    public void setParent(CrawlerEntity parent) {
+        this.parent = parent;
+    }
+
+    public List<CrawlerEntity> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<CrawlerEntity> children) {
+        this.children = children;
     }
 
     public String getType() {
@@ -78,12 +94,12 @@ public class CrawlerEntity {
         this.type = type;
     }
 
-    public String getURL() {
-        return URL;
+    public String getUrl() {
+        return url;
     }
 
-    public void setURL(String URL) {
-        this.URL = URL;
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public List<String> getConnections() {
@@ -117,4 +133,7 @@ public class CrawlerEntity {
     public void setProcessTime(int processTime) {
         this.processTime = processTime;
     }
+
+
+    // getters + setters
 }

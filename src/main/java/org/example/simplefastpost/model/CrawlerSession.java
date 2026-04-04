@@ -1,15 +1,13 @@
 package org.example.simplefastpost.model;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
-//@Entity
+@Entity
 public class CrawlerSession {
 
     @Id
@@ -17,14 +15,17 @@ public class CrawlerSession {
     private Long id;
 
     private String title;
-    private List<CrawlerEntity> crawlerEntities;
 
     private LocalDateTime created;
+
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CrawlerEntity> crawlerEntities = new ArrayList<>();
+
     public CrawlerSession() {}
 
-    public CrawlerSession(String title, List<CrawlerEntity> crawlerEntities) {
+    public CrawlerSession(String title) {
         this.title = title;
-        this.crawlerEntities = crawlerEntities;
+        this.created = LocalDateTime.now();
     }
 
     public Long getId() {
