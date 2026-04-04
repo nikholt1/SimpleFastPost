@@ -47,7 +47,6 @@ public class CLIFolderRepository {
             }
         }
     }
-    /* READ ALL */
     public void listFolders() throws SQLException {
         String sql = "SELECT id, project_name FROM folder";
         boolean found = false;

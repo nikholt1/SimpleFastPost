@@ -22,7 +22,6 @@ public class RequestController {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest.Builder builder = HttpRequest.newBuilder().uri(URI.create(url));
 
-        // Add all headers from the list
         if (headers != null) {
             for (Headers h : headers) {
                 if (h.getKey() != null && !h.getKey().isBlank()) {
@@ -31,7 +30,6 @@ public class RequestController {
             }
         }
 
-        // Set the HTTP method and body
         switch (method.toUpperCase()) {
             case "POST":
             case "PUT":

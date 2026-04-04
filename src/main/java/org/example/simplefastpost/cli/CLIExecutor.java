@@ -111,8 +111,8 @@ public class CLIExecutor {
         String method = "GET";
         String url = "";
         String body = null;
-        String updateTarget = null; // "command" or "folder"
-        String updateField = null;  // name, body, etc.
+        String updateTarget = null;
+        String updateField = null;
         String updateValue = null;
 
         for (; i < rawArgs.length; i++) {
@@ -255,15 +255,14 @@ public class CLIExecutor {
                 case "api":
                     if (rawArgs.length < 2) {
                         System.out.println("Usage: api [ls|kill <pid>]");
-                        return; // exit method after showing usage
+                        return;
                     }
 
                     String subCommand = rawArgs[1];
 
                     if (subCommand.equals("ls")) {
-                        // List all running API instances from the database
                         apiService.listAllInstances();
-                        return; // done, exit method
+                        return;
                     } else if (subCommand.equals("kill")) {
                         if (rawArgs.length < 3) {
                             System.out.println("Usage: api kill <pid>");
@@ -279,35 +278,29 @@ public class CLIExecutor {
                         } catch (Exception e) {
                             System.err.println("Failed to stop API: " + e.getMessage());
                         }
-                        return; // exit after handling kill
+                        return;
                     } else {
                         System.out.println("Unknown api subcommand: " + subCommand);
-                        return; // exit after unknown subcommand
+                        return;
                     }
 
                 case "history":
                     List<History> historyList = historyService.getAllHistory();
 
-                    // Check if a sub-command was provided
                     String subHistoryCommand = rawArgs.length > 1 ? rawArgs[1] : "";
 
                     if ("purge".equalsIgnoreCase(subHistoryCommand)) {
-                        // Delete all history entries
                         historyService.deleteAllHistory();
                         System.out.println("All history purged.");
                         return;
                     }
 
-                    // Sort by created timestamp
                     if ("reverse".equalsIgnoreCase(subHistoryCommand)) {
-                        // Oldest first (ascending)
                         historyList.sort((h1, h2) -> h1.getCreated().compareTo(h2.getCreated()));
                     } else {
-                        // Latest first (descending)
                         historyList.sort((h1, h2) -> h2.getCreated().compareTo(h1.getCreated()));
                     }
 
-                    // Print all history entries
                     for (History historyItem : historyList) {
                         if (historyItem.getResponse() == null) {
                             System.out.println("___________________________________________");
@@ -364,7 +357,6 @@ public class CLIExecutor {
 
                 case "run":
 
-                    // RUN ALL COMMANDS IN A FOLDER
                     if (folderName != null && commandName == null) {
 
                         List<Command> commands = cliFolderRepository.getCommandsInFolder(folderName);
@@ -392,7 +384,6 @@ public class CLIExecutor {
                         return;
                     }
 
-                    // RUN SINGLE COMMAND
                     if (commandName == null) {
                         System.err.println("run requires -scmd <commandName> OR -f <folder>");
                         return;
@@ -460,7 +451,6 @@ public class CLIExecutor {
 
                     } else if (flag.equals("-f")) {
 
-                        // FOLDER MODE: delete -f <folderName>
                         if (rawArgs.length > 2) {
                             String folderTarget = rawArgs[2];
                             List<Folder> folders = cliFolderService.getAllFolders();
@@ -504,7 +494,6 @@ public class CLIExecutor {
                             updateField = first.substring(0, sep);
                             StringBuilder valueBuilder = new StringBuilder(first.substring(sep + 1));
 
-                            // collect remaining args as part of the value
                             while (j + 1 < rawArgs.length && !rawArgs[j + 1].startsWith("--")) {
                                 valueBuilder.append(" ").append(rawArgs[++j]);
                             }
@@ -536,7 +525,6 @@ public class CLIExecutor {
 
                         case "command" -> {
 
-                            // 1️⃣ Get command (must return something even if multiple exist)
                             Command command = cliCommandService.getCommandByName(targetName);
                             if (command == null) {
                                 System.err.println("Command not found: " + targetName);
@@ -546,10 +534,8 @@ public class CLIExecutor {
                             id = command.getId();
                             folderId = command.getFolderId();
 
-                            // 2️⃣ Special handling: --set folder:<folderName>
                             if ("folder".equalsIgnoreCase(updateField)) {
 
-                                // Special case: folder:0 → unset folder
                                 if ("0".equals(updateValue)) {
                                     folderId = null;
                                     command.setFolderId(null);
@@ -561,10 +547,10 @@ public class CLIExecutor {
                                             folderId
                                     );
                                     System.out.println("Folder removed from command '" + targetName + "' (folderId set to null)");
-                                    return; // done
+                                    return;
                                 }
 
-                                // Normal case: find folder by name
+
                                 List<Folder> folders = cliFolderService.getAllFolders();
                                 Folder targetFolder = null;
                                 for (Folder f : folders) {
@@ -580,19 +566,18 @@ public class CLIExecutor {
                                 }
 
                                 folderId = targetFolder.getId();
-                                command.setFolderId(folderId); // update command object
+                                command.setFolderId(folderId);
                                 cliCommandService.updateCommand(
                                         command.getId(),
                                         command.getName(),
                                         command.getCommand(),
                                         command.getBody(),
                                         folderId
-                                ); // persist change
+                                );
 
                                 System.out.println("Updated folderId of command '" + targetName + "' to folder '" + updateValue + "' (id=" + folderId + ")");
-                                return; // done
+                                return;
                             }
-                            // HEADER UPDATE MODE (unchanged)
                             if (rawArgs.length >= 5 && rawArgs[3].equalsIgnoreCase("header")) {
 
                                 String headerKey = rawArgs[4];
@@ -661,7 +646,6 @@ public class CLIExecutor {
             }
         }
 
-        /* SAVE MODE */
         if (saveMode) {
             if (commandName == null || url.isBlank()) {
                 System.err.println("Saving requires -cmd <name> and -u <url>");
@@ -704,7 +688,6 @@ public class CLIExecutor {
             return;
         }
 
-        /* DIRECT REQUEST */
         if (url.isBlank()) {
             System.err.println("URL required (-u)");
             return;

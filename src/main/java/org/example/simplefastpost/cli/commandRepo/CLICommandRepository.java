@@ -53,12 +53,10 @@ public class CLICommandRepository {
                 throw new SQLException("Creating command failed, no rows affected.");
             }
 
-            // Retrieve the generated ID
             try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     long id = generatedKeys.getLong(1);
 
-                    // Return a new Command object
                     Command createdCommand = new Command();
                     createdCommand.setId(id);
                     createdCommand.setName(name);

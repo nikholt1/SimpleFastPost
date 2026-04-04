@@ -17,21 +17,18 @@ public class HistoryRepository {
         this.DB_URL = DB_URL;
     }
 
-    /* CREATE */
     public History createNewHistoryEntity(History history) throws SQLException {
         String sql = "INSERT INTO history(command_id, created, response, url, status, action) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            // Handle nullable commandId
             if (history.getCommandId() != null) {
                 stmt.setObject(1, history.getCommandId(), java.sql.Types.BIGINT);
             } else {
                 stmt.setNull(1, java.sql.Types.BIGINT);
             }
 
-            // Convert LocalDateTime to java.sql.Timestamp
             if (history.getCreated() != null) {
                 stmt.setTimestamp(2, Timestamp.valueOf(history.getCreated()));
             } else {
@@ -54,7 +51,6 @@ public class HistoryRepository {
 
         return history;
     }
-    /* READ ONE */
     public History getHistoryById(Long id) throws SQLException {
         String sql = "SELECT * FROM history WHERE id = ?";
 
@@ -80,7 +76,6 @@ public class HistoryRepository {
         }
     }
 
-    /* READ ALL */
     public List<History> getAllHistoryEntities() throws SQLException {
         String sql = "SELECT * FROM history";
         List<History> list = new ArrayList<>();
@@ -105,7 +100,6 @@ public class HistoryRepository {
         return list;
     }
 
-    /* READ BY command_id */
     public List<History> getHistoryByCommandId(Long commandId) throws SQLException {
         String sql = "SELECT * FROM history WHERE command_id = ?";
         List<History> list = new ArrayList<>();
@@ -133,7 +127,6 @@ public class HistoryRepository {
         return list;
     }
 
-    /* UPDATE */
     public History updateHistoryEntity(History history, Long id) throws SQLException {
         String sql = "UPDATE history SET command_id = ?, created = ?, response = ?, url = ?, status = ?, action = ? WHERE id = ?";
 
@@ -155,7 +148,6 @@ public class HistoryRepository {
         return history;
     }
 
-    /* DELETE ALL */
     public void deleteAllHistory() throws SQLException {
         String sql = "DELETE FROM history";
 
@@ -165,7 +157,6 @@ public class HistoryRepository {
         }
     }
 
-    /* DELETE ONE */
     public void deleteHistoryEntityById(Long id) throws SQLException {
         String sql = "DELETE FROM history WHERE id = ?";
 

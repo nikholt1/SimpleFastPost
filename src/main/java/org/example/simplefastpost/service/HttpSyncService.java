@@ -39,7 +39,6 @@ public class HttpSyncService {
 
             String line = lines.get(i).trim();
 
-            // ------------------------- CREATE FOLDER -------------------------
             if (line.startsWith("#mkdir")) {
                 String[] parts = line.split("\\s+");
                 if (parts.length >= 4) {
@@ -54,7 +53,6 @@ public class HttpSyncService {
                 }
             }
 
-            // ------------------------- CREATE COMMAND -------------------------
             if (line.startsWith("### place")) {
 
                 String[] placeParts = line.split("\\s+");
@@ -69,27 +67,24 @@ public class HttpSyncService {
                 }
 
 
-                // Command name
                 i++;
                 String commandLine = lines.get(i).trim();
                 String[] commandParts = commandLine.split("\\s+");
                 String commandName = commandParts[3].replace(";", "");
 
-                // Method + URL
                 i++;
                 String requestLine = lines.get(i).trim();
                 String[] requestParts = requestLine.split("\\s+");
                 String method = requestParts[0];
                 String url = requestParts.length > 1 ? requestParts[1] : "";
 
-                // ------------------------- HEADERS -------------------------
                 List<Headers> headersList = new ArrayList<>();
                 i++;
                 while (i < lines.size()) {
                     String headerLine = lines.get(i).trim();
-                    if (headerLine.isEmpty()) break; // end of headers
+                    if (headerLine.isEmpty()) break;
                     if (headerLine.startsWith("###")) {
-                        i--; // backtrack
+                        i--;
                         break;
                     }
                     int sep = headerLine.indexOf(':');
@@ -106,7 +101,6 @@ public class HttpSyncService {
                     i++;
                 }
 
-                // ------------------------- BODY -------------------------
                 StringBuilder bodyBuilder = new StringBuilder();
                 i++;
                 while (i < lines.size()) {
@@ -120,7 +114,6 @@ public class HttpSyncService {
                 }
                 String body = bodyBuilder.toString().trim();
 
-                // ------------------------- FIND FOLDER ID -------------------------
                 Long folderId = null;
                 if (!target.equals("root")) {
                     try {
@@ -136,7 +129,6 @@ public class HttpSyncService {
                     }
                 }
 
-                // ------------------------- CREATE COMMAND -------------------------
                 String commandStr = "-m " + method + " -u " + url;
                 Command createdCommand = null;
                 try {
@@ -148,7 +140,6 @@ public class HttpSyncService {
                     e.printStackTrace();
                 }
 
-                // ------------------------- SAVE HEADERS -------------------------
                 if (createdCommand != null && !headersList.isEmpty()) {
                     for (Headers h : headersList) {
                         h.setCommandId(createdCommand.getId());

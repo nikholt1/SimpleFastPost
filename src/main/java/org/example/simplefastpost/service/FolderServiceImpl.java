@@ -67,10 +67,8 @@ public class FolderServiceImpl implements FolderService {
         Folder existing = folderRepository.findById(folderId)
                 .orElseThrow(() -> new RuntimeException("Folder not found"));
 
-        // update name
         existing.setProjectName(projectName);
 
-        // update commands if provided
         if (commands != null) {
             existing.setCommands(commands);
         }

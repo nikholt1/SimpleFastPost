@@ -47,7 +47,7 @@ public class HeaderServiceImpl implements HeaderService {
 
     @Override
     public List<Headers> getHeadersByCommandId(Long commandId) {
-        List<Headers> allHeaders = getAllHeaders(); // get all headers however you do
+        List<Headers> allHeaders = getAllHeaders();
         List<Headers> filteredHeaders = new ArrayList<>();
 
         for (Headers header : allHeaders) {

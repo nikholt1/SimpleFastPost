@@ -15,12 +15,11 @@ public class FolderMapper {
         );
     }
 
-    // Create Folder entity from FolderDTO
     public static Folder fromDTO(FolderDTO dto) {
         Folder folder = new Folder();
-        folder.setId(dto.id());                // optional if new entity
+        folder.setId(dto.id());
         folder.setProjectName(dto.projectName());
-        folder.setCommands(dto.cmds());        // watch out: may want to clone the list
+        folder.setCommands(dto.cmds());
         return folder;
     }
 }

@@ -47,24 +47,64 @@ public class ApiService {
     /// TODO: run program with "--api" flag only
 
 
-    public void startApiDaemon() throws Exception {
+    public void startApiDaemon(String[] originalArgs) throws Exception {
+
         Path jarPath = getCurrentProgram();
-        Path dataDir = getDataDir();  // ensure data dir exists
+        Path dataDir = getDataDir();
         Path logFile = dataDir.resolve("api-detached.log");
 
-        // Make sure log file exists
         if (!Files.exists(logFile)) {
             Files.createFile(logFile);
         }
 
-        ProcessBuilder pb = new ProcessBuilder(
-                "java",
-                "-jar",
-                jarPath.toString(),
-                "--api"
-        )
-                .redirectOutput(logFile.toFile())  // write stdout to log file
-                .redirectError(logFile.toFile());  // write stderr to same log file
+        List<String> command = new ArrayList<>();
+
+        command.add("java");
+        command.add("-jar");
+        command.add(jarPath.toString());
+
+        boolean hasApiFlag = false;
+        boolean hasPort = false;
+
+        for (int i = 0; i < originalArgs.length; i++) {
+            String arg = originalArgs[i];
+
+            if (arg.equals("-d")) {
+                continue;
+            }
+
+            if (arg.equals("--api")) {
+                hasApiFlag = true;
+            }
+
+            if (arg.equals("-p")) {
+                hasPort = true;
+
+                command.add(arg);
+
+                if (i + 1 < originalArgs.length) {
+                    command.add(originalArgs[i + 1]);
+                    i++;
+                }
+                continue;
+            }
+
+            command.add(arg);
+        }
+
+
+        if (!hasApiFlag) {
+            command.add("--api");
+        }
+
+        if (!hasPort) {
+            command.add("-p");
+            command.add("8080");
+        }
+
+        ProcessBuilder pb = new ProcessBuilder(command)
+                .redirectOutput(logFile.toFile())
+                .redirectError(logFile.toFile());
 
         Process process = pb.start();
 
@@ -74,7 +114,8 @@ public class ApiService {
         APIEntity apiEntity = new APIEntity(pid, startedAt);
         apiRepository.createNewInstance(apiEntity);
 
-        System.out.println("Detached API started with PID " + pid + ". Logs are at: " + logFile.toAbsolutePath());
+        System.out.println("Detached API started with PID " + pid +
+                ". Logs are at: " + logFile.toAbsolutePath());
     }
 
 
@@ -93,17 +134,16 @@ public class ApiService {
         OSService.OSType os = OSService.getOperatingSystemType();
 
         if (os == OSService.OSType.WINDOWS) {
-            // Windows: use taskkill
             new ProcessBuilder("taskkill", "/PID", pid.toString(), "/F")
-                    .inheritIO() // optional, to see output/errors
+                    .inheritIO()
                     .start()
                     .waitFor();
         } else {
-            // Linux/macOS: use ProcessHandle
+
             ProcessHandle.of(pid).ifPresent(ProcessHandle::destroy);
         }
 
-        // Remove from database in all cases
+
         apiRepository.deleteByPid(pid);
     }
 
