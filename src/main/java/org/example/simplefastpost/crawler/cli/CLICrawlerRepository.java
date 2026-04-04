@@ -139,7 +139,13 @@ public class CLICrawlerRepository {
 
                 Long id = rsEntity.getLong("id");
                 Long sessionId = rsEntity.getLong("session_id");
-                Long parentId = (Long) rsEntity.getObject("parent_id");
+
+                // Fix: safely cast parent_id to Long
+                Object parentObj = rsEntity.getObject("parent_id");
+                Long parentId = null;
+                if (parentObj != null) {
+                    parentId = ((Number) parentObj).longValue();
+                }
 
                 e.setId(id);
                 e.setTitle(rsEntity.getString("title"));

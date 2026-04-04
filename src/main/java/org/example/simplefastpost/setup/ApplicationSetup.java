@@ -72,53 +72,50 @@ public class ApplicationSetup {
         """);
 
             stmt.execute("""
-    CREATE TABLE IF NOT EXISTS crawler_session (
-        id BIGINT AUTO_INCREMENT,
-        title VARCHAR(255),
-        created TIMESTAMP,
-        PRIMARY KEY (id)
-    );
+CREATE TABLE IF NOT EXISTS crawler_session (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title VARCHAR(255),
+    created TIMESTAMP
+);
 """);
 
             stmt.execute("""
-    CREATE TABLE IF NOT EXISTS crawler_entity (
-        id BIGINT AUTO_INCREMENT,
-        title VARCHAR(255),
+CREATE TABLE IF NOT EXISTS crawler_entity (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title VARCHAR(255),
 
-        parent_id BIGINT,
-        session_id BIGINT NOT NULL,
+    parent_id BIGINT,
+    session_id BIGINT NOT NULL,
 
-        type VARCHAR(50),
-        url VARCHAR(500),
+    type VARCHAR(50),
+    url VARCHAR(500),
 
-        method VARCHAR(50),
-        response TEXT,
+    method VARCHAR(50),
+    response TEXT,
 
-        process_time INT,
+    process_time INT,
 
-        PRIMARY KEY (id),
+    FOREIGN KEY (session_id)
+        REFERENCES crawler_session(id)
+        ON DELETE CASCADE,
 
-        FOREIGN KEY (session_id)
-            REFERENCES crawler_session(id)
-            ON DELETE CASCADE,
-
-        FOREIGN KEY (parent_id)
-            REFERENCES crawler_entity(id)
-            ON DELETE CASCADE
-    );
+    FOREIGN KEY (parent_id)
+        REFERENCES crawler_entity(id)
+        ON DELETE CASCADE
+);
 """);
 
             stmt.execute("""
-    CREATE TABLE IF NOT EXISTS crawler_connections (
-        entity_id BIGINT,
-        connection VARCHAR(500),
+CREATE TABLE IF NOT EXISTS crawler_connections (
+    entity_id INTEGER,
+    connection VARCHAR(500),
 
-        PRIMARY KEY (entity_id, connection),
+    PRIMARY KEY (entity_id, connection),
 
-        FOREIGN KEY (entity_id)
-            REFERENCES crawler_entity(id)
-            ON DELETE CASCADE
-    );
+    FOREIGN KEY (entity_id)
+        REFERENCES crawler_entity(id)
+        ON DELETE CASCADE
+);
 """);
         } catch (SQLException e) {
             throw new RuntimeException("Failed to initialize database", e);

@@ -61,7 +61,15 @@ public class CLICrawlerService {
         return repo.getAllSessions();
     }
 
-
+    public CrawlerSession getSessionById(Long id) {
+        List<CrawlerSession> sessions = repo.getAllSessions();
+        for (CrawlerSession session : sessions) {
+            if (session.getId()== id) {
+                return session;
+            }
+        }
+        return null;
+    }
 
     public void updateEntity(CrawlerEntity entity) {
         repo.updateEntity(entity);

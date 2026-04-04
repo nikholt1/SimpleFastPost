@@ -16,10 +16,9 @@ import org.example.simplefastpost.cli.historyService.HistoryService;
 import org.example.simplefastpost.cli.syncService.HttpSyncService;
 import org.example.simplefastpost.cli.syncService.PushService;
 import org.example.simplefastpost.crawler.cli.CLICrawler;
-import org.example.simplefastpost.model.Command;
-import org.example.simplefastpost.model.Folder;
-import org.example.simplefastpost.model.Headers;
-import org.example.simplefastpost.model.History;
+import org.example.simplefastpost.crawler.cli.CLICrawlerRepository;
+import org.example.simplefastpost.crawler.cli.CLICrawlerService;
+import org.example.simplefastpost.model.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,6 +46,8 @@ public class CLIExecutor {
     private final HeaderRepository headerRepository;
     private final HistoryService historyService;
     private final HistoryRepository historyRepository;
+    private final CLICrawlerRepository cliCrawlerRepository;
+    private final CLICrawlerService cliCrawlerService;
     private final CLICrawler crawler;
 
     public CLIExecutor() throws Exception {
@@ -69,7 +70,9 @@ public class CLIExecutor {
         this.historyRepository = new HistoryRepository(DB_URL);
         this.historyService = new HistoryService(historyRepository);
         this.requestController = new RequestController(historyService);
-        this.crawler = new CLICrawler(DB_URL);
+        this.cliCrawlerRepository = new CLICrawlerRepository(DB_URL);
+        this.cliCrawlerService = new CLICrawlerService(cliCrawlerRepository);
+        this.crawler = new CLICrawler(cliCrawlerService, cliCrawlerRepository);
     }
 
     public void execute(String[] rawArgs) throws Exception {
@@ -241,17 +244,120 @@ public class CLIExecutor {
                     }
                     return;
                 case "crawl":
-                    String baseUrl = rawArgs[1];
-
-                    if (rawArgs[1] == null) {
-                        System.out.println("Usage: crawl <url>");
+                    if (rawArgs.length < 2) {
+                        System.out.println("Usage: crawl <url> | crawl history [<sessionId>]");
+                        break;
                     }
-                    crawler.run(baseUrl);
-                    History crawlHistoryEntry = new History();
-                    crawlHistoryEntry.setUrl(baseUrl);
-                    crawlHistoryEntry.setAction("crawl -> " + baseUrl);
-                    historyService.createHistoryEntity(crawlHistoryEntry);
 
+                    // ===== SHOW HISTORY =====
+                    if ("history".equalsIgnoreCase(rawArgs[1])) {
+
+                        // List all sessions
+                        if (rawArgs.length == 2) {
+                            List<CrawlerSession> sessions = cliCrawlerService.getAllSessions();
+                            System.out.println("===== ALL CRAWL SESSIONS =====");
+                            if (sessions.isEmpty()) {
+                                System.out.println("No sessions found.");
+                            } else {
+                                for (CrawlerSession s : sessions) {
+                                    System.out.println("Session ID: " + s.getId() +
+                                            ", Title: " + s.getTitle() +
+                                            ", Entities: " + s.getCrawlerEntities().size());
+                                }
+                            }
+                        }
+                        // Show detailed session
+                        else if (rawArgs.length == 3) {
+                            try {
+                                Long sessionId = Long.parseLong(rawArgs[2]);
+                                CrawlerSession session = cliCrawlerService.getSessionById(sessionId);
+                                if (session == null) {
+                                    System.out.println("Session not found: ID " + sessionId);
+                                    break;
+                                }
+
+                                System.out.println("===== SESSION DETAIL =====");
+                                System.out.println("Session ID: " + session.getId() + ", Title: " + session.getTitle());
+
+                                // Inline recursive printing of entities
+                                if (session.getCrawlerEntities() != null) {
+                                    LinkedList<CrawlerEntity> stack = new LinkedList<>(session.getCrawlerEntities());
+                                    LinkedList<String> prefixStack = new LinkedList<>();
+                                    for (int l = 0; l < stack.size(); l++) prefixStack.add("|_ ");
+
+                                    while (!stack.isEmpty()) {
+                                        CrawlerEntity entity = stack.pollFirst();
+                                        String prefix = prefixStack.pollFirst();
+                                        System.out.println(prefix + entity.getType() + ": " + entity.getTitle());
+
+                                        if (entity.getConnections() != null) {
+                                            for (String conn : entity.getConnections()) {
+                                                System.out.println(prefix + "   -> Connection: " + conn);
+                                            }
+                                        }
+
+                                        if (entity.getChildren() != null) {
+                                            for (CrawlerEntity child : entity.getChildren()) {
+                                                stack.addFirst(child);
+                                                prefixStack.addFirst(prefix + "   ");
+                                            }
+                                        }
+                                    }
+                                }
+
+                            } catch (NumberFormatException e) {
+                                System.out.println("Invalid session ID: " + rawArgs[2]);
+                            }
+                        }
+                        else {
+                            System.out.println("Usage: crawl history [<sessionId>]");
+                        }
+
+                    }
+                    // ===== RUN NEW CRAWL =====
+                    else {
+                        String baseUrl = rawArgs[1];
+                        crawler.run(baseUrl);
+
+                        // Add to history
+                        History crawlHistoryEntry = new History();
+                        crawlHistoryEntry.setUrl(baseUrl);
+                        crawlHistoryEntry.setAction("crawl -> " + baseUrl);
+                        historyService.createHistoryEntity(crawlHistoryEntry);
+
+                        // Optional: print persistent session immediately
+                        List<CrawlerSession> sessions = cliCrawlerService.getAllSessions();
+                        CrawlerSession latestSession = sessions.get(sessions.size() - 1);
+
+                        System.out.println("\n===== NEW SESSION DETAIL =====");
+                        System.out.println("Session ID: " + latestSession.getId() + ", Title: " + latestSession.getTitle());
+
+                        if (latestSession.getCrawlerEntities() != null) {
+                            LinkedList<CrawlerEntity> stack = new LinkedList<>(latestSession.getCrawlerEntities());
+                            LinkedList<String> prefixStack = new LinkedList<>();
+                            for (int j = 0; j < stack.size(); j++) prefixStack.add("|_ ");
+
+                            while (!stack.isEmpty()) {
+                                CrawlerEntity entity = stack.pollFirst();
+                                String prefix = prefixStack.pollFirst();
+                                System.out.println(prefix + entity.getType() + ": " + entity.getTitle());
+
+                                if (entity.getConnections() != null) {
+                                    for (String conn : entity.getConnections()) {
+                                        System.out.println(prefix + "   -> Connection: " + conn);
+                                    }
+                                }
+
+                                if (entity.getChildren() != null) {
+                                    for (CrawlerEntity child : entity.getChildren()) {
+                                        stack.addFirst(child);
+                                        prefixStack.addFirst(prefix + "   ");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return;
                 case "api":
                     if (rawArgs.length < 2) {
                         System.out.println("Usage: api [ls|kill <pid>]");
