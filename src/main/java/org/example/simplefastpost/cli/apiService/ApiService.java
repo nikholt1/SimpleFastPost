@@ -49,9 +49,11 @@ public class ApiService {
 
     public void startApiDaemon(String[] originalArgs) throws Exception {
 
-        Path jarPath = getCurrentProgram();
+//        Path jarPath = getCurrentProgram();
+
         Path dataDir = getDataDir();
         Path logFile = dataDir.resolve("api-detached.log");
+        Path jarPath = dataDir.resolve("SimpleFastPost.jar");
 
         if (!Files.exists(logFile)) {
             Files.createFile(logFile);

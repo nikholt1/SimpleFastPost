@@ -15,7 +15,7 @@ import org.example.simplefastpost.cli.historyRepository.HistoryRepository;
 import org.example.simplefastpost.cli.historyService.HistoryService;
 import org.example.simplefastpost.cli.syncService.HttpSyncService;
 import org.example.simplefastpost.cli.syncService.PushService;
-import org.example.simplefastpost.crawler.CLICrawler;
+import org.example.simplefastpost.crawler.cli.CLICrawler;
 import org.example.simplefastpost.model.Command;
 import org.example.simplefastpost.model.Folder;
 import org.example.simplefastpost.model.Headers;
@@ -69,7 +69,7 @@ public class CLIExecutor {
         this.historyRepository = new HistoryRepository(DB_URL);
         this.historyService = new HistoryService(historyRepository);
         this.requestController = new RequestController(historyService);
-        this.crawler = new CLICrawler();
+        this.crawler = new CLICrawler(DB_URL);
     }
 
     public void execute(String[] rawArgs) throws Exception {
