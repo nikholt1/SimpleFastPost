@@ -250,36 +250,49 @@ public class CLIExecutor {
                     }
 
                     // ===== SHOW HISTORY =====
+                    // ===== SHOW HISTORY =====
                     if ("history".equalsIgnoreCase(rawArgs[1])) {
 
+                        // 🔥 PURGE ALL SESSIONS
+                        if (rawArgs.length == 3 && "purge".equalsIgnoreCase(rawArgs[2])) {
+                            cliCrawlerService.deleteAllSessions();
+                            System.out.println("All crawl sessions deleted.");
+                            return;
+                        }
+
                         // List all sessions
+// List all sessions
                         if (rawArgs.length == 2) {
                             List<CrawlerSession> sessions = cliCrawlerService.getAllSessions();
+
+                            if (sessions == null || sessions.isEmpty()) {
+                                System.out.println("History empty.");
+                                return;
+                            }
+
                             System.out.println("===== ALL CRAWL SESSIONS =====");
-                            if (sessions.isEmpty()) {
-                                System.out.println("No sessions found.");
-                            } else {
-                                for (CrawlerSession s : sessions) {
-                                    System.out.println("Session ID: " + s.getId() +
-                                            ", Title: " + s.getTitle() +
-                                            ", Entities: " + s.getCrawlerEntities().size());
-                                }
+
+                            for (CrawlerSession s : sessions) {
+                                System.out.println("Session ID: " + s.getId() +
+                                        ", Title: " + s.getTitle() +
+                                        ", Entities: " + (s.getCrawlerEntities() != null ? s.getCrawlerEntities().size() : 0));
                             }
                         }
+
                         // Show detailed session
                         else if (rawArgs.length == 3) {
                             try {
                                 Long sessionId = Long.parseLong(rawArgs[2]);
                                 CrawlerSession session = cliCrawlerService.getSessionById(sessionId);
+
                                 if (session == null) {
                                     System.out.println("Session not found: ID " + sessionId);
-                                    break;
+                                    return;
                                 }
 
                                 System.out.println("===== SESSION DETAIL =====");
                                 System.out.println("Session ID: " + session.getId() + ", Title: " + session.getTitle());
 
-                                // Inline recursive printing of entities
                                 if (session.getCrawlerEntities() != null) {
                                     LinkedList<CrawlerEntity> stack = new LinkedList<>(session.getCrawlerEntities());
                                     LinkedList<String> prefixStack = new LinkedList<>();
@@ -309,17 +322,45 @@ public class CLIExecutor {
                                 System.out.println("Invalid session ID: " + rawArgs[2]);
                             }
                         }
+
                         else {
-                            System.out.println("Usage: crawl history [<sessionId>]");
+                            System.out.println("Usage: crawl history [<sessionId>|purge]");
                         }
 
+                        return;
+                    }
+
+                    // ===== DELETE SESSION =====
+                    if ("delete".equalsIgnoreCase(rawArgs[1])) {
+
+                        if (rawArgs.length != 3) {
+                            System.out.println("Usage: crawl delete <sessionId>");
+                            return;
+                        }
+
+                        try {
+                            Long sessionId = Long.parseLong(rawArgs[2]);
+
+                            CrawlerSession session = cliCrawlerService.getSessionById(sessionId);
+                            if (session == null) {
+                                System.out.println("Session not found: ID " + sessionId);
+                                return;
+                            }
+
+                            cliCrawlerService.deleteSession(sessionId);
+                            System.out.println("Deleted session ID: " + sessionId);
+
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid session ID: " + rawArgs[2]);
+                        }
+
+                        return; // 🔥 VERY IMPORTANT
                     }
                     // ===== RUN NEW CRAWL =====
                     else {
                         String baseUrl = rawArgs[1];
                         crawler.run(baseUrl);
 
-                        // Add to history
                         History crawlHistoryEntry = new History();
                         crawlHistoryEntry.setUrl(baseUrl);
                         crawlHistoryEntry.setAction("crawl -> " + baseUrl);

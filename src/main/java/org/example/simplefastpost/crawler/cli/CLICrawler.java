@@ -18,27 +18,27 @@ import org.jsoup.select.*;
 
 public class CLICrawler {
 
-
     private final CLICrawlerRepository cliCrawlerRepository;
     private final CLICrawlerService cliCrawlerService;
 
-    private static CrawlerSession session;
-    private static final Set<String> visited = new LinkedHashSet<>();
-    private static final Map<String, Set<String>> pageToEndpoints = new LinkedHashMap<>();
-    private static final Pattern fetchPattern =
-            Pattern.compile("fetch\\(([^)]*)\\)", Pattern.DOTALL);
+    private CrawlerSession session; // non-static now
+    private final Set<String> visited = new LinkedHashSet<>();
+    private final Map<String, Set<String>> pageToEndpoints = new LinkedHashMap<>();
+    private static final Pattern fetchPattern = Pattern.compile("fetch\\(([^)]*)\\)", Pattern.DOTALL);
 
     public CLICrawler(CLICrawlerService cliCrawlerService, CLICrawlerRepository cliCrawlerRepository) {
-
         this.cliCrawlerRepository = cliCrawlerRepository;
         this.cliCrawlerService = cliCrawlerService;
     }
 
     public void run(String baseUrl) {
-        // Create DB session
-        session = cliCrawlerService.createSession(baseUrl);
+        if (baseUrl == null || baseUrl.isEmpty()) {
+            throw new IllegalArgumentException("Base URL must not be null or empty");
+        }
 
-        // Start crawling
+        session = cliCrawlerService.createSession(baseUrl);
+        if (session == null) throw new RuntimeException("Failed to create crawler session.");
+
         crawl(baseUrl, null, 1);
         printAsciiWebGraph();
     }
@@ -56,20 +56,7 @@ public class CLICrawler {
                     .timeout(10000)
                     .get();
 
-            // Create entity for the current page
-            CrawlerEntity currentPageEntity = cliCrawlerService.createEntity(
-                    session,
-                    parentEntity,
-                    url,                   // title = url
-                    "PAGE",
-                    url,
-                    new ArrayList<>(),     // connections filled later
-                    null,                  // method N/A for pages
-                    null,                  // response N/A
-                    0
-            );
-
-            // 1️⃣ Collect all links on the current page first
+            // 1️⃣ Collect page links
             Set<String> pageLinks = new LinkedHashSet<>();
             Elements links = doc.select("a[href]");
             for (Element link : links) {
@@ -77,22 +64,16 @@ public class CLICrawler {
                 if (!nextUrl.isEmpty() && !nextUrl.startsWith("#") &&
                         !nextUrl.startsWith("mailto:") && !nextUrl.startsWith("javascript:")) {
                     pageLinks.add(nextUrl);
-                    pageToEndpoints.get(url).add("PAGE: " + nextUrl); // record page
+                    pageToEndpoints.get(url).add("PAGE: " + nextUrl);
                     System.out.println("Found webpageUrl: " + nextUrl);
                 }
             }
 
-            // Save connections (links) for this page
-            List<String> connections = new ArrayList<>();
-            for (String linkUrl : pageLinks) connections.add(linkUrl);
-            currentPageEntity.setConnections(connections);
-            cliCrawlerService.updateEntity(currentPageEntity);
-
             // 2️⃣ Scan scripts for fetch endpoints
+            Set<CrawlerEntity> apiEndpoints = new LinkedHashSet<>();
             Elements scripts = doc.select("script");
             for (Element script : scripts) {
-                scanFetchEndpoints(script.html(), url, currentPageEntity);
-
+                apiEndpoints.addAll(scanFetchEndpoints(script.html(), url));
                 String src = script.absUrl("src");
                 if (!src.isEmpty()) {
                     try {
@@ -102,14 +83,38 @@ public class CLICrawler {
                                 .timeout(10000)
                                 .execute()
                                 .body();
-                        scanFetchEndpoints(jsContent, url, currentPageEntity);
+                        apiEndpoints.addAll(scanFetchEndpoints(jsContent, url));
                     } catch (Exception e) {
                         System.out.println("Failed to fetch JS: " + src + " (" + e.getMessage() + ")");
                     }
                 }
             }
 
-            // 3️⃣ Recursively crawl all the links found on this page
+            // 3️⃣ Create page entity with all unique connections
+            Set<String> connectionsSet = new LinkedHashSet<>(pageLinks);
+            for (CrawlerEntity api : apiEndpoints) connectionsSet.add(api.getUrl()); // deduplicate
+
+            List<String> connections = new ArrayList<>(connectionsSet);
+
+            CrawlerEntity currentPageEntity = cliCrawlerService.createEntity(
+                    session,
+                    parentEntity,
+                    url,
+                    "PAGE",
+                    url,
+                    connections,
+                    null,
+                    null,
+                    0
+            );
+
+            // 4️⃣ Set parent for all API endpoints
+            for (CrawlerEntity api : apiEndpoints) {
+                api.setParent(currentPageEntity);
+                cliCrawlerService.updateEntity(api);
+            }
+
+            // 5️⃣ Recursively crawl all page links
             for (String nextUrl : pageLinks) {
                 crawl(nextUrl, currentPageEntity, depth + 1);
             }
@@ -119,51 +124,56 @@ public class CLICrawler {
         }
     }
 
-    private void scanFetchEndpoints(String js, String pageUrl, CrawlerEntity parentEntity) {
+    private Set<CrawlerEntity> scanFetchEndpoints(String js, String pageUrl) {
+        Set<CrawlerEntity> endpoints = new LinkedHashSet<>();
         Matcher matcher = fetchPattern.matcher(js);
 
         while (matcher.find()) {
             String fetchCall = matcher.group(1);
-
             String endpoint = extractUrl(fetchCall);
             String method = extractMethod(fetchCall);
 
             if (endpoint != null) {
-                endpoint = resolveUrl(pageUrl, endpoint);
-
-                pageToEndpoints
-                        .computeIfAbsent(pageUrl, k -> new LinkedHashSet<>())
+                endpoint = resolvePlaceholders(resolveUrl(pageUrl, endpoint));
+                pageToEndpoints.computeIfAbsent(pageUrl, k -> new LinkedHashSet<>())
                         .add(method + " " + endpoint);
 
                 System.out.println("Found endpoint on page [" + pageUrl + "]: " + method + " " + endpoint);
 
-                // Save endpoint as entity
-                cliCrawlerService.createEntity(
+                CrawlerEntity apiEntity = cliCrawlerService.createEntity(
                         session,
-                        parentEntity,
+                        null, // parent set later
                         endpoint,
                         "API",
                         endpoint,
-                        new ArrayList<>(), // endpoints don’t have connections
+                        new ArrayList<>(),
                         method,
-                        null,  // response unknown
+                        null,
                         0
                 );
+                endpoints.add(apiEntity);
             }
         }
+        return endpoints;
+    }
+
+    // Replaces dynamic placeholders like ${BASE_URL}, ${id}, ${commandId} safely
+    private static String resolvePlaceholders(String url) {
+        if (url == null) return null;
+        url = url.replace("${BASE_URL}", "");
+        url = url.replaceAll("\\$\\{[^}]+}", ""); // remove other placeholders
+        return url;
     }
 
     private static String extractUrl(String fetchCall) {
         Matcher m = Pattern.compile("([\"'`])([^\"'`]+)\\1").matcher(fetchCall);
-        if (m.find()) return m.group(2);
-        return null;
+        return m.find() ? m.group(2) : null;
     }
 
     private static String extractMethod(String fetchCall) {
         Matcher m = Pattern.compile("method\\s*:\\s*[\"'](GET|POST|PUT|DELETE|PATCH)[\"']",
                 Pattern.CASE_INSENSITIVE).matcher(fetchCall);
-        if (m.find()) return m.group(1).toUpperCase();
-        return "GET";
+        return m.find() ? m.group(1).toUpperCase() : "GET";
     }
 
     private static String resolveUrl(String base, String endpoint) {
@@ -174,29 +184,20 @@ public class CLICrawler {
         }
     }
 
-    private static void printAsciiWebGraph() {
+    private void printAsciiWebGraph() {
         System.out.println("\n===== DATA =====");
         for (String page : pageToEndpoints.keySet()) {
             System.out.println(page);
 
-            // Separate pages from API endpoints
             Set<String> pages = new LinkedHashSet<>();
             Set<String> endpoints = new LinkedHashSet<>();
-
             for (String entry : pageToEndpoints.get(page)) {
                 if (entry.startsWith("PAGE: ")) pages.add(entry.substring(6));
                 else endpoints.add(entry);
             }
 
-            // Print linked pages first
-            for (String linkedPage : pages) {
-                System.out.println("|_ PAGE: " + linkedPage);
-            }
-
-            // Print endpoints after
-            for (String endpoint : endpoints) {
-                System.out.println("|_ " + endpoint);
-            }
+            for (String linkedPage : pages) System.out.println("|_ PAGE: " + linkedPage);
+            for (String endpoint : endpoints) System.out.println("|_ " + endpoint);
             System.out.println();
         }
     }

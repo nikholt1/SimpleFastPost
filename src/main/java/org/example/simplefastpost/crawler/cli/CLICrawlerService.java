@@ -77,8 +77,14 @@ public class CLICrawlerService {
 
 
 
-    public void deleteSession(CrawlerSession session) {
-        repo.deleteSession(session.getId());
+    public void deleteSession(Long sessionId) {
+        repo.deleteSession(sessionId);
+    }
+    public void deleteAllSessions() {
+        List<CrawlerSession> sessions = repo.getAllSessions();
+        for (CrawlerSession session : sessions ) {
+            repo.deleteSession(session.getId());
+        }
     }
 
     public void deleteEntity(CrawlerEntity entity) {
