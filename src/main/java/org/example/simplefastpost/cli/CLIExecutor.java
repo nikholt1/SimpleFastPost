@@ -301,7 +301,7 @@ public class CLIExecutor {
                                     while (!stack.isEmpty()) {
                                         CrawlerEntity entity = stack.pollFirst();
                                         String prefix = prefixStack.pollFirst();
-                                        System.out.println(prefix + entity.getType() + ": " + entity.getTitle());
+                                        System.out.println(prefix + entity.getType() + ": " + entity.getTitle() + " " + entity.getMethod());
 
                                         if (entity.getConnections() != null) {
                                             for (String conn : entity.getConnections()) {
