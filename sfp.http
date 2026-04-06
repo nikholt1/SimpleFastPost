@@ -20,6 +20,15 @@ POST https://jsonplaceholder.typicode.com/posts
   "body" : "This is a test",
   "userId" : 1
 }
+### expected:
+#200
+#{
+#  "title" : "this is for the test",
+#  "body" : "testing new expected outcome",
+#  "userId" : 10
+#}
+
+
 
  
 ### place folder thisIsfolderName;

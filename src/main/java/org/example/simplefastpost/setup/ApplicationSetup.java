@@ -36,6 +36,10 @@ public class ApplicationSetup {
                 command TEXT NOT NULL,
                 body TEXT,
                 folder_id INTEGER,
+                response TEXT,
+                status INTEGER,
+                expected_response TEXT,
+                expected_status INTEGER,
                 FOREIGN KEY (folder_id) REFERENCES folder(id)
             )
         """);

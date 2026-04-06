@@ -46,7 +46,6 @@ public class HttpSyncService {
 
         // Clear existing data
         try {
-
             cliFolderService.deleteAllFolders();
             cliCommandService.deleteAllCommands();
             headerService.deleteAllHeadersInDB();
@@ -72,7 +71,7 @@ public class HttpSyncService {
                         e.printStackTrace();
                     }
                 }
-                counter ++;
+                counter++;
             }
 
             // ---------------- PLACE BLOCK ----------------
@@ -120,9 +119,9 @@ public class HttpSyncService {
                 while (i < lines.size()) {
                     String headerLine = lines.get(i).trim();
 
-                    if (headerLine.isEmpty()) break; // empty line ends headers
+                    if (headerLine.isEmpty()) break;
                     if (headerLine.startsWith("###")) {
-                        i--; // backtrack for next section
+                        i--;
                         break;
                     }
 
@@ -153,7 +152,51 @@ public class HttpSyncService {
                     bodyBuilder.append(bodyLine).append("\n");
                     i++;
                 }
-                String body = bodyBuilder.toString();
+                String body = bodyBuilder.toString().trim();
+
+                // ---------------- EXPECTED ----------------
+                // ---------------- EXPECTED ----------------
+                Integer expectedStatus = 0;   // default if no expected block
+                String expectedBody = null;
+
+                if (i + 1 < lines.size() && lines.get(i + 1).trim().startsWith("### expected:")) {
+
+                    i++; // move to ### expected:
+                    i++; // move to first expected line
+
+                    boolean isFirstLine = true;
+                    StringBuilder expectedBodyBuilder = new StringBuilder();
+
+                    while (i < lines.size()) {
+                        String rawLine = lines.get(i).trim();
+
+                        if (rawLine.startsWith("###")) {
+                            i--;
+                            break;
+                        }
+
+                        if (rawLine.startsWith("#")) {
+                            String cleaned = rawLine.substring(1).trim();
+
+                            if (isFirstLine) {
+                                try {
+                                    expectedStatus = Integer.parseInt(cleaned);
+                                } catch (NumberFormatException e) {
+                                    System.out.println("Invalid expected status: " + cleaned);
+                                    expectedStatus = 0; // fallback safety
+                                }
+                                isFirstLine = false;
+                            } else {
+                                expectedBodyBuilder.append(cleaned).append("\n");
+                            }
+                        }
+
+                        i++;
+                    }
+
+                    String parsedBody = expectedBodyBuilder.toString().trim();
+                    expectedBody = parsedBody.isEmpty() ? null : parsedBody;
+                }
 
                 // ---------------- FIND FOLDER ----------------
                 Long folderId = null;
@@ -176,10 +219,19 @@ public class HttpSyncService {
                 Command createdCommand = null;
 
                 try {
-                    createdCommand = cliCommandService.createCommand(commandName, commandStr, body, folderId);
+                    createdCommand = cliCommandService.createCommand(
+                            commandName,
+                            commandStr,
+                            body,
+                            folderId,
+                            null,
+                            0,
+                            expectedBody,
+                            expectedStatus
+                    );
                 } catch (Exception e) {
                     e.printStackTrace();
-                    continue; // skip headers if command creation fails
+                    continue;
                 }
 
                 // ---------------- SAVE HEADERS ----------------

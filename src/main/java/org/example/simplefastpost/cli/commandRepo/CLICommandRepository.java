@@ -22,7 +22,9 @@ public class CLICommandRepository {
             String name,
             String command,
             String body,
-            Long folderId
+            Long folderId,
+            String expected_response,
+            int expected_status
     ) throws SQLException {
 
         if (commandNameExists(name)) {
@@ -31,8 +33,8 @@ public class CLICommandRepository {
         }
 
         String sql = """
-        INSERT INTO command (name, command, body, folder_id)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO command (name, command, body, folder_id, expected_response, expected_status)
+        VALUES (?, ?, ?, ?, ?, ?)
     """;
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
@@ -47,18 +49,28 @@ public class CLICommandRepository {
             } else {
                 stmt.setNull(4, Types.INTEGER);
             }
+            if (expected_response != null) {
+                stmt.setString(5, expected_response);
+            } else {
+                stmt.setString(5, null);
+            }
+            if (expected_status != 0) {
+                stmt.setInt(6, expected_status);
+
+            } else {
+                stmt.setInt(6, 0);
+            }
+
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
                 throw new SQLException("Creating command failed, no rows affected.");
             }
 
-            // Retrieve the generated ID
             try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     long id = generatedKeys.getLong(1);
 
-                    // Return a new Command object
                     Command createdCommand = new Command();
                     createdCommand.setId(id);
                     createdCommand.setName(name);
@@ -78,7 +90,7 @@ public class CLICommandRepository {
         List<Command> commands = new ArrayList<>();
 
         String sql = """
-        SELECT id, name, command, body, folder_id
+        SELECT id, name, command, body, folder_id, expected_response, expected_status
         FROM command
     """;
 
@@ -95,14 +107,16 @@ public class CLICommandRepository {
 
                 Object folderObj = rs.getObject("folder_id");
                 Long folderId = folderObj == null ? null : ((Number) folderObj).longValue();
-
+                String expected_response = rs.getString("expected_response");
+                int expected_status = rs.getInt("expected_status");
                 Command cmd = new Command();
                 cmd.setId(id);
                 cmd.setName(name);
                 cmd.setCommand(command);
                 cmd.setBody(body);
                 cmd.setFolderId(folderId);
-
+                cmd.setExpected_response(expected_response);
+                cmd.setExpected_status(expected_status);
                 commands.add(cmd);
             }
         }
@@ -112,9 +126,10 @@ public class CLICommandRepository {
 
     public void listCommands() throws SQLException {
         String sql = """
-        SELECT id, name, command, body, folder_id
+        SELECT id, name, command, body, folder_id, expected_response, expected_status
         FROM command
     """;
+
         boolean found = false;
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
@@ -128,17 +143,29 @@ public class CLICommandRepository {
                 String command = rs.getString("command");
                 String body = rs.getString("body");
                 Object folderId = rs.getObject("folder_id");
+                String expectedResponse = rs.getString("expected_response");
+                int expectedStatus = rs.getInt("expected_status");
 
                 System.out.printf("Name: %s | Command: %s | Folder: %s%n", name, command, folderId);
 
                 if (body != null && !body.isBlank()) {
-                    String[] lines = body.split("\\R");
-                    for (String line : lines) {
+                    for (String line : body.split("\\R")) {
                         System.out.println("---> " + line);
                     }
-                } else {
-                    System.out.println();
                 }
+
+                if (expectedStatus != 0) {
+                    System.out.println("Expected status: " + expectedStatus);
+                }
+
+                if (expectedResponse != null && !expectedResponse.isBlank()) {
+                    System.out.println("Expected response:");
+                    for (String line : expectedResponse.split("\\R")) {
+                        System.out.println("         ---> " + line);
+                    }
+                }
+
+                System.out.println();
             }
         }
 
@@ -169,14 +196,16 @@ public class CLICommandRepository {
             String name,
             String command,
             String body,
-            Long folderId
+            Long folderId,
+            String expected_response,
+            int expected_status
     ) throws SQLException {
 
         String sql = """
-            UPDATE command
-            SET name = ?, command = ?, body = ?, folder_id = ?
-            WHERE id = ?
-        """;
+        UPDATE command
+        SET name = ?, command = ?, body = ?, folder_id = ?, expected_response = ?, expected_status = ?
+        WHERE id = ?
+    """;
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -188,10 +217,13 @@ public class CLICommandRepository {
             if (folderId != null) {
                 stmt.setLong(4, folderId);
             } else {
-                stmt.setNull(4, Types.INTEGER);
+                stmt.setNull(4, Types.BIGINT);
             }
 
-            stmt.setLong(5, id);
+            stmt.setString(5, expected_response); // can be null
+            stmt.setInt(6, expected_status); // default 0
+
+            stmt.setLong(7, id);
 
             int rows = stmt.executeUpdate();
             if (rows == 0) {

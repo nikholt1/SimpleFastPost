@@ -20,7 +20,11 @@ public interface CommandService {
             String name,
             String command,
             String body,
-            Long folderId
+            Long folderId,
+            String response,
+            int status,
+            String expected_response,
+            int expected_status
     );
 
     CommandDTO updateCommand(
@@ -28,7 +32,11 @@ public interface CommandService {
             String name,
             String command,
             String body,
-            Long folderId
+            Long folderId,
+            String response,
+            int status,
+            String expected_response,
+            int expected_status
     );
 
     void deleteCommand(Long commandId);

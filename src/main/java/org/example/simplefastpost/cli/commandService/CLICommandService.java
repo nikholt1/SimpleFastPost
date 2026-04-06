@@ -17,10 +17,14 @@ public class CLICommandService {
             String name,
             String command,
             String body,
-            Long folderId
+            Long folderId,
+            String response,
+            int status,
+            String expected_response,
+            int expected_status
     ) {
         try {
-            return cliCommandRepository.createCommand(name, command, body, folderId);
+            return cliCommandRepository.createCommand(name, command, body, folderId, expected_response, expected_status);
 
         } catch (Exception e) {
             System.err.println("Failed to create command: " + e.getMessage());
@@ -56,10 +60,12 @@ public class CLICommandService {
             String name,
             String command,
             String body,
-            Long folderId
+            Long folderId,
+            String expected_response,
+            int expected_status
     ) {
         try {
-            cliCommandRepository.updateCommand(id, name, command, body, folderId);
+            cliCommandRepository.updateCommand(id, name, command, body, folderId, expected_response, expected_status );
 
         } catch (Exception e) {
             System.err.println("Failed to update command: " + e.getMessage());

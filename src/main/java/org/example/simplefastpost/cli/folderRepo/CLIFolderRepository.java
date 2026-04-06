@@ -172,7 +172,11 @@ public class CLIFolderRepository {
                     Command cmd = new Command(
                             rs.getString("name"),
                             rs.getString("command"),
-                            rs.getString("body")
+                            rs.getString("body"),
+                            rs.getString("response"),
+                            rs.getInt("status"),
+                            rs.getString("expected_response"),
+                            rs.getInt("expected_status")
                     );
                     commands.add(cmd);
                 }

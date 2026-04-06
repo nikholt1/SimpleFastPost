@@ -136,19 +136,16 @@ public class HttpSyncService {
                     }
                 }
 
-                // ------------------------- CREATE COMMAND -------------------------
                 String commandStr = "-m " + method + " -u " + url;
                 Command createdCommand = null;
                 try {
-                    // <-- FIX: capture the returned command
-                    CommandDTO commandDTO = cliCommandService.createCommand(commandName, commandStr, body, folderId);
+                    CommandDTO commandDTO = cliCommandService.createCommand(commandName, commandStr, body, folderId, null, 1, null, 1);
                     Folder emptyFolder = new Folder();
                     createdCommand = CommandMapper.fromDTO(commandDTO, emptyFolder);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
-                // ------------------------- SAVE HEADERS -------------------------
                 if (createdCommand != null && !headersList.isEmpty()) {
                     for (Headers h : headersList) {
                         h.setCommandId(createdCommand.getId());

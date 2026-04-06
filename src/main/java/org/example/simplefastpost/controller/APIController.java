@@ -112,7 +112,11 @@ public class APIController {
                 request.name(),
                 request.command(),
                 request.body(),
-                request.folderId()
+                request.folderId(),
+                request.response(),
+                request.status(),
+                request.expected_response(),
+                request.expected_status()
         );
         return ResponseEntity.ok(saved);
     }
@@ -127,7 +131,11 @@ public class APIController {
                 request.name(),
                 request.command(),
                 request.body(),
-                request.folderId()
+                request.folderId(),
+                request.response(),
+                request.status(),
+                request.expected_response(),
+                request.expected_status()
         );
         return ResponseEntity.ok(updated);
     }

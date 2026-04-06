@@ -99,6 +99,31 @@ public class PushService {
                     }
 
 
+                    String expectedResponse = command.getExpected_response();
+                    int expectedStatus = command.getExpected_status();
+                    if (expectedStatus != 0) {
+                        writer.write("#" + expectedStatus);
+
+                    }
+                    if (expectedResponse != null) {
+                        Object json = mapper.readValue(expectedResponse, Object.class);
+
+                        String pretty = mapper
+                                .writerWithDefaultPrettyPrinter()
+                                .writeValueAsString(json);
+
+                        String commented = pretty
+                                .lines()
+                                .map(line -> "# " + line)
+                                .reduce((a, b) -> a + "\n" + b)
+                                .orElse("");
+
+                        writer.write(commented);
+                        writer.write("\n\n");
+                    } else {
+                        writer.write("\n");
+                        writer.write("\n \n");
+                    }
 
 
                 }

@@ -104,6 +104,7 @@ public class CLIExecutor {
         boolean saveMode = false;
         boolean helpMode = false;
         boolean updateMode = false;
+        boolean testMode = false;
         String commandName = null;
         String folderName = null;
         String method = "GET";
@@ -120,6 +121,8 @@ public class CLIExecutor {
                 method = rawArgs[++i].toUpperCase();
             } else if (arg.equalsIgnoreCase("-u") && i + 1 < rawArgs.length) {
                 url = rawArgs[++i];
+            } else if (arg.equalsIgnoreCase("-t")) {
+                testMode = true;
             } else if (arg.equalsIgnoreCase("-sv")) {
                 saveMode = true;
             } else if (arg.equalsIgnoreCase("-f") && i + 1 < rawArgs.length) {
@@ -174,33 +177,52 @@ public class CLIExecutor {
 
                 case "ls":
                     if (folderName != null) {
-                        List<Command> cmds =
-                                cliFolderRepository.getCommandsInFolder(folderName);
+                        List<Command> cmds = cliFolderRepository.getCommandsInFolder(folderName);
                         if (cmds.isEmpty()) {
                             System.out.println("No folders or commands found in DB");
+                        } else {
+                            for (Command c : cmds) {
+                                System.out.println(c.getName() + " -> " + c.getCommand());
+                            }
                         }
-                        cmds.forEach(c ->
-                                System.out.println(c.getName() + " -> " + c.getCommand()));
                     } else {
                         List<Folder> folders = cliFolderService.getAllFolders();
                         List<Command> commands = cliCommandService.getAllCommands();
 
-                        for (Folder folder  : folders) {
+                        // Commands inside folders
+                        for (Folder folder : folders) {
                             System.out.println("[] " + folder.getProjectName());
                             for (Command command : commands) {
-                                if (command.getFolderId() == folder.getId()) {
+                                if (folder.getId().equals(command.getFolderId())) {
                                     System.out.printf("         Name: %s | Command: %s%n", command.getName(), command.getCommand());
 
                                     List<Headers> headers = headerService.getAllHeadersFromCommandId(command.getId());
-                                    if (!headers.isEmpty()) {
-                                        for (Headers header : headers) {
-                                            System.out.println("         " + header.getKey() + ": " + header.getValue());
-                                        }
+                                    for (Headers header : headers) {
+                                        System.out.println("         " + header.getKey() + ": " + header.getValue());
                                     }
-                                    String commandBody = command.getBody();
-                                    if (commandBody != null && !commandBody.isBlank()) {
-                                        String[] lines = commandBody.split("\\R");
-                                        for (String line : lines) {
+
+                                    body = command.getBody();
+                                    if (body != null && !body.isBlank()) {
+                                        for (String line : body.split("\\R")) {
+                                            System.out.println("         ---> " + line);
+                                        }
+                                        if (command.getExpected_status() != 0 || command.getExpected_response() != null) {
+
+                                        } else {
+                                            System.out.println();
+                                        }
+                                    } else {
+                                        System.out.println();
+                                    }
+
+                                    if (command.getExpected_status() != 0) {
+                                        System.out.println("        Expected status: " + command.getExpected_status());
+                                    }
+
+                                    String expectedResponse = command.getExpected_response();
+                                    if (expectedResponse != null && !expectedResponse.isBlank()) {
+                                        System.out.println("        Expected response: ");
+                                        for (String line : expectedResponse.split("\\R")) {
                                             System.out.println("         ---> " + line);
                                         }
                                         System.out.println();
@@ -210,32 +232,42 @@ public class CLIExecutor {
                                 }
                             }
                         }
+
+                        // Root commands (no folder)
                         for (Command command : commands) {
                             if (command.getFolderId() == null) {
                                 System.out.println("\n{} Root Commands");
                                 System.out.printf("Name: %s | Command: %s%n", command.getName(), command.getCommand());
 
                                 List<Headers> headers = headerService.getAllHeadersFromCommandId(command.getId());
-                                if (!headers.isEmpty()) {
-                                    for (Headers header : headers) {
-                                        System.out.println(header.getKey() + ": " + header.getValue());
-                                    }
+                                for (Headers header : headers) {
+                                    System.out.println(header.getKey() + ": " + header.getValue());
                                 }
 
-                                String commandBody = command.getBody();
-                                if (commandBody != null && !commandBody.isBlank()) {
-                                    String[] lines = commandBody.split("\\R");
-                                    for (String line : lines) {
-                                        System.out.println("---> " + line);
+                                body = command.getBody();
+                                if (body != null && !body.isBlank()) {
+                                    for (String line : body.split("\\R")) {
+                                        System.out.println("    ---> " + line);
                                     }
-
-                                } else {
                                     System.out.println();
                                 }
 
+                                if (command.getExpected_status() != 0) {
+                                    System.out.println("        Expected status: " + command.getExpected_status());
+                                }
+
+                                String expectedResponse = command.getExpected_response();
+                                if (expectedResponse != null && !expectedResponse.isBlank()) {
+                                    System.out.println("        Expected response: ");
+                                    for (String line : expectedResponse.split("\\R")) {
+                                        System.out.println("         ---> " + line);
+                                    }
+                                    System.out.println();
+                                }
+
+                                System.out.println(); // spacing after each root command
                             }
                         }
-
                     }
                     return;
                 case "api":
@@ -544,7 +576,9 @@ public class CLIExecutor {
                                             command.getName(),
                                             command.getCommand(),
                                             command.getBody(),
-                                            folderId
+                                            folderId,
+                                            command.getExpected_response(),
+                                            command.getExpected_status()
                                     );
                                     System.out.println("Folder removed from command '" + targetName + "' (folderId set to null)");
                                     return; // done
@@ -572,7 +606,9 @@ public class CLIExecutor {
                                         command.getName(),
                                         command.getCommand(),
                                         command.getBody(),
-                                        folderId
+                                        folderId,
+                                        command.getExpected_response(),
+                                        command.getExpected_status()
                                 ); // persist change
 
                                 System.out.println("Updated folderId of command '" + targetName + "' to folder '" + updateValue + "' (id=" + folderId + ")");
@@ -633,7 +669,7 @@ public class CLIExecutor {
 
                     }
 
-                    handleUpdate(id, folderId, updateTarget, updateField, updateValue);
+                    handleUpdate(id, folderId, updateTarget, updateField, updateValue, null, 0);
                     return;
 
                 case "purge":
@@ -670,12 +706,22 @@ public class CLIExecutor {
 
             String fullCommand =
                     "-m " + method + " -u " + url + " -cmd " + commandName;
+            String expected_response = null;
+            int expected_status = 0;
+            if (testMode) {
+                expected_response = readJsonBody(null, replayMode);
 
+            }
             cliCommandService.createCommand(
                     commandName,
                     fullCommand,
                     body,
-                    folderId
+                    folderId,
+                    null,
+                    0,
+                    expected_response,
+                    expected_status
+
             );
             Command savedCommand = cliCommandService.getCommandByName(commandName);
             List<Headers> headersToAdd = readHeadersInteractively();
@@ -867,7 +913,9 @@ HISTORY
             Long folderId,
             String target,
             String field,
-            String value
+            String value,
+            String expected_response,
+            int expected_status
     ) throws Exception {
 
         switch (target) {
@@ -899,7 +947,9 @@ HISTORY
                         name,
                         commandStr,
                         body,
-                        newFolderId
+                        newFolderId,
+                        expected_response,
+                        expected_status
                 );
             }
 

@@ -57,12 +57,14 @@ public class CommandServiceImpl implements CommandService {
         commandRepository.deleteById(commandId);
     }
     @Override
-    public CommandDTO createCommand(String name, String command, String body, Long folderId) {
+    public CommandDTO createCommand(String name, String command, String body, Long folderId, String response, int status, String expected_response, int expected_status) {
 
         Command cmd = new Command();
         cmd.setName(name);
         cmd.setCommand(command);
         cmd.setBody(body);
+        cmd.setExpected_response(expected_response);
+        cmd.setExpected_status(expected_status);
 
         if (folderId != null) {
             Folder folder = folderRepository.findById(folderId)
@@ -79,7 +81,11 @@ public class CommandServiceImpl implements CommandService {
             String name,
             String command,
             String body,
-            Long folderId
+            Long folderId,
+            String response,
+            int status,
+            String expected_response,
+            int expected_status
     ) {
 
         Command existing = commandRepository.findById(commandId)
