@@ -706,12 +706,9 @@ public class CLIExecutor {
 
             String fullCommand =
                     "-m " + method + " -u " + url + " -cmd " + commandName;
+
             String expected_response = null;
             int expected_status = 0;
-            if (testMode) {
-                expected_response = readJsonBody(null, replayMode);
-
-            }
             cliCommandService.createCommand(
                     commandName,
                     fullCommand,
@@ -731,7 +728,9 @@ public class CLIExecutor {
                 header.setCommandId(savedCommand.getId());
                 headerService.createHeader(header);
             }
-
+            if (testMode) {
+                requestController.sendTestRequest(method, url, body, headersToAdd, savedCommand.getId());
+            }
             requestController.sendRequest(method, url, body, headersToAdd, savedCommand.getId());
             return;
         }
@@ -765,10 +764,15 @@ public class CLIExecutor {
         Command savedCommand = cliCommandService.getCommandByName(commandName);
         List<Headers> headersToAdd = readHeadersInteractively();
 
-
+        String expected_response = savedCommand.getExpected_response();
+        int expected_status = savedCommand.getExpected_status();
         for (Headers header : headersToAdd) {
             header.setCommandId(savedCommand.getId());
             headerService.createHeader(header);
+        }
+
+        if (testMode) {
+            requestController.sendTestRequest(method, url, body, headersToAdd, 0L);
         }
         requestController.sendRequest(method, url, body, headersToAdd, 0L);
     }
@@ -931,11 +935,22 @@ HISTORY
                 String commandStr = existing.getCommand();
                 String body = existing.getBody();
                 Long newFolderId = existing.getFolderId();
+                String newExpectedResponse = existing.getExpected_response();
+                int newExpectedStatus = existing.getExpected_status();
 
-                switch (field) {
+                switch (field.toLowerCase()) {
                     case "name" -> name = value;
                     case "body" -> body = readJsonBody(existing.getName(), false);
                     case "command" -> commandStr = value;
+                    case "expected_status" -> {
+                        try {
+                            newExpectedStatus = Integer.parseInt(value);
+                        } catch (NumberFormatException e) {
+                            System.err.println("Invalid expected_status: " + value);
+                            return;
+                        }
+                    }
+                    case "expected_response" -> newExpectedResponse = value;
                     default -> {
                         System.err.println("Unknown command field: " + field);
                         return;
@@ -948,9 +963,11 @@ HISTORY
                         commandStr,
                         body,
                         newFolderId,
-                        expected_response,
-                        expected_status
+                        newExpectedResponse,
+                        newExpectedStatus
                 );
+
+                System.out.println("Command updated successfully: " + field);
             }
 
             case "folder" -> {

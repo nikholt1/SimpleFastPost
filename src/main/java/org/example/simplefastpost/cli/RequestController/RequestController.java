@@ -67,4 +67,51 @@ public class RequestController {
     public void sendSavedRequest(Command command) {
 
     }
+
+    public void sendTestRequest(String method, String url, String body, List<Headers> headers, Long commandId) throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest.Builder builder = HttpRequest.newBuilder().uri(URI.create(url));
+
+        // Add all headers from the list
+        if (headers != null) {
+            for (Headers h : headers) {
+                if (h.getKey() != null && !h.getKey().isBlank()) {
+                    builder.header(h.getKey(), h.getValue() != null ? h.getValue() : "");
+                }
+            }
+        }
+
+        // Set the HTTP method and body
+        switch (method.toUpperCase()) {
+            case "POST":
+            case "PUT":
+            case "PATCH":
+            case "DELETE":
+                if (body != null && !body.isEmpty()) {
+                    builder.method(method.toUpperCase(), HttpRequest.BodyPublishers.ofString(body))
+                            .header("Content-Type", "application/json"); // default content type
+                } else {
+                    builder.method(method.toUpperCase(), HttpRequest.BodyPublishers.noBody());
+                }
+                break;
+            default:
+                builder.GET();
+        }
+
+        HttpResponse<String> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        System.out.println("\nRESPONSE:");
+        System.out.println("Status: " + response.statusCode());
+        System.out.println(response.body());
+
+        History history = new History();
+        history.setCreated(LocalDateTime.now());
+        history.setUrl(url);
+        history.setResponse(response.body());
+        history.setStatus(String.valueOf(response.statusCode()));
+        history.setAction(null);
+        history.setCommandId(commandId);
+        // maybe list of headers?
+        historyService.createHistoryEntity(history);
+    }
 }
