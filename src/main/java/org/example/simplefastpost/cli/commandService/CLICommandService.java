@@ -27,6 +27,16 @@ public class CLICommandService {
         }
         return null;
     }
+
+    public Command createCommandWithExpected(String name, String command, String body, Long folderId, String expected_response, String expected_status) {
+        try {
+            return cliCommandRepository.createCommandWithExpected(name, command, body, folderId, expected_response, expected_status);
+        }catch (Exception e) {
+            System.err.println("Failed to create command: " + e.getMessage());
+        }
+        return null;
+    }
+
     public List<Command> getAllCommands() {
         try {
             return cliCommandRepository.getAllCommands();

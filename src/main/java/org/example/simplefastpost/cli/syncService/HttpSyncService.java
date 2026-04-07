@@ -44,9 +44,7 @@ public class HttpSyncService {
         List<String> lines = Files.readAllLines(file);
         int counter = 0;
 
-        // Clear existing data
         try {
-
             cliFolderService.deleteAllFolders();
             cliCommandService.deleteAllCommands();
             headerService.deleteAllHeadersInDB();
@@ -61,7 +59,6 @@ public class HttpSyncService {
 
             String line = lines.get(i).trim();
 
-            // ---------------- MKDIR ----------------
             if (line.startsWith("#mkdir")) {
                 String[] parts = line.split("\\s+");
                 if (parts.length >= 4) {
@@ -72,10 +69,9 @@ public class HttpSyncService {
                         e.printStackTrace();
                     }
                 }
-                counter ++;
+                counter++;
             }
 
-            // ---------------- PLACE BLOCK ----------------
             if (line.startsWith("### place ")) {
 
                 String[] placeParts = line.split("\\s+");
@@ -91,7 +87,6 @@ public class HttpSyncService {
                     throw new IllegalArgumentException("Invalid place syntax: " + line);
                 }
 
-                // ---------------- COMMAND NAME ----------------
                 i++;
                 if (i >= lines.size()) break;
 
@@ -99,7 +94,6 @@ public class HttpSyncService {
                 String[] commandParts = commandLine.split("\\s+");
                 String commandName = commandParts[3].replace(";", "");
 
-                // ---------------- METHOD + URL ----------------
                 i++;
                 if (i >= lines.size()) break;
 
@@ -113,16 +107,15 @@ public class HttpSyncService {
                     continue;
                 }
 
-                // ---------------- HEADERS ----------------
                 List<Headers> headersList = new ArrayList<>();
                 i++;
 
                 while (i < lines.size()) {
                     String headerLine = lines.get(i).trim();
 
-                    if (headerLine.isEmpty()) break; // empty line ends headers
+                    if (headerLine.isEmpty()) break;
                     if (headerLine.startsWith("###")) {
-                        i--; // backtrack for next section
+                        i--;
                         break;
                     }
 
@@ -141,7 +134,6 @@ public class HttpSyncService {
                     i++;
                 }
 
-                // ---------------- BODY ----------------
                 StringBuilder bodyBuilder = new StringBuilder();
                 i++;
                 while (i < lines.size()) {
@@ -155,7 +147,36 @@ public class HttpSyncService {
                 }
                 String body = bodyBuilder.toString();
 
-                // ---------------- FIND FOLDER ----------------
+                String expectedStatus = null;
+                StringBuilder expectedResponseBuilder = new StringBuilder();
+
+                if (i + 1 < lines.size() && lines.get(i + 1).trim().startsWith("###expected")) {
+                    i += 2;
+
+                    while (i < lines.size()) {
+                        String expectedLine = lines.get(i).trim();
+
+                        if (expectedLine.startsWith("###")) {
+                            i--;
+                            break;
+                        }
+
+                        if (expectedLine.startsWith("#")) {
+                            String clean = expectedLine.substring(1).trim();
+
+                            if (expectedStatus == null && clean.matches("\\d+")) {
+                                expectedStatus = clean;
+                            } else {
+                                expectedResponseBuilder.append(clean).append("\n");
+                            }
+                        }
+
+                        i++;
+                    }
+                }
+
+                String expectedResponse = expectedResponseBuilder.toString().trim();
+
                 Long folderId = null;
                 if (!targetFolder.equals("root")) {
                     try {
@@ -171,18 +192,32 @@ public class HttpSyncService {
                     }
                 }
 
-                // ---------------- SAVE COMMAND ----------------
                 String commandStr = "-m " + method + " -u " + url;
                 Command createdCommand = null;
 
                 try {
-                    createdCommand = cliCommandService.createCommand(commandName, commandStr, body, folderId);
+                    if (expectedStatus != null || !expectedResponse.isEmpty()) {
+                        createdCommand = cliCommandService.createCommandWithExpected(
+                                commandName,
+                                commandStr,
+                                body,
+                                folderId,
+                                expectedResponse.isEmpty() ? null : expectedResponse,
+                                expectedStatus
+                        );
+                    } else {
+                        createdCommand = cliCommandService.createCommand(
+                                commandName,
+                                commandStr,
+                                body,
+                                folderId
+                        );
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    continue; // skip headers if command creation fails
+                    continue;
                 }
 
-                // ---------------- SAVE HEADERS ----------------
                 if (createdCommand != null && !headersList.isEmpty()) {
                     for (Headers h : headersList) {
                         h.setCommandId(createdCommand.getId());
@@ -197,7 +232,6 @@ public class HttpSyncService {
                 counter++;
             }
 
-            // ---------------- PROGRESS BAR ----------------
             int percent = (int) ((i / (double) total) * 100);
             if (percent > 100) percent = 100;
 

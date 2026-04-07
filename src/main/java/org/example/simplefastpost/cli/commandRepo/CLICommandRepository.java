@@ -8,15 +8,11 @@ import java.util.List;
 
 public class CLICommandRepository {
 
-
     private final String DB_URL;
 
     public CLICommandRepository(String DB_URL) {
         this.DB_URL = DB_URL;
-
-
     }
-
 
     public Command createCommand(
             String name,
@@ -27,12 +23,12 @@ public class CLICommandRepository {
 
         if (commandNameExists(name)) {
             System.out.println("Command name already exists: " + name);
-            return null; // return null instead of void
+            return null;
         }
 
         String sql = """
-        INSERT INTO command (name, command, body, folder_id)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO command (name, command, body, folder_id, expected_response, expected_status)
+        VALUES (?, ?, ?, ?, ?, ?)
     """;
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
@@ -48,23 +44,26 @@ public class CLICommandRepository {
                 stmt.setNull(4, Types.INTEGER);
             }
 
+            stmt.setString(5, null);
+            stmt.setString(6, null);
+
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
                 throw new SQLException("Creating command failed, no rows affected.");
             }
 
-            // Retrieve the generated ID
             try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     long id = generatedKeys.getLong(1);
 
-                    // Return a new Command object
                     Command createdCommand = new Command();
                     createdCommand.setId(id);
                     createdCommand.setName(name);
                     createdCommand.setCommand(command);
                     createdCommand.setBody(body);
                     createdCommand.setFolderId(folderId);
+                    createdCommand.setExpected_response(null);
+                    createdCommand.setExpected_status(null);
 
                     return createdCommand;
                 } else {
@@ -73,12 +72,71 @@ public class CLICommandRepository {
             }
         }
     }
+    public Command createCommandWithExpected(
+            String name,
+            String command,
+            String body,
+            Long folderId,
+            String expectedResponse,
+            String expectedStatus
+    ) throws SQLException {
 
+        if (commandNameExists(name)) {
+            System.out.println("Command name already exists: " + name);
+            return null;
+        }
+
+        String sql = """
+    INSERT INTO command (name, command, body, folder_id, expected_response, expected_status)
+    VALUES (?, ?, ?, ?, ?, ?)
+""";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setString(1, name);
+            stmt.setString(2, command);
+            stmt.setString(3, body);
+
+            if (folderId != null) {
+                stmt.setLong(4, folderId);
+            } else {
+                stmt.setNull(4, Types.INTEGER);
+            }
+
+            stmt.setString(5, expectedResponse);
+            stmt.setString(6, expectedStatus);
+
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Creating command failed, no rows affected.");
+            }
+
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    long id = generatedKeys.getLong(1);
+
+                    Command createdCommand = new Command();
+                    createdCommand.setId(id);
+                    createdCommand.setName(name);
+                    createdCommand.setCommand(command);
+                    createdCommand.setBody(body);
+                    createdCommand.setFolderId(folderId);
+                    createdCommand.setExpected_response(expectedResponse);
+                    createdCommand.setExpected_status(expectedStatus);
+
+                    return createdCommand;
+                } else {
+                    throw new SQLException("Creating command failed, no ID obtained.");
+                }
+            }
+        }
+    }
     public List<Command> getAllCommands() throws SQLException {
         List<Command> commands = new ArrayList<>();
 
         String sql = """
-        SELECT id, name, command, body, folder_id
+        SELECT id, name, command, body, folder_id, expected_response, expected_status
         FROM command
     """;
 
@@ -102,6 +160,8 @@ public class CLICommandRepository {
                 cmd.setCommand(command);
                 cmd.setBody(body);
                 cmd.setFolderId(folderId);
+                cmd.setExpected_response(rs.getString("expected_response"));
+                cmd.setExpected_status(rs.getString("expected_status"));
 
                 commands.add(cmd);
             }
@@ -112,7 +172,7 @@ public class CLICommandRepository {
 
     public void listCommands() throws SQLException {
         String sql = """
-        SELECT id, name, command, body, folder_id
+        SELECT id, name, command, body, folder_id, expected_response, expected_status
         FROM command
     """;
         boolean found = false;
@@ -174,7 +234,7 @@ public class CLICommandRepository {
 
         String sql = """
             UPDATE command
-            SET name = ?, command = ?, body = ?, folder_id = ?
+            SET name = ?, command = ?, body = ?, folder_id = ?, expected_response = ?, expected_status = ?
             WHERE id = ?
         """;
 
@@ -191,7 +251,9 @@ public class CLICommandRepository {
                 stmt.setNull(4, Types.INTEGER);
             }
 
-            stmt.setLong(5, id);
+            stmt.setString(5, null);
+            stmt.setString(6, null);
+            stmt.setLong(7, id);
 
             int rows = stmt.executeUpdate();
             if (rows == 0) {
@@ -201,6 +263,7 @@ public class CLICommandRepository {
             }
         }
     }
+
     private boolean commandNameExists(String name) throws SQLException {
         String sql = "SELECT 1 FROM command WHERE name = ? LIMIT 1";
 
@@ -213,6 +276,7 @@ public class CLICommandRepository {
             }
         }
     }
+
     public Command getCommandByName(String commandName) throws SQLException {
 
         String sql = """
@@ -222,6 +286,8 @@ public class CLICommandRepository {
             c.command,
             c.body,
             c.folder_id,
+            c.expected_response,
+            c.expected_status,
             f.project_name AS folder_name
         FROM command c
         LEFT JOIN folder f ON c.folder_id = f.id
@@ -247,6 +313,8 @@ public class CLICommandRepository {
                         command.setCommand(rs.getString("command"));
                         command.setBody(rs.getString("body"));
                         command.setFolderId(rs.getLong("folder_id"));
+                        command.setExpected_response(rs.getString("expected_response"));
+                        command.setExpected_status(rs.getString("expected_status"));
                     } else {
                         multiple = true;
                     }

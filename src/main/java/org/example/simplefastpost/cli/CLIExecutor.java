@@ -112,6 +112,7 @@ public class CLIExecutor {
         String updateTarget = null; // "command" or "folder"
         String updateField = null;  // name, body, etc.
         String updateValue = null;
+        boolean testMode = false;
 
         for (; i < rawArgs.length; i++) {
             String arg = rawArgs[i];
@@ -122,6 +123,8 @@ public class CLIExecutor {
                 url = rawArgs[++i];
             } else if (arg.equalsIgnoreCase("-sv")) {
                 saveMode = true;
+            }else if (arg.equalsIgnoreCase("-t")) {
+                testMode = true;
             } else if (arg.equalsIgnoreCase("-f") && i + 1 < rawArgs.length) {
                 folderName = rawArgs[++i];
             } else if ((arg.equalsIgnoreCase("-cmd") || arg.equalsIgnoreCase("-scmd"))

@@ -11,6 +11,8 @@
 ### command name commandNameAfterPush;
 GET https://jsonplaceholder.typicode.com/posts/1
 
+
+ 
 ### place folder thisIsfolderName;
 ### command name commandName1;
 POST https://jsonplaceholder.typicode.com/posts
@@ -20,6 +22,13 @@ POST https://jsonplaceholder.typicode.com/posts
   "body" : "This is a test",
   "userId" : 1
 }
+###expected:
+#200
+#{
+#"title" : "Hello World",
+#"body" : "This is a test",
+#"userId" : 1
+#}
 
  
 ### place folder thisIsfolderName;
@@ -60,20 +69,30 @@ PUT https://jsonplaceholder.typicode.com/posts/1
 ### command name getCommand;
 GET https://jsonplaceholder.typicode.com/posts/1
 
+
+ 
 ### place folder localhostTest;
 ### command name testGetAllCommands;
 GET localhost:8080/api/commands
 key: value
 
+
+ 
 ### place folder localhostTest;
 ### command name getOneCommandTest;
 GET localhost:8080/api/commands/1
 
+
+ 
 ### place folder localhostTest;
 ### command name wrongInputbutRightUrl;
 POST localhost:8080/api/commands/1
 
+
+ 
 ### place folder localhostTest;
 ### command name fail;
 GET localhost:8090/api/commands
 
+
+ 

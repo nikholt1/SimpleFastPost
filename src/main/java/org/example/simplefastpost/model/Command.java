@@ -25,12 +25,38 @@ public class Command {
     @JsonBackReference
     private Folder folder;
 
+    private String expected_response;
+    private String expected_status;
 
     public Command() {}
     public Command(String name, String command, String body) {
         this.name = name;
         this.command = command;
         this.body = body;
+    }
+
+    public Command(String name, String command, String body, String expected_response, String expected_status) {
+        this.name = name;
+        this.command = command;
+        this.body = body;
+        this.expected_response = expected_response;
+        this.expected_status = expected_status;
+    }
+
+    public String getExpected_status() {
+        return expected_status;
+    }
+
+    public void setExpected_status(String expected_status) {
+        this.expected_status = expected_status;
+    }
+
+    public String getExpected_response() {
+        return expected_response;
+    }
+
+    public void setExpected_response(String expected_response) {
+        this.expected_response = expected_response;
     }
 
     public Long getFolderId() {
