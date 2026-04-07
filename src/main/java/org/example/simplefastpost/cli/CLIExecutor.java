@@ -382,6 +382,8 @@ public class CLIExecutor {
 
                 case "run":
 
+//                    testMode = Arrays.asList(rawArgs.split("\\s+")).contains("-t");
+
                     // RUN ALL COMMANDS IN A FOLDER
                     if (folderName != null && commandName == null) {
 
@@ -392,7 +394,11 @@ public class CLIExecutor {
                             return;
                         }
 
-                        System.out.println("Running folder: " + folderName);
+                        System.out.println((testMode ? "Testing" : "Running") + " folder: " + folderName);
+
+                        boolean allPassed = true;
+                        int passed = 0;
+                        int failed = 0;
 
                         for (Command c : commands) {
 
@@ -401,11 +407,37 @@ public class CLIExecutor {
                                 continue;
                             }
 
+                            List<Headers> headers = headerService.getAllHeadersFromCommandId(c.getId());
                             System.out.println("> " + c.getCommand());
 
-                            execute(tokenize(c.getCommand()), depth + 1, true);
+                            if (testMode) {
+                                boolean result = requestController.sendTestRequest(headers, method, url, c);
+
+                                if (result) {
+                                    passed++;
+                                } else {
+                                    failed++;
+                                    allPassed = false;
+                                }
+                            } else {
+                                requestController.sendTestRequest(headers, method, url, c);
+                                // or sendRequest(...) if you split methods later
+                            }
                         }
 
+                        // Only print summary in test mode
+                        if (testMode) {
+                            System.out.println("\n==== TEST SUMMARY ====");
+                            System.out.println("Total: " + (passed + failed));
+                            System.out.println("Passed: " + passed);
+                            System.out.println("Failed: " + failed);
+
+                            if (!allPassed) {
+                                System.exit(1);
+                            } else {
+                                System.exit(0);
+                            }
+                        }
 
                         return;
                     }
@@ -428,10 +460,23 @@ public class CLIExecutor {
                         return;
                     }
 
-                    System.out.println("Re-running:");
+                    System.out.println((testMode ? "Testing:" : "Re-running:"));
                     System.out.println("> " + cmd.getCommand());
 
-                    execute(tokenize(cmd.getCommand()), depth + 1, true);
+                    List<Headers> headers = headerService.getAllHeadersFromCommandId(cmd.getId());
+
+                    if (testMode) {
+                        boolean result = requestController.sendTestRequest(headers, method, url, cmd);
+
+                        if (!result) {
+                            System.exit(1);
+                        } else {
+                            System.exit(0);
+                        }
+                    } else {
+                        execute(tokenize(cmd.getCommand()), depth + 1, true);
+                    }
+
                     return;
                 case "delete":
                     String flag = rawArgs[1].toLowerCase();
@@ -619,10 +664,10 @@ public class CLIExecutor {
 
                                 String headerKey = rawArgs[4];
 
-                                List<Headers> headers = headerService.getAllHeadersFromCommandId(command.getId());
+                                List<Headers> headersInCommand = headerService.getAllHeadersFromCommandId(command.getId());
 
                                 Headers header = null;
-                                for (Headers h : headers) {
+                                for (Headers h : headersInCommand) {
                                     if (h.getKey().equalsIgnoreCase(headerKey)) {
                                         header = h;
                                         break;
@@ -728,9 +773,7 @@ public class CLIExecutor {
                 header.setCommandId(savedCommand.getId());
                 headerService.createHeader(header);
             }
-            if (testMode) {
-                requestController.sendTestRequest(method, url, body, headersToAdd, savedCommand.getId());
-            }
+
             requestController.sendRequest(method, url, body, headersToAdd, savedCommand.getId());
             return;
         }
@@ -771,9 +814,9 @@ public class CLIExecutor {
             headerService.createHeader(header);
         }
 
-        if (testMode) {
-            requestController.sendTestRequest(method, url, body, headersToAdd, 0L);
-        }
+//        if (testMode) {
+//            requestController.sendTestRequest(method, url, body, headersToAdd, 0L);
+//        }
         requestController.sendRequest(method, url, body, headersToAdd, 0L);
     }
 
