@@ -280,57 +280,39 @@ public class CLICommandRepository {
     public Command getCommandByName(String commandName) throws SQLException {
 
         String sql = """
-        SELECT 
-            c.id,
-            c.name,
-            c.command,
-            c.body,
-            c.folder_id,
-            c.expected_response,
-            c.expected_status,
-            f.project_name AS folder_name
-        FROM command c
-        LEFT JOIN folder f ON c.folder_id = f.id
-        WHERE c.name LIKE ?
-        ORDER BY c.name
-    """;
+    SELECT 
+        c.id,
+        c.name,
+        c.command,
+        c.body,
+        c.folder_id,
+        c.expected_response,
+        c.expected_status,
+        f.project_name AS folder_name
+    FROM command c
+    LEFT JOIN folder f ON c.folder_id = f.id
+    WHERE c.name = ?
+""";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, "%" + commandName + "%");
+            stmt.setString(1, commandName);
 
             try (ResultSet rs = stmt.executeQuery()) {
 
-                Command command = null;
-                boolean multiple = false;
-
-                while (rs.next()) {
-                    if (command == null) {
-                        command = new Command();
-                        command.setId(rs.getLong("id"));
-                        command.setName(rs.getString("name"));
-                        command.setCommand(rs.getString("command"));
-                        command.setBody(rs.getString("body"));
-                        command.setFolderId(rs.getLong("folder_id"));
-                        command.setExpected_response(rs.getString("expected_response"));
-                        command.setExpected_status(rs.getString("expected_status"));
-                    } else {
-                        multiple = true;
-                    }
-                }
-
-                if (command == null) {
+                if (!rs.next()) {
                     return null;
                 }
-                System.out.println(command.getId() + " id of command");
-                if (multiple) {
-                    System.out.println(
-                            "Warning: multiple commands matched '" + commandName +
-                                    "', using first result: " + command.getName()
-                    );
-                    return null;
-                }
+
+                Command command = new Command();
+                command.setId(rs.getLong("id"));
+                command.setName(rs.getString("name"));
+                command.setCommand(rs.getString("command"));
+                command.setBody(rs.getString("body"));
+                command.setFolderId(rs.getLong("folder_id"));
+                command.setExpected_response(rs.getString("expected_response"));
+                command.setExpected_status(rs.getString("expected_status"));
 
                 return command;
             }
