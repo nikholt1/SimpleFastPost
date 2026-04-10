@@ -191,7 +191,7 @@ public class RequestController {
             if (!statusMatch || !responseMatch) {
                 System.err.println("Test failed for command: " + command.getName());
                 System.err.println("Expected Status: " + command.getExpected_status() + ", Actual: " + response.statusCode());
-                System.err.println("Expected Response: " + command.getExpected_response() + ", Actual: " + response.body());
+                System.err.println("Expected Response: \n" + command.getExpected_response() + "\nActual: \n" + response.body());
                 failCount++;
             } else {
                 System.out.println("Test passed for command: " + command.getName());
