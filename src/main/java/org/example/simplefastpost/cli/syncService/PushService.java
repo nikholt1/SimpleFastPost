@@ -32,17 +32,27 @@ public class PushService {
         try (FileWriter writer = new FileWriter(file.toString(), false)) {
             writer.write("");
         }
+
         try {
             List<Command> commands = commandService.getAllCommands();
             List<Folder> folders = folderService.getAllFolders();
+
+            int total = folders.size() + commands.size(); // total work
+            int progress = 0;
+
             try (FileWriter writer = new FileWriter(file.toString(), true)) {
 
+                // 📁 FOLDERS
                 for (Folder folder : folders) {
                     writer.write("#mkdir folder name " + folder.getProjectName() + ";\n");
                     writer.write("\n \n");
                     counter++;
+
+                    progress++;
+                    printProgressBar((progress * 100) / total);
                 }
 
+                // 📄 COMMANDS
                 for (Command command : commands) {
                     Folder folder = null;
                     if (command.getFolderId() != null) {
@@ -77,7 +87,6 @@ public class PushService {
                         }
                         writer.write(method + " " + url + "\n");
                     } else {
-                        finalCommand = commandString;
                         writer.write(finalCommand);
                     }
 
@@ -115,14 +124,32 @@ public class PushService {
                     }
 
                     writer.write("\n \n");
+
+                    // ✅ update progress AFTER each command
+                    progress++;
+                    printProgressBar((progress * 100) / total);
+
                 }
+                System.out.println();
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        System.out.print("Commands build: ");
+        for (int i = 0; i < counter; i++) {
+            System.out.print("\u001B[32m" + "+" + "\u001B[0m");
+        }
+        System.out.println();
         return counter;
     }
 
+    private void printProgressBar(int percent) {
+        int barLength = 30;
+        int filled = (percent * barLength) / 100;
+
+        String bar = "[" + "\u001B[32m" + "=".repeat(filled) + " ".repeat(barLength - filled) + "\u001B[0m" + "] " + percent + "%";
+        System.out.print("\r" + bar);
+        System.out.flush();
+    }
 }

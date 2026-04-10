@@ -195,7 +195,11 @@ public class CLIFolderRepository {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             int deleted = stmt.executeUpdate();
-            System.out.println("Deleted folders: " + deleted);
+            System.out.print("Deleted folders: " + deleted + " ");
+            for (int i = 0; i < deleted; i++) {
+                System.out.print("\u001B[31m" + "-" + "\u001B[0m");
+            }
+            System.out.println();
         }
     }
 }

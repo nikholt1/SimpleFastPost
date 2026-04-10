@@ -64,7 +64,7 @@ public class RequestController {
 
         HttpResponse<String> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
 
-        System.out.println("\nRESPONSE:");
+        System.out.println("\n" + "\u001B[48;5;58m" + "RESPONSE:" + "\u001B[0m");
         System.out.println("Status: " + response.statusCode());
         System.out.println(response.body());
 
@@ -189,18 +189,29 @@ public class RequestController {
             }
 
             if (!statusMatch || !responseMatch) {
-                System.err.println("Test failed for command: " + command.getName());
+                System.err.println("\u001B[48;5;52m" + "Test failed for command: " + command.getName() + "\u001B[0m");
                 System.err.println("Expected Status: " + command.getExpected_status() + ", Actual: " + response.statusCode());
                 System.err.println("Expected Response: \n" + command.getExpected_response() + "\nActual: \n" + response.body());
                 failCount++;
             } else {
-                System.out.println("Test passed for command: " + command.getName());
+
+                System.out.println("\u001B[48;5;58m" + "Test passed for command: " + command.getName() + "\u001B[0m" );
             }
         }
-
-        System.out.println("\\u001B[48;5;149m" + "SUMMARY: Total commands = " + commands.size() +
-                ", Passed = " + (commands.size() - failCount) +
-                ", Failed = " + failCount + "\u001B[0m");
-        System.exit(failCount > 0 ? 1 : 0);
+        System.out.println();
+        if (failCount == 0) {
+            System.out.println("\u001B[48;5;22m" + "SUMMARY: Total commands = " + commands.size() +
+                    ", Passed = " + (commands.size() - failCount) +
+                    ", Failed = " + failCount + "\u001B[0m");
+            System.exit(failCount > 0 ? 1 : 0);
+        }
+        if (failCount > 0) {
+            System.out.println("\u001B[48;5;52m" + "SUMMARY: Total commands = " + commands.size() +
+                    ", Passed = " + (commands.size() - failCount) +
+                    ", Failed = " + failCount + "\u001B[0m");
+            System.exit(failCount > 0 ? 1 : 0);
+        }
     }
+
+
 }

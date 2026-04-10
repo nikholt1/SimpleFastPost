@@ -243,15 +243,20 @@ public class HttpSyncService {
 
         printProgressBar(100);
         System.out.println();
-
+        System.out.print("Commands build: ");
+        for (int i = 0; i < counter; i++) {
+            System.out.print("\u001B[32m" + "+" + "\u001B[0m");
+        }
+        System.out.println();
         return counter;
+
     }
 
     private void printProgressBar(int percent) {
         int barLength = 30;
         int filled = (percent * barLength) / 100;
 
-        String bar = "[" + "=".repeat(filled) + " ".repeat(barLength - filled) + "] " + percent + "%";
+        String bar = "[" + "\u001B[32m" +  "=".repeat(filled) + " ".repeat(barLength - filled) + "\u001B[0m" +  "] " + percent + "%";
         System.out.print("\r" + bar);
         System.out.flush();
     }
