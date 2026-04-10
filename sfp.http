@@ -10,7 +10,16 @@
 ### place folder thisIsfolderName;
 ### command name commandNameAfterPush;
 GET https://jsonplaceholder.typicode.com/posts/1
+###expected:
+#200
+#{
+#  "userId": 1,
+#  "id": 1,
+#  "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+#  "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
+#}
 
+ 
 ### place folder thisIsfolderName;
 ### command name commandName1;
 POST https://jsonplaceholder.typicode.com/posts
@@ -20,6 +29,14 @@ POST https://jsonplaceholder.typicode.com/posts
   "body" : "This is a test",
   "userId" : 1
 }
+###expected:
+#201
+#{
+#"title" : "Hello World",
+#"body" : "This is a test",
+#"userId" : 1,
+#"id": 101
+#}
 
  
 ### place folder thisIsfolderName;
@@ -31,7 +48,14 @@ POST https://jsonplaceholder.typicode.com/posts
   "body" : "This is a test",
   "userId" : 1
 }
-
+###expected:
+#201
+#{
+#"title" : "Hello World",
+#"body" : "This is a test",
+#"userId" : 1,
+#"id": 101
+#}
  
 ### place folder thisIsfolderName;
 ### command name commandName;
@@ -42,6 +66,8 @@ DELETE https://jsonplaceholder.typicode.com/posts/1
   "body" : "This is a test",
   "userId" : 1
 }
+###expected:
+#200
 
  
 ### place folder newFolder;
@@ -60,20 +86,30 @@ PUT https://jsonplaceholder.typicode.com/posts/1
 ### command name getCommand;
 GET https://jsonplaceholder.typicode.com/posts/1
 
+
+ 
 ### place folder localhostTest;
 ### command name testGetAllCommands;
 GET localhost:8080/api/commands
 key: value
 
+
+ 
 ### place folder localhostTest;
 ### command name getOneCommandTest;
 GET localhost:8080/api/commands/1
 
+
+ 
 ### place folder localhostTest;
 ### command name wrongInputbutRightUrl;
 POST localhost:8080/api/commands/1
 
+
+ 
 ### place folder localhostTest;
 ### command name fail;
 GET localhost:8090/api/commands
 
+
+ 
