@@ -201,7 +201,56 @@ public class CLICrawlerRepository {
     }
 
 
+    public List<CrawlerEntity> getEntitiesBySessionId(Long sessionId) {
+        String sql = """
+        SELECT id, title, session_id, parent_id, type, url, method, response, process_time
+        FROM crawler_entity
+        WHERE session_id = ?
+    """;
 
+        List<CrawlerEntity> entities = new ArrayList<>();
+
+        try (Connection conn = connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, sessionId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+
+                    CrawlerEntity entity = new CrawlerEntity();
+
+                    entity.setId(rs.getLong("id"));
+                    entity.setTitle(rs.getString("title"));
+                    entity.setType(rs.getString("type"));
+                    entity.setUrl(rs.getString("url"));
+                    entity.setMethod(rs.getString("method"));
+                    entity.setResponse(rs.getString("response"));
+                    entity.setProcessTime(rs.getInt("process_time"));
+
+                    // session (minimal reference)
+                    CrawlerSession session = new CrawlerSession();
+                    session.setId(rs.getLong("session_id"));
+                    entity.setSession(session);
+
+                    // parent (nullable)
+                    long parentId = rs.getLong("parent_id");
+                    if (!rs.wasNull()) {
+                        CrawlerEntity parent = new CrawlerEntity();
+                        parent.setId(parentId);
+                        entity.setParent(parent);
+                    }
+
+                    entities.add(entity);
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error fetching entities by session id", e);
+        }
+
+        return entities;
+    }
     public void updateEntity(CrawlerEntity entity) {
         String sql = """
             UPDATE crawler_entity

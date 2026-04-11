@@ -15,15 +15,28 @@ public class CLIFolderRepository {
         this.DB_URL = DB_URL;
     }
 
-    public void createFolder(String projectName) throws SQLException {
+    public Folder createFolder(String projectName) throws SQLException {
         String sql = "INSERT INTO folder(project_name) VALUES (?)";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, projectName);
             stmt.executeUpdate();
-//            System.out.println("Folder created: " + projectName);
+
+            Long folderId = null;
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    folderId = rs.getLong(1);
+                }
+            }
+
+            Folder folder = new Folder();
+            folder.setId(folderId);
+            folder.setProjectName(projectName);
+
+            return folder;
         }
     }
     public Folder fetchFolderById(Long id) throws SQLException {

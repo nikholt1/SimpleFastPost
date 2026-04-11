@@ -18,6 +18,7 @@ import org.example.simplefastpost.cli.syncService.PushService;
 import org.example.simplefastpost.crawler.cli.CLICrawler;
 import org.example.simplefastpost.crawler.cli.CLICrawlerRepository;
 import org.example.simplefastpost.crawler.cli.CLICrawlerService;
+import org.example.simplefastpost.crawler.cli.CrawlerToCommandConverter;
 import org.example.simplefastpost.model.*;
 
 import java.nio.file.Files;
@@ -49,7 +50,7 @@ public class CLIExecutor {
     private final CLICrawlerRepository cliCrawlerRepository;
     private final CLICrawlerService cliCrawlerService;
     private final CLICrawler crawler;
-
+    private final CrawlerToCommandConverter crawlerToCommandConverter;
     public CLIExecutor() throws Exception {
 
         try {
@@ -75,6 +76,7 @@ public class CLIExecutor {
         this.cliCrawlerRepository = new CLICrawlerRepository(DB_URL);
         this.cliCrawlerService = new CLICrawlerService(cliCrawlerRepository);
         this.crawler = new CLICrawler(cliCrawlerService, cliCrawlerRepository);
+        this.crawlerToCommandConverter = new CrawlerToCommandConverter(cliFolderService, cliCommandService, headerService, cliCrawlerService);
     }
 
     public void execute(String[] rawArgs) throws Exception {
@@ -266,8 +268,24 @@ public class CLIExecutor {
                         break;
                     }
 
-                    // ===== SHOW HISTORY =====
-                    // ===== SHOW HISTORY =====
+                    if ("build".equalsIgnoreCase(rawArgs[1])) {
+
+                        if (rawArgs.length >= 4) {
+
+                            Long id;
+                            try {
+                                id = Long.parseLong(rawArgs[2]);
+                            } catch (NumberFormatException e) {
+                                throw new IllegalArgumentException("Expected rawArgs[2] to be an integer ID", e);
+                            }
+
+                            String name = rawArgs[3];
+                            crawlerToCommandConverter.convert(id, name);
+                            return;
+                        } else {
+                            throw new IllegalArgumentException("Usage: build <id:int> <name>");
+                        }
+                    }
                     if ("history".equalsIgnoreCase(rawArgs[1])) {
 
                         // 🔥 PURGE ALL SESSIONS
@@ -318,7 +336,7 @@ public class CLIExecutor {
                                     while (!stack.isEmpty()) {
                                         CrawlerEntity entity = stack.pollFirst();
                                         String prefix = prefixStack.pollFirst();
-                                        System.out.println(prefix + entity.getType() + ": " + entity.getTitle() + " " + entity.getMethod());
+                                        System.out.println(prefix + entity.getType() + ": "+ entity.getMethod() + " " + entity.getUrl());
 
                                         if (entity.getConnections() != null) {
                                             for (String conn : entity.getConnections()) {
@@ -398,7 +416,7 @@ public class CLIExecutor {
                             while (!stack.isEmpty()) {
                                 CrawlerEntity entity = stack.pollFirst();
                                 String prefix = prefixStack.pollFirst();
-                                System.out.println(prefix + entity.getType() + ": " + entity.getTitle());
+                                System.out.println(prefix + entity.getType() + ": "+ entity.getMethod() + entity.getUrl());
 
                                 if (entity.getConnections() != null) {
                                     for (String conn : entity.getConnections()) {
