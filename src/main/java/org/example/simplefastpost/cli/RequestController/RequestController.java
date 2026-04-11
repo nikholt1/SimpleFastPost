@@ -135,7 +135,6 @@ public class RequestController {
                         builder.method(method.toUpperCase(), HttpRequest.BodyPublishers.ofString(body))
                                 .header("Content-Type", "application/json");
                     } else {
-                        // Even if no body, set Content-Type
                         builder.method(method.toUpperCase(), HttpRequest.BodyPublishers.noBody())
                                 .header("Content-Type", "application/json");
                     }
@@ -144,10 +143,19 @@ public class RequestController {
                     builder.GET();
             }
 
+            // ⏱️ START TIMER
+            long startTime = System.nanoTime();
+
             HttpResponse<String> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
 
+            // ⏱️ END TIMER
+            long endTime = System.nanoTime();
+            long durationMs = (endTime - startTime) / 1_000_000;
+
             System.out.println("\nCOMMAND: " + command.getName());
+            System.out.println("URL: " + url);
             System.out.println("Status: " + response.statusCode());
+            System.out.println("Time taken: " + durationMs + " ms");
             System.out.println(response.body());
 
             // Save history
@@ -172,7 +180,6 @@ public class RequestController {
                 String expected = command.getExpected_response().trim();
                 String actual = response.body().trim();
 
-                // Try JSON comparison if both look like JSON
                 if ((expected.startsWith("{") && expected.endsWith("}")) ||
                         (expected.startsWith("[") && expected.endsWith("]"))) {
                     try {
@@ -180,7 +187,6 @@ public class RequestController {
                         JsonNode actualJson = mapper.readTree(actual);
                         responseMatch = expectedJson.equals(actualJson);
                     } catch (Exception e) {
-                        // fallback to string comparison
                         responseMatch = expected.equals(actual);
                     }
                 } else {
@@ -194,23 +200,18 @@ public class RequestController {
                 System.err.println("Expected Response: \n" + command.getExpected_response() + "\nActual: \n" + response.body());
                 failCount++;
             } else {
-
-                System.out.println("\u001B[48;5;58m" + "Test passed for command: " + command.getName() + "\u001B[0m" );
+                System.out.println("\u001B[48;5;58m" + "Test passed for command: " + command.getName() + "\u001B[0m");
             }
         }
+
         System.out.println();
-        if (failCount == 0) {
-            System.out.println("\u001B[48;5;22m" + "SUMMARY: Total commands = " + commands.size() +
-                    ", Passed = " + (commands.size() - failCount) +
-                    ", Failed = " + failCount + "\u001B[0m");
-            System.exit(failCount > 0 ? 1 : 0);
-        }
-        if (failCount > 0) {
-            System.out.println("\u001B[48;5;52m" + "SUMMARY: Total commands = " + commands.size() +
-                    ", Passed = " + (commands.size() - failCount) +
-                    ", Failed = " + failCount + "\u001B[0m");
-            System.exit(failCount > 0 ? 1 : 0);
-        }
+
+        System.out.println((failCount == 0 ? "\u001B[48;5;22m" : "\u001B[48;5;52m") +
+                "SUMMARY: Total commands = " + commands.size() +
+                ", Passed = " + (commands.size() - failCount) +
+                ", Failed = " + failCount + "\u001B[0m");
+
+        System.exit(failCount > 0 ? 1 : 0);
     }
 
 
