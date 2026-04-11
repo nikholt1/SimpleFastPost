@@ -72,4 +72,5 @@ public class HistoryService {
             throw new RuntimeException("Error deleting all history", e);
         }
     }
+
 }

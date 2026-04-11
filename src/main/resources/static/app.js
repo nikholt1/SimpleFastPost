@@ -1429,7 +1429,10 @@ async function renderCommand(command) {
 
         <p class="dark-text">Body</p>
         <textarea id="commandBody" class="dark-body" style="min-height:120px;">${command.body ?? ""}</textarea>
-
+        
+        <p class="dark-text"></p>
+        <textarea id="commandExpected" class="dark-body" style="min-height:120px;">${command.expected ?? ""}</textarea>
+        
         <div style="margin-top: 10px; margin-bottom: 10px; display: flex; align-items: center">
             <p class="dark-text" style="padding-bottom: 0px; margin-bottom: 0;">Response</p>
             <span id="responseNumber" style="background-color: #885ebb; color:white; border-radius: 4px;padding: 2px 4px; margin-left: 6px; font-size: 12px; font-weight: bold;">ready</span>

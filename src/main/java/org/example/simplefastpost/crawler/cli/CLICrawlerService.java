@@ -3,6 +3,7 @@ package org.example.simplefastpost.crawler.cli;
 import org.example.simplefastpost.model.CrawlerEntity;
 import org.example.simplefastpost.model.CrawlerSession;
 
+import java.sql.SQLException;
 import java.util.List;
 
 public class CLICrawlerService {
@@ -81,10 +82,17 @@ public class CLICrawlerService {
         repo.deleteSession(sessionId);
     }
     public void deleteAllSessions() {
-        List<CrawlerSession> sessions = repo.getAllSessions();
-        for (CrawlerSession session : sessions ) {
-            repo.deleteSession(session.getId());
+        try {
+            repo.deleteAllEntities();
+            repo.deleteAllConnections();
+            repo.deleteAllSessions();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+//        List<CrawlerSession> sessions = repo.getAllSessions();
+//        for (CrawlerSession session : sessions ) {
+//            repo.deleteSession(session.getId());
+//        }
     }
 
     public void deleteEntity(CrawlerEntity entity) {

@@ -1,6 +1,7 @@
 package org.example.simplefastpost.crawler.cli;
 import org.example.simplefastpost.model.CrawlerEntity;
 import org.example.simplefastpost.model.CrawlerSession;
+import org.sqlite.core.DB;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -112,6 +113,7 @@ public class CLICrawlerRepository {
 
 
     public List<CrawlerSession> getAllSessions() {
+        System.out.println(DB_URL);
         List<CrawlerSession> sessions = new ArrayList<>();
 
         try (Connection conn = connect()) {
@@ -259,6 +261,66 @@ public class CLICrawlerRepository {
 
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+    public int deleteAllConnections() {
+        String sql = "DELETE FROM crawler_connections";
+
+        try (Connection conn = connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            int deleted = stmt.executeUpdate(); // ✅ correct
+
+            System.out.print("Deleted crawler connections: " + deleted + " ");
+            for (int i = 0; i < deleted; i++) {
+                System.out.print("\u001B[31m-\u001B[0m");
+            }
+            System.out.println();
+
+            return deleted; // ✅ return correct value
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error deleting all connections", e);
+        }
+    }
+    public int deleteAllEntities() {
+        String sql = "DELETE FROM crawler_entity";
+
+        try (Connection conn = connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            int deleted = stmt.executeUpdate();
+
+            System.out.print("Deleted crawler entities: " + deleted + " ");
+            for (int i = 0; i < deleted; i++) {
+                System.out.print("\u001B[31m-\u001B[0m");
+            }
+            System.out.println();
+
+            return deleted;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error deleting all entities", e);
+        }
+    }
+    public int deleteAllSessions() {
+        String sql = "DELETE FROM crawler_session";
+
+        try (Connection conn = connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            int deleted = stmt.executeUpdate();
+
+            System.out.print("Deleted crawler sessions: " + deleted + " ");
+            for (int i = 0; i < deleted; i++) {
+                System.out.print("\u001B[31m-\u001B[0m");
+            }
+            System.out.println();
+
+            return deleted;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error deleting all sessions", e);
         }
     }
 }

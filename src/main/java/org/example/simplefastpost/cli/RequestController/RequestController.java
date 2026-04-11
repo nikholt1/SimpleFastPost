@@ -32,7 +32,7 @@ public class RequestController {
 
     }
 
-    public void sendRequest(String method, String url, String body, List<Headers> headers, Long commandId) throws Exception {
+    public void sendRequest(String method, String url, String body, List<Headers> headers, Long commandId, String commandName) throws Exception {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest.Builder builder = HttpRequest.newBuilder().uri(URI.create(url));
 
@@ -59,12 +59,17 @@ public class RequestController {
             default:
                 builder.GET();
         }
-
+        long startTime = System.nanoTime();
         HttpResponse<String> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        long endTime = System.nanoTime();
+        long durationMs = (endTime - startTime) / 1_000_000;
 
-        System.out.println("\n" + "\u001B[48;5;58m" + "RESPONSE:" + "\u001B[0m");
+        System.out.println(commandName);
+        System.out.println("Time taken: " + durationMs + " ms");
+        System.out.println(method + " " + url);
+        System.out.println("\u001B[48;5;58m" + "RESPONSE:" + "\u001B[0m");
         System.out.println("Status: " + response.statusCode());
-        System.out.println(response.body());
+        System.out.println(response.body() + "\n");
 
         History history = new History();
         history.setCreated(LocalDateTime.now());
@@ -141,12 +146,12 @@ public class RequestController {
                     builder.GET();
             }
 
-            // ⏱️ START TIMER
+
             long startTime = System.nanoTime();
 
             HttpResponse<String> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
 
-            // ⏱️ END TIMER
+
             long endTime = System.nanoTime();
             long durationMs = (endTime - startTime) / 1_000_000;
 

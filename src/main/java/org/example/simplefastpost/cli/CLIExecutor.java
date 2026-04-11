@@ -273,7 +273,7 @@ public class CLIExecutor {
                         // 🔥 PURGE ALL SESSIONS
                         if (rawArgs.length == 3 && "purge".equalsIgnoreCase(rawArgs[2])) {
                             cliCrawlerService.deleteAllSessions();
-                            System.out.println("All crawl sessions deleted.");
+
                             return;
                         }
 
@@ -455,7 +455,7 @@ public class CLIExecutor {
 
                     if ("purge".equalsIgnoreCase(subHistoryCommand)) {
                         historyService.deleteAllHistory();
-                        System.out.println("All history purged.");
+
                         return;
                     }
 
@@ -571,7 +571,8 @@ public class CLIExecutor {
                                             url,
                                             command.getBody(),
                                             headerService.getAllHeadersFromCommandId(command.getId()),
-                                            command.getId()
+                                            command.getId(),
+                                            command.getName()
                                     );
                                 } catch (Exception e) {
                                     e.printStackTrace();
@@ -603,7 +604,7 @@ public class CLIExecutor {
                     System.out.println("Re-running:");
                     System.out.println("> " + cmd.getCommand());
 
-                    requestController.sendRequest(method, url, body, headerService.getAllHeadersFromCommandId(cmd.getId()), cmd.getId());
+                    requestController.sendRequest(method, url, body, headerService.getAllHeadersFromCommandId(cmd.getId()), cmd.getId(), cmd.getName());
 //                    execute(tokenize(cmd.getCommand()), depth + 1, true);
                     return;
                 case "delete":
@@ -884,7 +885,7 @@ public class CLIExecutor {
                 headerService.createHeader(header);
             }
 
-            requestController.sendRequest(method, url, body, headersToAdd, savedCommand.getId());
+            requestController.sendRequest(method, url, body, headersToAdd, savedCommand.getId(), savedCommand.getName());
             return;
         }
 
@@ -922,7 +923,7 @@ public class CLIExecutor {
             header.setCommandId(savedCommand.getId());
             headerService.createHeader(header);
         }
-        requestController.sendRequest(method, url, body, headersToAdd, 0L);
+        requestController.sendRequest(method, url, body, headersToAdd, 0L, savedCommand.getName());
     }
 
     private Command resolveCommand(String name, String folder) throws SQLException {

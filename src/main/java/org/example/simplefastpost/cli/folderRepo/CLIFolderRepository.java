@@ -191,6 +191,7 @@ public class CLIFolderRepository {
         String sql = "DELETE FROM folder";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
+
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             int deleted = stmt.executeUpdate();

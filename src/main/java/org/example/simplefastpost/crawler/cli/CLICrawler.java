@@ -37,7 +37,10 @@ public class CLICrawler {
         }
 
         session = cliCrawlerService.createSession(baseUrl);
-        if (session == null) throw new RuntimeException("Failed to create crawler session.");
+        System.out.println("\u001B[48;5;129m" + "Starting crawl session on: " + baseUrl + " Session ID: " + session.getId() + "\u001B[0m");
+
+
+        if (session == null) throw new RuntimeException("\u001B[48;5;52m" + "Failed to create crawler session."+ "\u001B[0m");
 
         crawl(baseUrl, null, 1);
         printAsciiWebGraph();
@@ -49,7 +52,7 @@ public class CLICrawler {
         try {
             visited.add(url);
             pageToEndpoints.putIfAbsent(url, new LinkedHashSet<>());
-            System.out.println("Visiting: " + url);
+            System.out.println("\u001B[97;48;5;19m" + "Visiting: " + url + "\u001B[0m");
 
             Document doc = Jsoup.connect(url)
                     .userAgent("Mozilla/5.0 (compatible; CLICrawler/1.0)")
@@ -85,7 +88,7 @@ public class CLICrawler {
                                 .body();
                         apiEndpoints.addAll(scanFetchEndpoints(jsContent, url));
                     } catch (Exception e) {
-                        System.out.println("Failed to fetch JS: " + src + " (" + e.getMessage() + ")");
+                        System.out.println("\u001B[48;5;52m" + "Failed to fetch JS: " + src + " (" + e.getMessage() + ")" + "\u001B[0m");
                     }
                 }
             }
@@ -120,7 +123,7 @@ public class CLICrawler {
             }
 
         } catch (Exception e) {
-            System.out.println("Failed: " + url + " (" + e.getMessage() + ")");
+            System.out.println("\u001B[48;5;52m" + "Failed: " + url + " (" + e.getMessage() + ")"+ "\u001B[0m");
         }
     }
 

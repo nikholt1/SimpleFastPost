@@ -152,7 +152,13 @@ public class HistoryRepository {
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate(sql);
+
+            int deleted = stmt.executeUpdate(sql);
+            System.out.print("Deleted history entities: " + deleted + " ");
+            for (int i = 0; i < deleted; i++) {
+                System.out.print("\u001B[31m" + "-" + "\u001B[0m");
+            }
+
         }
     }
 
