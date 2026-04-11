@@ -94,7 +94,9 @@ public class CLICrawlerService {
 //            repo.deleteSession(session.getId());
 //        }
     }
-
+    public List<CrawlerEntity> getAllEntitiesBySessionId(Long id) {
+        return repo.getEntitiesBySessionId(id);
+    }
     public void deleteEntity(CrawlerEntity entity) {
         repo.deleteEntity(entity.getId());
     }

@@ -41,7 +41,7 @@ public class CrawlerEntity {
 
     public CrawlerEntity() {}
 
-    // ✅ helper
+
     public Long getParentId() {
         return parent != null ? parent.getId() : null;
     }

@@ -16,13 +16,14 @@ public class CLIFolderService {
         this.cliFolderRepository = cliFolderRepository;
     }
 
-    public void createFolder(String projectName) {
+    public Folder createFolder(String projectName) {
         try {
-            cliFolderRepository.createFolder(projectName);
+            return cliFolderRepository.createFolder(projectName);
 //            System.out.println("Folder created: " + projectName);
         } catch (Exception e) {
             System.err.println("Failed to create folder: " + e.getMessage());
         }
+        return null;
     }
 
     public void listFolders() {
