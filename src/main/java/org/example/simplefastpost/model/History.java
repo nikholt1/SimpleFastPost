@@ -19,7 +19,7 @@ public class History {
     private String response;
     private String url;
     private String status;
-    private String action; //not necessary
+    private String action;
     public History() {
     }
 
@@ -87,9 +87,5 @@ public class History {
     public void setUrl(String url) {
         this.url = url;
     }
-    //    id INTEGER PRIMARY KEY AUTOINCREMENT,
-//    command_id INTEGER,
-//    created TEXT DEFAULT (datetime('now','localtime'))
-//    response TEXT,
-//    url TEXT
+
 }

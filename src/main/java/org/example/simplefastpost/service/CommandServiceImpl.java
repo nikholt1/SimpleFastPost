@@ -94,7 +94,7 @@ public class CommandServiceImpl implements CommandService {
                     .orElseThrow(() -> new RuntimeException("Folder not found"));
             existing.setFolder(folder);
         } else {
-            existing.setFolder(null); // allow un-assigning
+            existing.setFolder(null);
         }
 
         return CommandMapper.toDto(commandRepository.save(existing));

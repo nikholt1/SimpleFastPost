@@ -37,7 +37,8 @@ async function initApp() {
     syncBtn.addEventListener("click", () => sync());
     pushBtn.addEventListener("click", () => pushSync());
     document.getElementById("historyPanelActivate").addEventListener("click", renderHistoryPanel);
-    document.getElementById("rightPanelActivate").addEventListener("click", () => renderRightCrawlerPanel());}
+    document.getElementById("rightPanelActivate").addEventListener("click", () => renderRightCrawlerPanel());
+}
 
 
 async function getDirectoryPath() {
@@ -61,50 +62,92 @@ function renderRightCrawlerPanel() {
 
     crawlerContent.innerHTML = `
 <div id="svgWrapper" style="
+    flex: 1;
     width: 100%;
-    height: 100%;
     overflow: hidden;
-    cursor: grab;
+    height: 100%;
     position: relative;
 ">
-  <div id="svgInner" style="transform-origin: 0 0;">
-    <svg width="50vw" height="90vh" style="display: block; margin: auto;">
-      
-      <!-- ALL LINES FIRST -->
-      <line x1="90" y1="40" x2="90" y2="120" stroke="white" stroke-width="1" />
-      <line x1="90" y1="120" x2="50" y2="200" stroke="white" stroke-width="1" />
-      <line x1="90" y1="120" x2="90" y2="200" stroke="white" stroke-width="1" />
-      <line x1="90" y1="120" x2="130" y2="200" stroke="white" stroke-width="1" />
+  <div id="svgInner" style="transform-origin: 0 0; position: relative; width: 100%; height: 100%;">
+    
+    <svg width="50vw" height="70vh" style="display: block; margin: auto; position: absolute; top: 0; left: 0;">
+      <foreignObject width="100%" height="100%">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="position:relative; width:100%; height:100%;">
 
-      <!-- THEN ALL CIRCLES -->
-      <circle cx="90" cy="40" r="25" fill="#8db038" />
-      <circle cx="90" cy="120" r="25" fill="#8db038" />
+<div class="crawlEntity" id="entity1" style="top:50px; left:50px; position:absolute;">
+    <div class="connection-point connection-right"></div>
+    <div class="crawlEntityBanner" style="background-color: #8c52ff">http://localhost:8080/index.html</div>
+    <div class="crawlEntityContent">
+        <p>http://localhost:8080/admin.html</p>
+        <p>http://localhost:8080/api/Folders</p>
+        <p>Date: 2026-31-03 13:16:2301</p>
+        <p>Process time: 230ms</p>
+    </div>
+</div>
 
-      <circle cx="50" cy="200" r="10" fill="#6eb050" />
-      <circle cx="90" cy="200" r="10" fill="#e2b76d" />
-      <circle cx="130" cy="200" r="10" fill="#c75656" />
+<div class="crawlEntity" id="entity2" style="top:50px; left:400px; position:absolute;">
+    <div class="connection-point connection-left"></div>
+    <div class="connection-point connection-right"></div>
+    <div class="crawlEntityBanner" style="background-color: #8ab23d">http://localhost:8080/admin.html</div>
+    <div class="crawlEntityContent">
+        <p>http://localhost:8080/admin.html</p>
+        <p>http://localhost:8080/api/Folders</p>
+        <p>Date: 2026-31-03 13:16:2301</p>
+        <p>Process time: 230ms</p>
+    </div>
+</div>
 
+<div class="crawlEntity" id="entity3" style="top:250px; left:400px; position:absolute;">
+    <div class="connection-point connection-left"></div>
+    <div class="crawlEntityBanner" style="background-color: #8ab23d">http://localhost:8080/api/Folders</div>
+    <div class="crawlEntityContent">
+        <p>http://localhost:8080/admin.html</p>
+        <p>http://localhost:8080/api/Folders</p>
+        <p>Date: 2026-31-03 13:16:2301</p>
+        <p>Process time: 230ms</p>
+    </div>
+</div>
+
+<div class="crawlEntity" id="entity4" style="top:250px; left:50px; position:absolute;">
+    <div class="connection-point connection-right"></div>
+    <div class="crawlEntityBanner" style="background-color: #2da589">http://localhost:8080/api/Folders</div>
+    <div class="crawlEntityContent">
+        <p>GET: 200</p>
+        <pre>{
+  "id": 4,
+  "name": "commandName"
+}</pre>
+    </div>
+</div>
+
+        </div>
+      </foreignObject>
     </svg>
+
   </div>
 </div>
 `;
+
     const wrapper = document.getElementById("svgWrapper");
     const inner = document.getElementById("svgInner");
+    const svg = inner.querySelector("svg");
+    const entities = document.querySelectorAll(".crawlEntity");
 
     let scale = 1;
     let originX = 0;
     let originY = 0;
-
     let isDragging = false;
     let startX, startY;
+
+    enableCrawlerResize();
 
     function updateTransform() {
         inner.style.transform = `translate(${originX}px, ${originY}px) scale(${scale})`;
     }
 
-    // 🖱 Dragging
     wrapper.addEventListener("mousedown", (e) => {
         isDragging = true;
+        document.body.classList.add("resizing");
         startX = e.clientX - originX;
         startY = e.clientY - originY;
         wrapper.style.cursor = "grabbing";
@@ -115,31 +158,115 @@ function renderRightCrawlerPanel() {
         originX = e.clientX - startX;
         originY = e.clientY - startY;
         updateTransform();
+        drawConnections();
     });
 
     window.addEventListener("mouseup", () => {
         isDragging = false;
         wrapper.style.cursor = "grab";
+        document.body.classList.remove("resizing");
     });
 
-    // 🔍 Zooming
     wrapper.addEventListener("wheel", (e) => {
         e.preventDefault();
-
         const zoomIntensity = 0.1;
         const delta = e.deltaY > 0 ? -1 : 1;
-
         const newScale = scale + delta * zoomIntensity;
-
-        // limit zoom
         if (newScale < 0.2 || newScale > 5) return;
-
         scale = newScale;
         updateTransform();
+        drawConnections();
     });
+
+    const connections = {
+        entity1: ["entity2", "entity4"],
+        entity2: ["entity3"],
+        entity3: [],
+        entity4: []
+    };
+
+    function getConnectionPointPos(entity, pointClass) {
+        const point = entity.querySelector(`.${pointClass}`);
+        const rect = point.getBoundingClientRect();
+        const wrapperRect = wrapper.getBoundingClientRect();
+
+        const x = (rect.left + rect.width / 2 - wrapperRect.left - originX) / scale;
+        const y = (rect.top + rect.height / 2 - wrapperRect.top - originY) / scale;
+
+        return { x, y };
+    }
+
+    function drawConnections() {
+        svg.querySelectorAll(".connection-path").forEach(p => p.remove());
+
+        entities.forEach(source => {
+            const sourceId = source.id;
+            const children = connections[sourceId] || [];
+
+            children.forEach(childId => {
+                const target = document.getElementById(childId);
+                if (!target) return;
+
+                const sourcePoint = source.querySelector(".connection-right") || source.querySelector(".connection-left");
+                const targetPoint = target.querySelector(".connection-left") || target.querySelector(".connection-right");
+
+                if (!sourcePoint || !targetPoint) return;
+
+                const start = getConnectionPointPos(source, sourcePoint.classList[1]);
+                const end = getConnectionPointPos(target, targetPoint.classList[1]);
+
+                const dx = Math.abs(end.x - start.x) * 0.5;
+                const c1 = { x: start.x + dx, y: start.y };
+                const c2 = { x: end.x - dx, y: end.y };
+
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", `M${start.x},${start.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${end.x},${end.y}`);
+                path.setAttribute("stroke", "#888");
+                path.setAttribute("stroke-width", "2");
+                path.setAttribute("fill", "none");
+                path.classList.add("connection-path");
+                svg.appendChild(path);
+            });
+        });
+    }
+
+    entities.forEach(entity => {
+        let isEntityDragging = false;
+        let offsetX, offsetY;
+
+        entity.addEventListener("mousedown", e => {
+            e.stopPropagation();
+            isEntityDragging = true;
+
+            const rect = entity.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+            offsetX = e.clientX - wrapperRect.left - parseFloat(entity.style.left) * scale - originX;
+            offsetY = e.clientY - wrapperRect.top - parseFloat(entity.style.top) * scale - originY;
+
+            entity.style.cursor = "grabbing";
+        });
+
+        window.addEventListener("mousemove", e => {
+            if (!isEntityDragging) return;
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const left = (e.clientX - wrapperRect.left - offsetX - originX) / scale;
+            const top = (e.clientY - wrapperRect.top - offsetY - originY) / scale;
+            entity.style.left = left + "px";
+            entity.style.top = top + "px";
+            drawConnections();
+        });
+
+        window.addEventListener("mouseup", () => {
+            if (isEntityDragging) {
+                isEntityDragging = false;
+                entity.style.cursor = "grab";
+                drawConnections();
+            }
+        });
+    });
+
+    drawConnections();
 }
-
-
 
 async function renderHistoryPanel() {
     const historyPanel = document.getElementById("historyPanel");
@@ -168,19 +295,16 @@ async function publicateHistoryPanel() {
         const arrowId = `arrow-${item.id}`;
 
         const getStatusColor = (status) =>
-            status >= 200 && status < 300 ? "#238636" :
+            status >= 200 && status < 300 ? "#44bc4e" :
                 status >= 400 && status < 500 ? "#d29922" :
                     status >= 500 ? "#da3633" :
                         status === "ERR" ? "#da3633" :
                             "#6e7681";
 
-// use it here
         const circleColor = getStatusColor(item.status);
-        // Decide what content to show
         let contentHTML = "";
 
         if (item.action && item.action.trim() !== "") {
-            // If action exists, show it instead
             contentHTML = `
                 <hr>
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
@@ -341,7 +465,6 @@ async function pushSync() {
         url: null,
         status: null,
         action: "---> push",
-        created: new Date().toISOString()
     });
 }
 
@@ -370,7 +493,6 @@ async function sync() {
         url: null,
         status: null,
         action: "<--- sync",
-        created: new Date().toISOString()
     });
 
     await Promise.all([
@@ -607,7 +729,7 @@ function renderItem(item, tbody, level) {
         const isExpanded = expandedFolders.has(item.id);
         const hasChildren = item.children.length > 0;
         const arrowIcon = hasChildren
-            ? `<i class="bi ${isExpanded ? "bi-chevron-down" : "bi-chevron-right"}" style="font-size:0.7rem;margin-right:2px;"></i>`
+            ? `<i class="bi ${isExpanded ? "bi-chevron-down" : "bi-chevron-right"}" style="font-size:15px;margin-right:2px;"></i>`
             : "";
 
         label.innerHTML = `
@@ -945,7 +1067,7 @@ async function runAllCommandsInFolder(folder) {
             const numberColor = headerCount > 0 ? "#36ca53" : "white";
 
 
-            toggle.innerHTML = `<i style="font-size:0.7rem;margin-right:2px;" class="bi bi-chevron-right"></i> Headers <span style="color:${numberColor};">(${headerCount})</span>`;
+            toggle.innerHTML = `<i style="font-size:15px;margin-right:2px;" class="bi bi-chevron-right"></i> Headers <span style="color:${numberColor};">(${headerCount})</span>`;
 
 
             toggle.addEventListener("click", () => {
@@ -953,7 +1075,7 @@ async function runAllCommandsInFolder(folder) {
                 headersContainer.style.display = open ? "block" : "none";
 
 
-                toggle.innerHTML = `<i style="font-size:0.7rem;margin-right:2px;" class="bi ${open ? "bi-chevron-down" : "bi-chevron-right"}"></i> Headers <span style="color:${numberColor};">(${headerCount})</span>`;
+                toggle.innerHTML = `<i style="font-size:15px;margin-right:2px;" class="bi ${open ? "bi-chevron-down" : "bi-chevron-right"}"></i> Headers <span style="color:${numberColor};">(${headerCount})</span>`;
             });
 
             main.appendChild(commandBlock);
@@ -1018,7 +1140,6 @@ async function executeCommand(command) {
             url: url,
             status: res.status,
             action: null,
-            created: new Date().toISOString() // optional
         });
 
         return result;
@@ -1040,7 +1161,6 @@ async function executeCommand(command) {
             url: url,
             status: "ERR",
             action: null,
-            created: new Date().toISOString()
         });
 
         return errorResult;
@@ -1129,7 +1249,7 @@ function renderNewCommand(folderId = null) {
 
             <textarea id="commandBody"
                 placeholder="Command Body (optional)"
-                style="border-radius:4px;background-color:rgb(30,31,34);color: #8ab23d;width:100%;height:200px;padding:6px;font-size:14px;box-sizing:border-box;">
+                style="border-radius:4px;background-color:rgb(30,31,34);color: #8ab23d;width:100%;height:200px;padding:6px;font-size:15px;box-sizing:border-box;">
             </textarea>
 
             <button type="submit" class="btn btn-primary"
@@ -1309,7 +1429,10 @@ async function renderCommand(command) {
 
         <p class="dark-text">Body</p>
         <textarea id="commandBody" class="dark-body" style="min-height:120px;">${command.body ?? ""}</textarea>
-
+        
+        <p class="dark-text"></p>
+        <textarea id="commandExpected" class="dark-body" style="min-height:120px;">${command.expected ?? ""}</textarea>
+        
         <div style="margin-top: 10px; margin-bottom: 10px; display: flex; align-items: center">
             <p class="dark-text" style="padding-bottom: 0px; margin-bottom: 0;">Response</p>
             <span id="responseNumber" style="background-color: #885ebb; color:white; border-radius: 4px;padding: 2px 4px; margin-left: 6px; font-size: 12px; font-weight: bold;">ready</span>
@@ -1662,7 +1785,9 @@ function initSidebarResize() {
 
     resizer.addEventListener("mousedown", () => {
         resizing = true;
-        document.body.style.cursor = "col-resize";
+        document.body.style.cursor = "ns-resize";
+        document.body.classList.add("resizing");
+
     });
 
     document.addEventListener("mousemove", e => {
@@ -1673,6 +1798,8 @@ function initSidebarResize() {
     document.addEventListener("mouseup", () => {
         resizing = false;
         document.body.style.cursor = "default";
+        document.body.classList.remove("resizing");
+
     });
 
     toggleBtn.addEventListener("click", () => {
@@ -1689,7 +1816,9 @@ function initRightPanelResize() {
 
     rightResizer.addEventListener("mousedown", () => {
         resizing = true;
-        document.body.style.cursor = "col-resize";
+        document.body.style.cursor = "ns-resize";
+        document.body.classList.add("resizing");
+
     });
 
     document.addEventListener("mousemove", (e) => {
@@ -1704,6 +1833,8 @@ function initRightPanelResize() {
     document.addEventListener("mouseup", () => {
         resizing = false;
         document.body.style.cursor = "default";
+        document.body.classList.remove("resizing");
+
     });
 }
 
@@ -1761,4 +1892,38 @@ async function deleteHistoryItem(id, element) {
     } catch (err) {
         console.error(err);
     }
+}
+
+
+function enableCrawlerResize() {
+    const pane = document.getElementById("crawlerStackTracePanel");
+    const handle = pane.querySelector(".crawlerHeaders");
+
+    if (!pane || !handle) return;
+
+    let isResizing = false;
+    let startY = 0;
+    let startHeight = 0;
+
+    handle.addEventListener("mousedown", (e) => {
+        isResizing = true;
+        startY = e.clientY;
+        startHeight = pane.offsetHeight;
+        document.body.style.cursor = "ns-resize";
+        e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", (e) => {
+        if (!isResizing) return;
+
+        const delta = startY - e.clientY; // invert so dragging up increases height
+        const newHeight = Math.max(40, startHeight + delta);
+        pane.style.height = newHeight + "px";
+    });
+
+    document.addEventListener("mouseup", () => {
+        if (!isResizing) return;
+        isResizing = false;
+        document.body.style.cursor = "default";
+    });
 }

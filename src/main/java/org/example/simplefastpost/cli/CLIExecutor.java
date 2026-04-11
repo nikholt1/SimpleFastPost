@@ -15,10 +15,10 @@ import org.example.simplefastpost.cli.historyRepository.HistoryRepository;
 import org.example.simplefastpost.cli.historyService.HistoryService;
 import org.example.simplefastpost.cli.syncService.HttpSyncService;
 import org.example.simplefastpost.cli.syncService.PushService;
-import org.example.simplefastpost.model.Command;
-import org.example.simplefastpost.model.Folder;
-import org.example.simplefastpost.model.Headers;
-import org.example.simplefastpost.model.History;
+import org.example.simplefastpost.crawler.cli.CLICrawler;
+import org.example.simplefastpost.crawler.cli.CLICrawlerRepository;
+import org.example.simplefastpost.crawler.cli.CLICrawlerService;
+import org.example.simplefastpost.model.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,6 +46,9 @@ public class CLIExecutor {
     private final HeaderRepository headerRepository;
     private final HistoryService historyService;
     private final HistoryRepository historyRepository;
+    private final CLICrawlerRepository cliCrawlerRepository;
+    private final CLICrawlerService cliCrawlerService;
+    private final CLICrawler crawler;
 
     public CLIExecutor() throws Exception {
 
@@ -68,6 +71,10 @@ public class CLIExecutor {
         this.historyService = new HistoryService(historyRepository);
         this.requestController = new RequestController(historyService, headerService);
 
+
+        this.cliCrawlerRepository = new CLICrawlerRepository(DB_URL);
+        this.cliCrawlerService = new CLICrawlerService(cliCrawlerRepository);
+        this.crawler = new CLICrawler(cliCrawlerService, cliCrawlerRepository);
     }
 
     public void execute(String[] rawArgs) throws Exception {
@@ -109,8 +116,8 @@ public class CLIExecutor {
         String method = "GET";
         String url = "";
         String body = null;
-        String updateTarget = null; // "command" or "folder"
-        String updateField = null;  // name, body, etc.
+        String updateTarget = null;
+        String updateField = null;
         String updateValue = null;
         boolean testMode = false;
 
@@ -253,18 +260,173 @@ public class CLIExecutor {
 
                     }
                     return;
+                case "crawl":
+                    if (rawArgs.length < 2) {
+                        System.out.println("Usage: crawl <url> | crawl history [<sessionId>]");
+                        break;
+                    }
+
+                    // ===== SHOW HISTORY =====
+                    // ===== SHOW HISTORY =====
+                    if ("history".equalsIgnoreCase(rawArgs[1])) {
+
+                        // 🔥 PURGE ALL SESSIONS
+                        if (rawArgs.length == 3 && "purge".equalsIgnoreCase(rawArgs[2])) {
+                            cliCrawlerService.deleteAllSessions();
+
+                            return;
+                        }
+
+                        // List all sessions
+// List all sessions
+                        if (rawArgs.length == 2) {
+                            List<CrawlerSession> sessions = cliCrawlerService.getAllSessions();
+
+                            if (sessions == null || sessions.isEmpty()) {
+                                System.out.println("History empty.");
+                                return;
+                            }
+
+                            System.out.println("===== ALL CRAWL SESSIONS =====");
+
+                            for (CrawlerSession s : sessions) {
+                                System.out.println("Session ID: " + s.getId() +
+                                        ", Title: " + s.getTitle() +
+                                        ", Entities: " + (s.getCrawlerEntities() != null ? s.getCrawlerEntities().size() : 0));
+                            }
+                        }
+
+                        // Show detailed session
+                        else if (rawArgs.length == 3) {
+                            try {
+                                Long sessionId = Long.parseLong(rawArgs[2]);
+                                CrawlerSession session = cliCrawlerService.getSessionById(sessionId);
+
+                                if (session == null) {
+                                    System.out.println("Session not found: ID " + sessionId);
+                                    return;
+                                }
+
+                                System.out.println("===== SESSION DETAIL =====");
+                                System.out.println("Session ID: " + session.getId() + ", Title: " + session.getTitle());
+
+                                if (session.getCrawlerEntities() != null) {
+                                    LinkedList<CrawlerEntity> stack = new LinkedList<>(session.getCrawlerEntities());
+                                    LinkedList<String> prefixStack = new LinkedList<>();
+                                    for (int l = 0; l < stack.size(); l++) prefixStack.add("|_ ");
+
+                                    while (!stack.isEmpty()) {
+                                        CrawlerEntity entity = stack.pollFirst();
+                                        String prefix = prefixStack.pollFirst();
+                                        System.out.println(prefix + entity.getType() + ": " + entity.getTitle() + " " + entity.getMethod());
+
+                                        if (entity.getConnections() != null) {
+                                            for (String conn : entity.getConnections()) {
+                                                System.out.println(prefix + "   -> Connection: " + conn);
+                                            }
+                                        }
+
+                                        if (entity.getChildren() != null) {
+                                            for (CrawlerEntity child : entity.getChildren()) {
+                                                stack.addFirst(child);
+                                                prefixStack.addFirst(prefix + "   ");
+                                            }
+                                        }
+                                    }
+                                }
+
+                            } catch (NumberFormatException e) {
+                                System.out.println("Invalid session ID: " + rawArgs[2]);
+                            }
+                        }
+
+                        else {
+                            System.out.println("Usage: crawl history [<sessionId>|purge]");
+                        }
+
+                        return;
+                    }
+
+                    // ===== DELETE SESSION =====
+                    if ("delete".equalsIgnoreCase(rawArgs[1])) {
+
+                        if (rawArgs.length != 3) {
+                            System.out.println("Usage: crawl delete <sessionId>");
+                            return;
+                        }
+
+                        try {
+                            Long sessionId = Long.parseLong(rawArgs[2]);
+
+                            CrawlerSession session = cliCrawlerService.getSessionById(sessionId);
+                            if (session == null) {
+                                System.out.println("Session not found: ID " + sessionId);
+                                return;
+                            }
+
+                            cliCrawlerService.deleteSession(sessionId);
+                            System.out.println("Deleted session ID: " + sessionId);
+
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid session ID: " + rawArgs[2]);
+                        }
+
+                        return; // 🔥 VERY IMPORTANT
+                    }
+                    // ===== RUN NEW CRAWL =====
+                    else {
+                        String baseUrl = rawArgs[1];
+                        crawler.run(baseUrl);
+
+                        History crawlHistoryEntry = new History();
+                        crawlHistoryEntry.setUrl(baseUrl);
+                        crawlHistoryEntry.setAction("crawl -> " + baseUrl);
+                        historyService.createHistoryEntity(crawlHistoryEntry);
+
+                        // Optional: print persistent session immediately
+                        List<CrawlerSession> sessions = cliCrawlerService.getAllSessions();
+                        CrawlerSession latestSession = sessions.get(sessions.size() - 1);
+
+                        System.out.println("\n===== NEW SESSION DETAIL =====");
+                        System.out.println("Session ID: " + latestSession.getId() + ", Title: " + latestSession.getTitle());
+
+                        if (latestSession.getCrawlerEntities() != null) {
+                            LinkedList<CrawlerEntity> stack = new LinkedList<>(latestSession.getCrawlerEntities());
+                            LinkedList<String> prefixStack = new LinkedList<>();
+                            for (int j = 0; j < stack.size(); j++) prefixStack.add("|_ ");
+
+                            while (!stack.isEmpty()) {
+                                CrawlerEntity entity = stack.pollFirst();
+                                String prefix = prefixStack.pollFirst();
+                                System.out.println(prefix + entity.getType() + ": " + entity.getTitle());
+
+                                if (entity.getConnections() != null) {
+                                    for (String conn : entity.getConnections()) {
+                                        System.out.println(prefix + "   -> Connection: " + conn);
+                                    }
+                                }
+
+                                if (entity.getChildren() != null) {
+                                    for (CrawlerEntity child : entity.getChildren()) {
+                                        stack.addFirst(child);
+                                        prefixStack.addFirst(prefix + "   ");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return;
                 case "api":
                     if (rawArgs.length < 2) {
                         System.out.println("Usage: api [ls|kill <pid>]");
-                        return; // exit method after showing usage
+                        return;
                     }
 
                     String subCommand = rawArgs[1];
 
                     if (subCommand.equals("ls")) {
-                        // List all running API instances from the database
                         apiService.listAllInstances();
-                        return; // done, exit method
+                        return;
                     } else if (subCommand.equals("kill")) {
                         if (rawArgs.length < 3) {
                             System.out.println("Usage: api kill <pid>");
@@ -280,37 +442,31 @@ public class CLIExecutor {
                         } catch (Exception e) {
                             System.err.println("Failed to stop API: " + e.getMessage());
                         }
-                        return; // exit after handling kill
+                        return;
                     } else {
                         System.out.println("Unknown api subcommand: " + subCommand);
-                        return; // exit after unknown subcommand
+                        return;
                     }
 
                 case "history":
                     List<History> historyList = historyService.getAllHistory();
 
-                    // Check if a sub-command was provided
                     String subHistoryCommand = rawArgs.length > 1 ? rawArgs[1] : "";
 
                     if ("purge".equalsIgnoreCase(subHistoryCommand)) {
-                        // Delete all history entries
                         historyService.deleteAllHistory();
-                        System.out.println("All history purged.");
+
                         return;
                     }
 
-                    // Sort by created timestamp
                     if ("reverse".equalsIgnoreCase(subHistoryCommand)) {
-                        // Oldest first (ascending)
                         historyList.sort((h1, h2) -> h1.getCreated().compareTo(h2.getCreated()));
                     } else {
-                        // Latest first (descending)
                         historyList.sort((h1, h2) -> h2.getCreated().compareTo(h1.getCreated()));
                     }
 
-                    // Print all history entries
                     for (History historyItem : historyList) {
-                        if (historyItem.getUrl() == null) {
+                        if (historyItem.getResponse() == null) {
                             System.out.println("___________________________________________");
                             System.out.println(historyItem.getAction() + " " + historyItem.getCreated());
                             System.out.println("___________________________________________");
@@ -365,6 +521,7 @@ public class CLIExecutor {
 
                 case "run":
 
+                    // RUN ALL COMMANDS IN A FOLDER
                     if (folderName != null && commandName == null) {
 
                         List<Command> commands = cliFolderRepository.getCommandsInFolder(folderName);
@@ -414,7 +571,8 @@ public class CLIExecutor {
                                             url,
                                             command.getBody(),
                                             headerService.getAllHeadersFromCommandId(command.getId()),
-                                            command.getId()
+                                            command.getId(),
+                                            command.getName()
                                     );
                                 } catch (Exception e) {
                                     e.printStackTrace();
@@ -446,7 +604,7 @@ public class CLIExecutor {
                     System.out.println("Re-running:");
                     System.out.println("> " + cmd.getCommand());
 
-                    requestController.sendRequest(method, url, body, headerService.getAllHeadersFromCommandId(cmd.getId()), cmd.getId());
+                    requestController.sendRequest(method, url, body, headerService.getAllHeadersFromCommandId(cmd.getId()), cmd.getId(), cmd.getName());
 //                    execute(tokenize(cmd.getCommand()), depth + 1, true);
                     return;
                 case "delete":
@@ -494,7 +652,6 @@ public class CLIExecutor {
 
                     } else if (flag.equals("-f")) {
 
-                        // FOLDER MODE: delete -f <folderName>
                         if (rawArgs.length > 2) {
                             String folderTarget = rawArgs[2];
                             List<Folder> folders = cliFolderService.getAllFolders();
@@ -538,7 +695,6 @@ public class CLIExecutor {
                             updateField = first.substring(0, sep);
                             StringBuilder valueBuilder = new StringBuilder(first.substring(sep + 1));
 
-                            // collect remaining args as part of the value
                             while (j + 1 < rawArgs.length && !rawArgs[j + 1].startsWith("--")) {
                                 valueBuilder.append(" ").append(rawArgs[++j]);
                             }
@@ -570,7 +726,6 @@ public class CLIExecutor {
 
                         case "command" -> {
 
-                            // 1️⃣ Get command (must return something even if multiple exist)
                             Command command = cliCommandService.getCommandByName(targetName);
                             if (command == null) {
                                 System.err.println("Command not found: " + targetName);
@@ -580,10 +735,8 @@ public class CLIExecutor {
                             id = command.getId();
                             folderId = command.getFolderId();
 
-                            // 2️⃣ Special handling: --set folder:<folderName>
                             if ("folder".equalsIgnoreCase(updateField)) {
 
-                                // Special case: folder:0 → unset folder
                                 if ("0".equals(updateValue)) {
                                     folderId = null;
                                     command.setFolderId(null);
@@ -595,10 +748,10 @@ public class CLIExecutor {
                                             folderId
                                     );
                                     System.out.println("Folder removed from command '" + targetName + "' (folderId set to null)");
-                                    return; // done
+                                    return;
                                 }
 
-                                // Normal case: find folder by name
+
                                 List<Folder> folders = cliFolderService.getAllFolders();
                                 Folder targetFolder = null;
                                 for (Folder f : folders) {
@@ -614,19 +767,18 @@ public class CLIExecutor {
                                 }
 
                                 folderId = targetFolder.getId();
-                                command.setFolderId(folderId); // update command object
+                                command.setFolderId(folderId);
                                 cliCommandService.updateCommand(
                                         command.getId(),
                                         command.getName(),
                                         command.getCommand(),
                                         command.getBody(),
                                         folderId
-                                ); // persist change
+                                );
 
                                 System.out.println("Updated folderId of command '" + targetName + "' to folder '" + updateValue + "' (id=" + folderId + ")");
-                                return; // done
+                                return;
                             }
-                            // HEADER UPDATE MODE (unchanged)
                             if (rawArgs.length >= 5 && rawArgs[3].equalsIgnoreCase("header")) {
 
                                 String headerKey = rawArgs[4];
@@ -695,7 +847,6 @@ public class CLIExecutor {
             }
         }
 
-        /* SAVE MODE */
         if (saveMode) {
             if (commandName == null || url.isBlank()) {
                 System.err.println("Saving requires -cmd <name> and -u <url>");
@@ -734,7 +885,7 @@ public class CLIExecutor {
                 headerService.createHeader(header);
             }
 
-            requestController.sendRequest(method, url, body, headersToAdd, savedCommand.getId());
+            requestController.sendRequest(method, url, body, headersToAdd, savedCommand.getId(), savedCommand.getName());
             return;
         }
 
@@ -772,7 +923,7 @@ public class CLIExecutor {
             header.setCommandId(savedCommand.getId());
             headerService.createHeader(header);
         }
-        requestController.sendRequest(method, url, body, headersToAdd, 0L);
+        requestController.sendRequest(method, url, body, headersToAdd, 0L, savedCommand.getName());
     }
 
     private Command resolveCommand(String name, String folder) throws SQLException {

@@ -214,12 +214,10 @@ public class APIController {
     public ResponseEntity<String> executeCommand(@RequestBody CommandRequest commandRequest) {
         try {
             String url = commandRequest.getUrl();
-            // If no scheme, default to http://
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 url = "http://" + url;
             }
 
-            // Build HTTP headers
             HttpHeaders headers = new HttpHeaders();
             if (commandRequest.getHeaders() != null) {
                 commandRequest.getHeaders().forEach(headers::add);

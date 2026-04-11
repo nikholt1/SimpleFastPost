@@ -5,6 +5,7 @@ import org.example.simplefastpost.model.History;
 import org.example.simplefastpost.repository.HistoryRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +20,7 @@ public class HistoryServiceImpl implements HistoryService {
 
     @Override
     public History createNewHistoryEntity(History history) {
+        history.setCreated(LocalDateTime.now());
         try {
             return historyRepository.save(history);
         } catch (Exception e) {

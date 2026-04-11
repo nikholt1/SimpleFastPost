@@ -47,7 +47,6 @@ public class CLIFolderRepository {
             }
         }
     }
-    /* READ ALL */
     public void listFolders() throws SQLException {
         String sql = "SELECT id, project_name FROM folder";
         boolean found = false;
@@ -192,6 +191,7 @@ public class CLIFolderRepository {
         String sql = "DELETE FROM folder";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
+
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             int deleted = stmt.executeUpdate();

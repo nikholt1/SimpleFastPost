@@ -15,7 +15,6 @@
 <body>
 
 <div id="layout">
-
     <div id="sidebar">
 
 
@@ -89,7 +88,7 @@
             <div class="startPageContent">
                 <h1 style="color: white;">Welcome to SFP</h1>
                 <p style="color: #bababa;">With SimpleFastPost you can simply run specified folders of commands and single commands from the terminal</p>
-
+                <a href="former.html"></a>
                 <p>Checkout the repository</p>
                 <a href="https://github.com/nikholt1/SimpleFastPost" target="_blank">
                     <button class="addFolderButton" style="width: 200px;">Github repo</button>
@@ -100,14 +99,26 @@
     </div>
     <div class="hidden" id="rightResizer"></div>
     <div style="display: none;" class="hidden" id="rightPanel">
-        <div style="padding: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; border-radius: 8px; width: 200px;">
-            <div style="display: flex; align-items: center; gap: 5px;">
+        <div >
+            <div style="display: flex; align-items: center; padding: 10px;">
                 <img style="cursor: pointer; width: 24px; height: 24px;" src="image/crawlerIcon.png">
-                <strong style="color: white;">Crawler</strong>
+                <strong >Crawler</strong>
             </div>
-            <div id="crawlerContent" style="padding: 10px; border-radius: 6px;">
+            <div id="crawlerContent" style="border-radius: 6px; width: 100%;">
                 <!-- Diagram will be injected here -->
+
+
             </div>
+            <div id="crawlerStackTracePanel" class="crawlerStackTracePane">
+                <div class="crawlerHeaders">
+                    <p class="crawlerHeadersRun">Run</p>
+                </div>
+
+                <div id="crawlerStackTrace" class="crawlerStackTrace">
+                    here goes the stacktrace
+                </div>
+            </div>
+
         </div>
     </div>
 

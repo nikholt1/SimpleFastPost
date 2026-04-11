@@ -3,12 +3,11 @@ package org.example.simplefastpost.dto;
 import java.util.Map;
 
 public class CommandRequest {
-    private String method; // GET, POST, etc.
+    private String method;
     private String url;
     private Map<String, String> headers;
     private String body;
 
-    // Getters and setters
     public String getMethod() { return method; }
     public void setMethod(String method) { this.method = method; }
     public String getUrl() { return url; }
