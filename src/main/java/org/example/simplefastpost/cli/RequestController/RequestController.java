@@ -153,9 +153,9 @@ public class RequestController {
             long durationMs = (endTime - startTime) / 1_000_000;
 
             System.out.println("\nCOMMAND: " + command.getName());
-            System.out.println("URL: " + url);
-            System.out.println("Status: " + response.statusCode());
             System.out.println("Time taken: " + durationMs + " ms");
+            System.out.println(method + " " + url);
+            System.out.println("Status: " + response.statusCode());
             System.out.println(response.body());
 
             // Save history
