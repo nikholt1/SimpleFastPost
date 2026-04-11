@@ -198,9 +198,10 @@ public class RequestController {
             }
 
             if (!statusMatch || !responseMatch) {
+                System.out.println();
                 System.err.println("\u001B[48;5;52m" + "Test failed for command: " + command.getName() + "\u001B[0m");
-                System.err.println("Expected Status: " + command.getExpected_status() + ", Actual: " + response.statusCode());
-                System.err.println("Expected Response: \n" + command.getExpected_response() + "\nActual: \n" + response.body());
+                System.err.println("\u001B[31m" + "Expected Status: " + command.getExpected_status() + ", Actual: " + response.statusCode());
+                System.err.println("Expected Response: \n" + command.getExpected_response() + "\nActual: \n" + response.body() + "\u001B[0m");
                 failCount++;
             } else {
                 System.out.println("\u001B[48;5;58m" + "Test passed for command: " + command.getName() + "\u001B[0m");
