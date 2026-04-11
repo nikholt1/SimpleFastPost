@@ -30,15 +30,17 @@ public class ApplicationSetup {
         """);
 
             stmt.execute("""
-            CREATE TABLE IF NOT EXISTS command (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE,
-                command TEXT NOT NULL,
-                body TEXT,
-                folder_id INTEGER,
-                FOREIGN KEY (folder_id) REFERENCES folder(id)
-            )
-        """);
+    CREATE TABLE IF NOT EXISTS command (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        command TEXT NOT NULL,
+        body TEXT,
+        folder_id INTEGER,
+        expected_response TEXT,
+        expected_status VARCHAR(255),
+        FOREIGN KEY (folder_id) REFERENCES folder(id)
+    )
+""");
 
             stmt.execute("""
             CREATE TABLE IF NOT EXISTS apiInstance (

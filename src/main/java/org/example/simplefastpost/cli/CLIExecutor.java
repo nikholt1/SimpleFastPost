@@ -69,7 +69,9 @@ public class CLIExecutor {
         this.syncService = new HttpSyncService(cliCommandService, cliFolderService, headerService);
         this.historyRepository = new HistoryRepository(DB_URL);
         this.historyService = new HistoryService(historyRepository);
-        this.requestController = new RequestController(historyService);
+        this.requestController = new RequestController(historyService, headerService);
+
+
         this.cliCrawlerRepository = new CLICrawlerRepository(DB_URL);
         this.cliCrawlerService = new CLICrawlerService(cliCrawlerRepository);
         this.crawler = new CLICrawler(cliCrawlerService, cliCrawlerRepository);
@@ -117,6 +119,7 @@ public class CLIExecutor {
         String updateTarget = null;
         String updateField = null;
         String updateValue = null;
+        boolean testMode = false;
 
         for (; i < rawArgs.length; i++) {
             String arg = rawArgs[i];
@@ -127,6 +130,8 @@ public class CLIExecutor {
                 url = rawArgs[++i];
             } else if (arg.equalsIgnoreCase("-sv")) {
                 saveMode = true;
+            }else if (arg.equalsIgnoreCase("-t")) {
+                testMode = true;
             } else if (arg.equalsIgnoreCase("-f") && i + 1 < rawArgs.length) {
                 folderName = rawArgs[++i];
             } else if ((arg.equalsIgnoreCase("-cmd") || arg.equalsIgnoreCase("-scmd"))
@@ -135,6 +140,18 @@ public class CLIExecutor {
             } else if (arg.equalsIgnoreCase("--help")) {
                 helpMode = true;
             } else if (arg.equalsIgnoreCase("--version")) {
+                System.out.println("""
+                                   
+                          =++===    
+                       +===+++====+  
+                     =+====++======+= 
+                     =====+++++====== 
+                  =++====++++=++++===+==
+                   +===   +    +   +==+
+                    +=    +    =    == 
+                     ++=          += 
+                        +++    =+=   
+                """);
                 System.out.println("sfp version: 0.0.1 alpha");
                 return;
             } else if (arg.equalsIgnoreCase("api")) {
@@ -504,33 +521,68 @@ public class CLIExecutor {
 
                 case "run":
 
+                    // RUN ALL COMMANDS IN A FOLDER
                     if (folderName != null && commandName == null) {
 
                         List<Command> commands = cliFolderRepository.getCommandsInFolder(folderName);
 
                         if (commands.isEmpty()) {
+
                             System.err.println("No commands found in folder: " + folderName);
                             return;
                         }
 
+
                         System.out.println("Running folder: " + folderName);
 
-                        for (Command c : commands) {
-
-                            if (c.getCommand().contains("run")) {
-                                System.err.println("Skipping recursive command: " + c.getName());
-                                continue;
+                        if (testMode) {
+                            try {
+                                requestController.sendRequests(commands); // runs all commands with expected checks
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                System.exit(1); // fail if something goes wrong
                             }
+                        } else {
+                            // run all commands without expected checks
+                            for (Command command : commands) {
 
-                            System.out.println("> " + c.getCommand());
+                                if (command.getCommand().contains("run")) {
+                                    System.err.println("Skipping recursive command: " + command.getName());
+                                    continue;
+                                }
 
-                            execute(tokenize(c.getCommand()), depth + 1, true);
+                                String commandStr = command.getCommand();
+                                String[] parts = commandStr.split("\\s+");
+//                                String method = null;
+//                                String url = null;
+
+                                for (int k = 0; k < parts.length; k++) {
+                                    if (parts[k].equals("-m") && k + 1 < parts.length) {
+                                        method = parts[k + 1];
+                                    }
+                                    if (parts[k].equals("-u") && k + 1 < parts.length) {
+                                        url = parts[k + 1];
+                                    }
+                                }
+
+                                try {
+                                    requestController.sendRequest(
+                                            method,
+                                            url,
+                                            command.getBody(),
+                                            headerService.getAllHeadersFromCommandId(command.getId()),
+                                            command.getId()
+                                    );
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
                         }
-
 
                         return;
                     }
 
+                    // RUN SINGLE COMMAND
                     if (commandName == null) {
                         System.err.println("run requires -scmd <commandName> OR -f <folder>");
                         return;
@@ -551,7 +603,8 @@ public class CLIExecutor {
                     System.out.println("Re-running:");
                     System.out.println("> " + cmd.getCommand());
 
-                    execute(tokenize(cmd.getCommand()), depth + 1, true);
+                    requestController.sendRequest(method, url, body, headerService.getAllHeadersFromCommandId(cmd.getId()), cmd.getId());
+//                    execute(tokenize(cmd.getCommand()), depth + 1, true);
                     return;
                 case "delete":
                     String flag = rawArgs[1].toLowerCase();
@@ -835,6 +888,7 @@ public class CLIExecutor {
             return;
         }
 
+        /* DIRECT REQUEST */
         if (url.isBlank()) {
             System.err.println("URL required (-u)");
             return;

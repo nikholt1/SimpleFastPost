@@ -45,7 +45,6 @@ public class HttpSyncService {
         int counter = 0;
 
         try {
-
             cliFolderService.deleteAllFolders();
             cliCommandService.deleteAllCommands();
             headerService.deleteAllHeadersInDB();
@@ -70,7 +69,7 @@ public class HttpSyncService {
                         e.printStackTrace();
                     }
                 }
-                counter ++;
+                counter++;
             }
 
             if (line.startsWith("### place ")) {
@@ -148,6 +147,36 @@ public class HttpSyncService {
                 }
                 String body = bodyBuilder.toString();
 
+                String expectedStatus = null;
+                StringBuilder expectedResponseBuilder = new StringBuilder();
+
+                if (i + 1 < lines.size() && lines.get(i + 1).trim().startsWith("###expected")) {
+                    i += 2;
+
+                    while (i < lines.size()) {
+                        String expectedLine = lines.get(i).trim();
+
+                        if (expectedLine.startsWith("###")) {
+                            i--;
+                            break;
+                        }
+
+                        if (expectedLine.startsWith("#")) {
+                            String clean = expectedLine.substring(1).trim();
+
+                            if (expectedStatus == null && clean.matches("\\d+")) {
+                                expectedStatus = clean;
+                            } else {
+                                expectedResponseBuilder.append(clean).append("\n");
+                            }
+                        }
+
+                        i++;
+                    }
+                }
+
+                String expectedResponse = expectedResponseBuilder.toString().trim();
+
                 Long folderId = null;
                 if (!targetFolder.equals("root")) {
                     try {
@@ -167,7 +196,23 @@ public class HttpSyncService {
                 Command createdCommand = null;
 
                 try {
-                    createdCommand = cliCommandService.createCommand(commandName, commandStr, body, folderId);
+                    if (expectedStatus != null || !expectedResponse.isEmpty()) {
+                        createdCommand = cliCommandService.createCommandWithExpected(
+                                commandName,
+                                commandStr,
+                                body,
+                                folderId,
+                                expectedResponse.isEmpty() ? null : expectedResponse,
+                                expectedStatus
+                        );
+                    } else {
+                        createdCommand = cliCommandService.createCommand(
+                                commandName,
+                                commandStr,
+                                body,
+                                folderId
+                        );
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                     continue;
@@ -198,15 +243,20 @@ public class HttpSyncService {
 
         printProgressBar(100);
         System.out.println();
-
+        System.out.print("Commands build: ");
+        for (int i = 0; i < counter; i++) {
+            System.out.print("\u001B[32m" + "+" + "\u001B[0m");
+        }
+        System.out.println();
         return counter;
+
     }
 
     private void printProgressBar(int percent) {
         int barLength = 30;
         int filled = (percent * barLength) / 100;
 
-        String bar = "[" + "=".repeat(filled) + " ".repeat(barLength - filled) + "] " + percent + "%";
+        String bar = "[" + "\u001B[32m" +  "=".repeat(filled) + " ".repeat(barLength - filled) + "\u001B[0m" +  "] " + percent + "%";
         System.out.print("\r" + bar);
         System.out.flush();
     }

@@ -13,7 +13,6 @@ public class HistoryRepository {
     private final String DB_URL;
 
     public HistoryRepository(String DB_URL) throws SQLException {
-        System.out.println(DB_URL);
         this.DB_URL = DB_URL;
     }
 

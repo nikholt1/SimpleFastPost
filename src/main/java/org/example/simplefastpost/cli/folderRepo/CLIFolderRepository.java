@@ -154,11 +154,11 @@ public class CLIFolderRepository {
         List<Command> commands = new ArrayList<>();
 
         String sql = """
-        SELECT c.id, c.name, c.command, c.body, c.folder_id
-        FROM command c
-        JOIN folder f ON c.folder_id = f.id
-        WHERE f.project_name = ?
-        ORDER BY c.name
+    SELECT c.id, c.name, c.command, c.body, c.folder_id, c.expected_response, c.expected_status
+    FROM command c
+    JOIN folder f ON c.folder_id = f.id
+    WHERE f.project_name = ?
+    ORDER BY c.name
     """;
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
@@ -173,6 +173,12 @@ public class CLIFolderRepository {
                             rs.getString("command"),
                             rs.getString("body")
                     );
+                    cmd.setId(rs.getLong("id"));
+                    Object folderObj = rs.getObject("folder_id");
+                    cmd.setFolderId(folderObj == null ? null : ((Number) folderObj).longValue());
+                    cmd.setExpected_response(rs.getString("expected_response"));
+                    cmd.setExpected_status(rs.getString("expected_status"));
+
                     commands.add(cmd);
                 }
             }
@@ -180,7 +186,6 @@ public class CLIFolderRepository {
 
         return commands;
     }
-
     public void deleteAllFolders() throws SQLException {
 
         String sql = "DELETE FROM folder";
@@ -189,7 +194,11 @@ public class CLIFolderRepository {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             int deleted = stmt.executeUpdate();
-            System.out.println("Deleted folders: " + deleted);
+            System.out.print("Deleted folders: " + deleted + " ");
+            for (int i = 0; i < deleted; i++) {
+                System.out.print("\u001B[31m" + "-" + "\u001B[0m");
+            }
+            System.out.println();
         }
     }
 }
