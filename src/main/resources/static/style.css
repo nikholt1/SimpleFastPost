@@ -302,6 +302,7 @@ form {
 .formInput {
     border-radius: 4px;
     background-color: rgb(30, 31, 34);
+    color: white;
 }
 /* Style the select element */
 .method-select {

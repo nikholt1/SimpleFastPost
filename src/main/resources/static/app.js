@@ -1,4 +1,5 @@
 const BASE_URL = "/api";
+import {ansiToHtml} from "./ansiConverter.js";
 
 let listOfFolders = [];
 let listOfCommands = [];
@@ -46,7 +47,25 @@ async function getDirectoryPath() {
     const data = await res.json();
     return data.currentDirectory;
 }
-function renderRightCrawlerPanel() {
+
+
+
+async function crawlByUrl(url) {
+    const crawlerStackTrace = document.getElementById("crawlerStackTrace");
+    crawlerStackTrace.innerHTML = "";
+
+    const es = new EventSource(`crawler/run?url=${encodeURIComponent(url)}`);
+
+    es.onmessage = (e) => {
+        crawlerStackTrace.innerHTML += ansiToHtml(e.data) + "<br/>";
+    };
+
+    es.onerror = () => {
+        es.close();
+    };
+}
+async function renderRightCrawlerPanel() {
+    await crawlByUrl("test")
     const rightPanel = document.getElementById("rightPanel");
     const rightResizer = document.getElementById("rightResizer");
 
@@ -742,6 +761,8 @@ function renderSidebar(items) {
 
     items.forEach(item => renderItem(item, tbody, 0));
 }
+
+
 
 function renderItem(item, tbody, level) {
     const tr = document.createElement("tr");
