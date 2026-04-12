@@ -129,6 +129,30 @@ public class CLICrawler {
 
     private Set<CrawlerEntity> scanFetchEndpoints(String js, String pageUrl) {
         Set<CrawlerEntity> endpoints = new LinkedHashSet<>();
+
+        // 🆕 Extract const/let/var variables
+        Map<String, String> variables = new HashMap<>();
+
+// Match const/let/var assignments (strings, template literals, simple values)
+        Matcher varMatcher = Pattern.compile(
+                "(?:const|let|var)\\s+(\\w+)\\s*=\\s*(?:([\"'`])([^\"'`]+)\\2|([^;\\n]+))"
+        ).matcher(js);
+
+        while (varMatcher.find()) {
+            String name = varMatcher.group(1);
+            String value;
+
+            if (varMatcher.group(3) != null) {
+                // مستقیم string: "value"
+                value = varMatcher.group(3);
+            } else {
+                // fallback: raw expression (e.g. startUrl + "/api")
+                value = varMatcher.group(4).trim();
+            }
+
+            variables.put(name, value);
+        }
+
         Matcher matcher = fetchPattern.matcher(js);
 
         while (matcher.find()) {
@@ -137,7 +161,7 @@ public class CLICrawler {
             String method = extractMethod(fetchCall);
 
             if (endpoint != null) {
-                endpoint = resolvePlaceholders(resolveUrl(pageUrl, endpoint));
+                endpoint = resolvePlaceholders(resolveUrl(pageUrl, endpoint), variables);
                 pageToEndpoints.computeIfAbsent(pageUrl, k -> new LinkedHashSet<>())
                         .add(method + " " + endpoint);
 
@@ -145,7 +169,7 @@ public class CLICrawler {
 
                 CrawlerEntity apiEntity = cliCrawlerService.createEntity(
                         session,
-                        null, // parent set later
+                        null,
                         endpoint,
                         "API",
                         endpoint,
@@ -161,11 +185,33 @@ public class CLICrawler {
     }
 
     // Replaces dynamic placeholders like ${BASE_URL}, ${id}, ${commandId} safely
-    private static String resolvePlaceholders(String url) {
+    private static String resolvePlaceholders(String url, Map<String, String> variables) {
         if (url == null) return null;
-        url = url.replace("${BASE_URL}", "");
-        url = url.replaceAll("\\$\\{[^}]+}", ""); // remove other placeholders
-        return url;
+
+        Matcher matcher = Pattern.compile("\\$\\{([^}]+)}").matcher(url);
+        StringBuffer sb = new StringBuffer();
+
+        while (matcher.find()) {
+            String expr = matcher.group(1).trim();
+
+            String replacement = variables.get(expr);
+
+            if (replacement == null) {
+                // Try simple fallback: strip unknown but keep path structure
+                replacement = "";
+            }
+
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+        }
+
+        matcher.appendTail(sb);
+
+        String result = sb.toString();
+
+        // Optional cleanup: collapse double slashes (except protocol)
+        result = result.replaceAll("(?<!:)//+", "/");
+
+        return result;
     }
 
     private static String extractUrl(String fetchCall) {
