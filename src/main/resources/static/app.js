@@ -64,22 +64,13 @@ function renderRightCrawlerPanel() {
 <div id="svgWrapper" style="
     flex: 1;
     width: 100%;
-    overflow: visible;
+    overflow: hidden;
     height: 100%;
     position: relative;
 ">
   <div id="svgInner" style="transform-origin: 0 0; position: relative; width: 100%; height: 100%;">
     
-    <svg style="
-        display: block;
-        margin: auto;
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        overflow: visible;
-    ">
+    <svg width="50vw" height="70vh" style="display: block; margin: auto; position: absolute; top: 0; left: 0;">
       <foreignObject width="100%" height="100%">
         <div xmlns="http://www.w3.org/1999/xhtml" style="position:relative; width:100%; height:100%;">
 
@@ -148,11 +139,12 @@ function renderRightCrawlerPanel() {
     let isDragging = false;
     let startX, startY;
 
+    enableCrawlerResize();
+
     function updateTransform() {
         inner.style.transform = `translate(${originX}px, ${originY}px) scale(${scale})`;
     }
 
-    // 🔥 FIXED CANVAS RESIZE (correct world-space math)
     function updateCanvasSize() {
         let minX = Infinity, minY = Infinity;
         let maxX = -Infinity, maxY = -Infinity;
@@ -175,13 +167,53 @@ function renderRightCrawlerPanel() {
         const width = (maxX - minX + padding * 2);
         const height = (maxY - minY + padding * 2);
 
-        // 🔥 KEY FIX: NO scale multiplication here
-        svg.style.width = width + "px";
-        svg.style.height = height + "px";
-
         svg.setAttribute("width", width);
         svg.setAttribute("height", height);
     }
+
+    function scheduleResize() {
+        requestAnimationFrame(updateCanvasSize);
+    }
+
+    wrapper.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        document.body.classList.add("resizing");
+        startX = e.clientX - originX;
+        startY = e.clientY - originY;
+        wrapper.style.cursor = "grabbing";
+    });
+
+    window.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        originX = e.clientX - startX;
+        originY = e.clientY - startY;
+        updateTransform();
+        drawConnections();
+    });
+
+    window.addEventListener("mouseup", () => {
+        isDragging = false;
+        wrapper.style.cursor = "grab";
+        document.body.classList.remove("resizing");
+    });
+
+    wrapper.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const zoomIntensity = 0.1;
+        const delta = e.deltaY > 0 ? -1 : 1;
+        const newScale = scale + delta * zoomIntensity;
+        if (newScale < 0.2 || newScale > 5) return;
+        scale = newScale;
+        updateTransform();
+        drawConnections();
+    });
+
+    const connections = {
+        entity1: ["entity2", "entity4"],
+        entity2: ["entity3"],
+        entity3: [],
+        entity4: []
+    };
 
     function getConnectionPointPos(entity, pointClass) {
         const point = entity.querySelector(`.${pointClass}`);
@@ -218,9 +250,7 @@ function renderRightCrawlerPanel() {
                 const c2 = { x: end.x - dx, y: end.y };
 
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                path.setAttribute("d",
-                    `M${start.x},${start.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${end.x},${end.y}`
-                );
+                path.setAttribute("d", `M${start.x},${start.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${end.x},${end.y}`);
                 path.setAttribute("stroke", "#888");
                 path.setAttribute("stroke-width", "2");
                 path.setAttribute("fill", "none");
@@ -228,54 +258,9 @@ function renderRightCrawlerPanel() {
                 svg.appendChild(path);
             });
         });
+
+        scheduleResize();
     }
-
-    const connections = {
-        entity1: ["entity2", "entity4"],
-        entity2: ["entity3"],
-        entity3: [],
-        entity4: []
-    };
-
-    wrapper.addEventListener("mousedown", (e) => {
-        isDragging = true;
-        document.body.classList.add("resizing");
-        startX = e.clientX - originX;
-        startY = e.clientY - originY;
-        wrapper.style.cursor = "grabbing";
-    });
-
-    window.addEventListener("mousemove", (e) => {
-        if (!isDragging) return;
-        originX = e.clientX - startX;
-        originY = e.clientY - startY;
-
-        updateTransform();
-        updateCanvasSize();   // 🔥 FIX
-        drawConnections();
-    });
-
-    window.addEventListener("mouseup", () => {
-        isDragging = false;
-        wrapper.style.cursor = "grab";
-        document.body.classList.remove("resizing");
-    });
-
-    wrapper.addEventListener("wheel", (e) => {
-        e.preventDefault();
-
-        const zoomIntensity = 0.1;
-        const delta = e.deltaY > 0 ? -1 : 1;
-        const newScale = scale + delta * zoomIntensity;
-
-        if (newScale < 0.2 || newScale > 5) return;
-
-        scale = newScale;
-
-        updateTransform();
-        updateCanvasSize();   // 🔥 FIX
-        drawConnections();
-    });
 
     entities.forEach(entity => {
         let isEntityDragging = false;
@@ -288,8 +273,8 @@ function renderRightCrawlerPanel() {
             const rect = entity.getBoundingClientRect();
             const wrapperRect = wrapper.getBoundingClientRect();
 
-            offsetX = e.clientX - wrapperRect.left - parseFloat(entity.style.left) * scale - originX;
-            offsetY = e.clientY - wrapperRect.top - parseFloat(entity.style.top) * scale - originY;
+            offsetX = (e.clientX - wrapperRect.left) / scale - parseFloat(entity.style.left);
+            offsetY = (e.clientY - wrapperRect.top) / scale - parseFloat(entity.style.top);
 
             entity.style.cursor = "grabbing";
         });
@@ -299,13 +284,12 @@ function renderRightCrawlerPanel() {
 
             const wrapperRect = wrapper.getBoundingClientRect();
 
-            const left = (e.clientX - wrapperRect.left - offsetX - originX) / scale;
-            const top = (e.clientY - wrapperRect.top - offsetY - originY) / scale;
+            const left = ((e.clientX - wrapperRect.left) / scale) - offsetX;
+            const top = ((e.clientY - wrapperRect.top) / scale) - offsetY;
 
             entity.style.left = left + "px";
             entity.style.top = top + "px";
 
-            updateCanvasSize();   // 🔥 FIX
             drawConnections();
         });
 
@@ -318,10 +302,8 @@ function renderRightCrawlerPanel() {
         });
     });
 
-    updateCanvasSize(); // 🔥 initial fit
     drawConnections();
 }
-
 async function renderHistoryPanel() {
     const historyPanel = document.getElementById("historyPanel");
     const historyItems = document.getElementById("historyItems");
