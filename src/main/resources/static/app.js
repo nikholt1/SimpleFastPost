@@ -71,7 +71,41 @@ async function renderRightCrawlerPanel() {
 
         await crawlByUrl(url);
     };
+    const crawlerSessionTitles = document.getElementById("crawlerSessionTitles");
 
+    async function loadSessions() {
+        try {
+            const response = await fetch(`/crawler/getAllSessions`);
+            const sessions = await response.json();
+
+            crawlerSessionTitles.innerHTML = "";
+
+            // Header
+            const runHeader = document.createElement("div");
+            runHeader.className = "crawlerHeadersRun";
+            runHeader.textContent = "Run";
+            crawlerSessionTitles.appendChild(runHeader);
+
+            // Items container (important for layout)
+            const list = document.createElement("div");
+            list.className = "crawlerSessionList";
+
+            sessions.forEach(session => {
+                const item = document.createElement("div");
+                item.className = "crawlerSessionItem";
+                item.textContent = session.title;
+
+                list.appendChild(item);
+            });
+
+            crawlerSessionTitles.appendChild(list);
+
+        } catch (error) {
+            console.error("Failed to load sessions:", error);
+        }
+    }
+
+    loadSessions();
 
     const rightPanel = document.getElementById("rightPanel");
     const rightResizer = document.getElementById("rightResizer");

@@ -721,3 +721,45 @@ pre {
 .connection-right {
     right: -5px;
 }
+
+.crawlerHeaders {
+    display: flex;
+    flex-direction: row;   /* KEY CHANGE */
+    align-items: center;
+    justify-content: flex-start; /* start from left */
+    gap: 12px;
+
+    width: 100%;
+}
+
+/* "Run" title */
+.crawlerHeadersRun {
+    font-weight: bold;
+    padding-right: 10px;
+    border-right: 1px solid #333;
+}
+
+/* list container */
+.crawlerSessionList {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start; /* start from left */
+    gap: 6px;
+}
+.crawlerHeaders {
+    overflow-x: auto;
+    white-space: nowrap;
+}
+.crawlerSessionItem {
+    padding: 6px 10px;
+
+
+    white-space: nowrap;
+
+    cursor: pointer;
+}
+
+.crawlerSessionItem:hover {
+    background: rgba(255, 255, 255, 0.1);
+}

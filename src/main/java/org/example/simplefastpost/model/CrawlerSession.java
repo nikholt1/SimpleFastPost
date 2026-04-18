@@ -20,7 +20,6 @@ public class CrawlerSession {
 
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CrawlerEntity> crawlerEntities = new ArrayList<>();
-
     public CrawlerSession() {}
 
     public CrawlerSession(String title) {
