@@ -65,7 +65,14 @@ async function crawlByUrl(url) {
     };
 }
 async function renderRightCrawlerPanel() {
-    await crawlByUrl("test")
+    document.getElementById("runCrawler").onclick = async function () {
+        const url = document.getElementById("urlInput").value;
+        console.log("Running crawler on " + url);
+
+        await crawlByUrl(url);
+    };
+
+
     const rightPanel = document.getElementById("rightPanel");
     const rightResizer = document.getElementById("rightResizer");
 

@@ -226,7 +226,7 @@ public class APIController {
             HttpEntity<String> entity = new HttpEntity<>(commandRequest.getBody(), headers);
 
             HttpMethod httpMethod = HttpMethod.valueOf(commandRequest.getMethod().toUpperCase());
-
+            System.out.println("sending:" + httpMethod + " " + url + "\n " + headers + " \n" + entity.getBody());
             ResponseEntity<String> response = restTemplate.exchange(
                     url,
                     httpMethod,
