@@ -2,6 +2,7 @@ package org.example.simplefastpost.crawler.cli;
 
 import org.example.simplefastpost.model.CrawlerEntity;
 import org.example.simplefastpost.model.CrawlerSession;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.List;

@@ -103,6 +103,8 @@
             <div style="display: flex; align-items: center; padding: 10px;">
                 <img style="cursor: pointer; width: 24px; height: 24px;" src="image/crawlerIcon.png">
                 <strong >Crawler</strong>
+                <input style="margin-left: 10px" class="formInput" type="url" id="urlInput" placeholder="Enter URL" />
+                <img id="runCrawler" style="margin-left: 10px; cursor: pointer; width: 19px; height: 19px;" src="image/runLogo.png">
             </div>
             <div id="crawlerContent" style="border-radius: 6px; width: 100%;">
                 <!-- Diagram will be injected here -->
@@ -110,9 +112,7 @@
 
             </div>
             <div id="crawlerStackTracePanel" class="crawlerStackTracePane">
-                <div class="crawlerHeaders">
-                    <p class="crawlerHeadersRun">Run</p>
-                </div>
+                <div id="crawlerSessionTitles" class="crawlerHeaders"></div>
 
                 <div id="crawlerStackTrace" class="crawlerStackTrace">
                     here goes the stacktrace

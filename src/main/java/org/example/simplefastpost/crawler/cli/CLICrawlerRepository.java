@@ -1,6 +1,7 @@
 package org.example.simplefastpost.crawler.cli;
 import org.example.simplefastpost.model.CrawlerEntity;
 import org.example.simplefastpost.model.CrawlerSession;
+import org.springframework.stereotype.Repository;
 import org.sqlite.core.DB;
 
 import java.sql.*;

@@ -1,4 +1,5 @@
 const BASE_URL = "/api";
+import {ansiToHtml} from "./ansiConverter.js";
 
 let listOfFolders = [];
 let listOfCommands = [];
@@ -46,7 +47,66 @@ async function getDirectoryPath() {
     const data = await res.json();
     return data.currentDirectory;
 }
-function renderRightCrawlerPanel() {
+
+
+
+async function crawlByUrl(url) {
+    const crawlerStackTrace = document.getElementById("crawlerStackTrace");
+    crawlerStackTrace.innerHTML = "";
+
+    const es = new EventSource(`crawler/run?url=${encodeURIComponent(url)}`);
+
+    es.onmessage = (e) => {
+        crawlerStackTrace.innerHTML += ansiToHtml(e.data) + "<br/>";
+    };
+
+    es.onerror = () => {
+        es.close();
+    };
+}
+async function renderRightCrawlerPanel() {
+    document.getElementById("runCrawler").onclick = async function () {
+        const url = document.getElementById("urlInput").value;
+        console.log("Running crawler on " + url);
+
+        await crawlByUrl(url);
+    };
+    const crawlerSessionTitles = document.getElementById("crawlerSessionTitles");
+
+    async function loadSessions() {
+        try {
+            const response = await fetch(`/crawler/getAllSessions`);
+            const sessions = await response.json();
+
+            crawlerSessionTitles.innerHTML = "";
+
+            // Header
+            const runHeader = document.createElement("div");
+            runHeader.className = "crawlerHeadersRun";
+            runHeader.textContent = "Run";
+            crawlerSessionTitles.appendChild(runHeader);
+
+            // Items container (important for layout)
+            const list = document.createElement("div");
+            list.className = "crawlerSessionList";
+
+            sessions.forEach(session => {
+                const item = document.createElement("div");
+                item.className = "crawlerSessionItem";
+                item.textContent = session.title;
+
+                list.appendChild(item);
+            });
+
+            crawlerSessionTitles.appendChild(list);
+
+        } catch (error) {
+            console.error("Failed to load sessions:", error);
+        }
+    }
+
+    loadSessions();
+
     const rightPanel = document.getElementById("rightPanel");
     const rightResizer = document.getElementById("rightResizer");
 
@@ -742,6 +802,8 @@ function renderSidebar(items) {
 
     items.forEach(item => renderItem(item, tbody, 0));
 }
+
+
 
 function renderItem(item, tbody, level) {
     const tr = document.createElement("tr");
