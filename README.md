@@ -3,7 +3,9 @@
 </p>
 
 <h1 align="center">SimpleFastPost</h1>
-<hr>
+
+<img width="100%"  alt="image" src="https://github.com/user-attachments/assets/152e5298-4f1d-43e4-b6d4-1ca720641c44" />
+
 
 # SimpleFastPost
 
